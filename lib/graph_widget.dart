@@ -2,9 +2,20 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class ProgressGraphWidget extends StatelessWidget {
-  final Map<double, double> dataPoints;
+  final List<int> goalData;
 
-  const ProgressGraphWidget({super.key, required this.dataPoints});
+  const ProgressGraphWidget({super.key, required this.goalData});
+
+  List<FlSpot> formatData() {
+    final temp = <FlSpot>[];
+    for (int i = 0; i < goalData.length; i++) {
+      temp.add(FlSpot(
+        (i + 1).toDouble(),
+        goalData[i].toDouble(),
+      ));
+    }
+    return temp;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,10 +23,8 @@ class ProgressGraphWidget extends StatelessWidget {
       LineChartData(
         lineBarsData: [
           LineChartBarData(
-            spots: dataPoints.keys
-                .map((double data) => FlSpot(data, dataPoints[data]!))
-                .toList(),
-            color: Colors.green
+            spots: formatData(),
+            color: Colors.green,
           ),
         ],
         minX: 1,
