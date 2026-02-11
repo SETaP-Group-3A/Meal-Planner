@@ -1,4 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class ProgressGraphWidget extends StatelessWidget {
@@ -15,8 +16,11 @@ class ProgressGraphWidget extends StatelessWidget {
             spots: dataPoints.keys
                 .map((double data) => FlSpot(data, dataPoints[data]!))
                 .toList(),
+            color: Colors.green
           ),
         ],
+        minX: 1,
+        maxX: 7,
       ),
     );
   }
