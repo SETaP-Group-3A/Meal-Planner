@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 class ProgressGraphWidget extends StatelessWidget {
   final List<int> goalData;
 
-  const ProgressGraphWidget({super.key, required this.goalData});
+  ProgressGraphWidget({super.key, required this.goalData});
+
+  final List<String> xTitles = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
   List<FlSpot> formatData() {
     final temp = <FlSpot>[];
@@ -27,9 +29,24 @@ class ProgressGraphWidget extends StatelessWidget {
             color: Colors.green,
           ),
         ],
-        minX: 1,
-        maxX: 7,
-      ),
+        titlesData: FlTitlesData(
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 1,
+              reservedSize: 32,
+              getTitlesWidget: xTitlesWidgets,
+            ),
+          ),
+          rightTitles: AxisTitles( sideTitles: SideTitles( showTitles: false )),
+          topTitles: AxisTitles( sideTitles: SideTitles( showTitles: false ))
+      )
+      )
     );
   }
-}
+
+  Widget xTitlesWidgets(double value, TitleMeta meta) {
+
+    return SideTitleWidget(meta: meta, child: Text(xTitles[value.toInt() - 1])); 
+    } 
+  }
