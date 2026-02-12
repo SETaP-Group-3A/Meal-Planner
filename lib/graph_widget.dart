@@ -1,10 +1,19 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:meal_planner/graph_controller.dart';
 
 class ProgressGraphWidget extends StatelessWidget {
-  final List<int> goalData;
+  late List<int> goalData;
 
-  ProgressGraphWidget({super.key, required this.goalData});
+  late GraphController controller;
+
+  //Replace var when type is known
+  var userData;
+
+  ProgressGraphWidget({super.key, required this.userData}) {
+    controller = GraphController(userData); 
+    goalData = controller.updateGraph("calories"); 
+  }
 
   final List<String> xTitles = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
