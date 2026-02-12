@@ -6,7 +6,7 @@ class ProgressGraphWidget extends StatelessWidget {
 
   ProgressGraphWidget({super.key, required this.goalData});
 
-  final List<String> xTitles = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+  final List<String> xTitles = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
   List<FlSpot> formatData() {
     final temp = <FlSpot>[];
