@@ -6,6 +6,3 @@ Our Meal Planner coursework
 2267744 - badideainc
 2213123 - Aryaan3123
 2273265 - 7nnu
-
-This is the Lucas branch
- Yoink , This is now Oskar's Branch 
