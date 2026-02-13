@@ -1,3 +1,5 @@
+import 'mock_data.dart';
+
 class ShoppingList {
   static final ShoppingList _instance = ShoppingList._internal();
 
@@ -7,7 +9,7 @@ class ShoppingList {
 
   ShoppingList._internal();
 
-  final List<String> shoppingItems = [];
+  final List<Ingredient> shoppingItems = [];
 
   // [x] 1. Method for adding a recipe with specific conditions
   void addRecipe(String recipeId, String sortBy) {
@@ -20,19 +22,32 @@ class ShoppingList {
     shoppingItems.addAll(sortedIngredients);
   }
 
-  List<String> _fetchIngredients(String recipeId) {
-    // TODO: Replace with actual data fetching
-    return [
-      'Ingredient 1 for $recipeId',
-      'Ingredient 2 for $recipeId',
-      'Ingredient 3 for $recipeId',
-    ];
+  List<Ingredient> _fetchIngredients(String recipeId) {
+    // Return mock data if available, otherwise return empty list or generic placeholder
+    if (mockRecipes.containsKey(recipeId)) {
+      return List.from(mockRecipes[recipeId]!); // Return a copy
+    }
+    // Fallback if recipe not found in mock data
+    return [];
   }
 
-  List<String> _processIngredients(List<String> ingredients, String sortBy) {
-    // TODO: Implement actual sorting/filtering logic based on 'sortBy'
-    // e.g. 'cost', 'distance', 'nutritional_value'
-    // For now, we just pass them through.
+  List<Ingredient> _processIngredients(List<Ingredient> ingredients, String sortBy) {
+    // Sort logic based on 'sortBy' criteria
+    switch (sortBy.toLowerCase()) {
+      case 'cost':
+        ingredients.sort((a, b) => a.cost.compareTo(b.cost));
+        break;
+      case 'distance':
+        ingredients.sort((a, b) => a.distance.compareTo(b.distance));
+        break;
+      case 'nutritional_value':
+      case 'calories':
+        ingredients.sort((a, b) => a.calories.compareTo(b.calories));
+        break;
+      default:
+        // No sorting or default sorting
+        break;
+    }
     return ingredients;
   }
 }
