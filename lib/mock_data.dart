@@ -4,7 +4,7 @@ import 'models/recipe.dart';
 final Map<String, List<Ingredient>> marketInventory = {
   'Flour': [
     Ingredient(name: 'Flour (Tesco)', cost: 1.50, distance: 0.5, calories: 364),
-    Ingredient(name: 'Flour (Aldi)', cost: 0.80, distance: 3.0, calories: 360), // Cheaper, further
+    Ingredient(name: 'Flour (Aldi)', cost: 0.80, distance: 3.0, calories: 360),
   ],
   'Milk': [
     Ingredient(name: 'Milk (Tesco)', cost: 1.20, distance: 0.5, calories: 42),

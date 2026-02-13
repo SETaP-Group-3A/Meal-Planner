@@ -14,13 +14,42 @@ class ShoppingList {
   final List<ShoppingListItem> shoppingItems = [];
 
   void addRecipe(String recipeId, String sortBy) {
-    final ingredients = _fetchIngredients(recipeId);
+    final requiredIngredientNames = _fetchRequirements(recipeId);
 
-    for (var ingredient in ingredients) {
-      _addOrIncrementIngredient(ingredient);
+    for (var name in requiredIngredientNames) {
+      final bestOption = _findBestIngredientOption(name, sortBy);
+      
+      if (bestOption != null) {
+        _addOrIncrementIngredient(bestOption);
+      }
     }
 
     _sortItems(sortBy);
+  }
+
+  Ingredient? _findBestIngredientOption(String ingredientName, String sortBy) {
+    if (!marketInventory.containsKey(ingredientName)) return null;
+
+    final options = List<Ingredient>.from(marketInventory[ingredientName]!);
+    
+    if (options.isEmpty) return null;
+
+    switch (sortBy.toLowerCase()) {
+      case 'cost':
+        options.sort((a, b) => a.cost.compareTo(b.cost));
+        break;
+      case 'distance':
+        options.sort((a, b) => a.distance.compareTo(b.distance));
+        break;
+      case 'nutritional_value':
+      case 'calories':
+        options.sort((a, b) => a.calories.compareTo(b.calories));
+        break;
+      default:
+        break;
+    }
+
+    return options.first;
   }
 
   void _addOrIncrementIngredient(Ingredient ingredient) {
@@ -44,10 +73,10 @@ class ShoppingList {
     }
   }
 
-  List<Ingredient> _fetchIngredients(String recipeId) {
+  List<String> _fetchRequirements(String recipeId) {
     try {
       final recipe = mockRecipes.firstWhere((r) => r.id == recipeId);
-      return List.from(recipe.ingredients);
+      return recipe.requiredIngredients;
     } catch (_) {
       return [];
     }
