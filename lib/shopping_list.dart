@@ -1,4 +1,5 @@
 import 'models/ingredient.dart';
+import 'models/shopping_list_item.dart';
 import 'mock_data.dart';
 
 class ShoppingList {
@@ -10,14 +11,29 @@ class ShoppingList {
 
   ShoppingList._internal();
 
-  final List<Ingredient> shoppingItems = [];
+  final List<ShoppingListItem> shoppingItems = [];
 
   void addRecipe(String recipeId, String sortBy) {
     final ingredients = _fetchIngredients(recipeId);
 
-    final sortedIngredients = _processIngredients(ingredients, sortBy);
+    for (var ingredient in ingredients) {
+      _addOrIncrementIngredient(ingredient);
+    }
 
-    shoppingItems.addAll(sortedIngredients);
+    _sortItems(sortBy);
+  }
+
+  void _addOrIncrementIngredient(Ingredient ingredient) {
+    // Check if ingredient exists by name
+    try {
+      final existingItem = shoppingItems.firstWhere(
+        (item) => item.ingredient.name == ingredient.name
+      );
+      existingItem.quantity++;
+    } catch (_) {
+      // Not found, add new
+      shoppingItems.add(ShoppingListItem(ingredient: ingredient));
+    }
   }
 
   List<Ingredient> _fetchIngredients(String recipeId) {
@@ -29,21 +45,22 @@ class ShoppingList {
     }
   }
 
-  List<Ingredient> _processIngredients(List<Ingredient> ingredients, String sortBy) {
+  void _sortItems(String sortBy) {
     switch (sortBy.toLowerCase()) {
       case 'cost':
-        ingredients.sort((a, b) => a.cost.compareTo(b.cost));
+        shoppingItems.sort((a, b) => a.totalCost.compareTo(b.totalCost));
         break;
       case 'distance':
-        ingredients.sort((a, b) => a.distance.compareTo(b.distance));
+        // Assuming distance is per trip, maybe grouping items from same location? 
+        // For now, sorting by ingredient distance.
+        shoppingItems.sort((a, b) => a.ingredient.distance.compareTo(b.ingredient.distance));
         break;
       case 'nutritional_value':
       case 'calories':
-        ingredients.sort((a, b) => a.calories.compareTo(b.calories));
+        shoppingItems.sort((a, b) => a.totalCalories.compareTo(b.totalCalories));
         break;
       default:
         break;
     }
-    return ingredients;
   }
 }

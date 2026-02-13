@@ -84,15 +84,16 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                 : ListView.builder(
                     itemCount: shoppingList.shoppingItems.length,
                     itemBuilder: (context, index) {
-                      final item = shoppingList.shoppingItems[index];
+                      final listItem = shoppingList.shoppingItems[index];
+                      final ingredient = listItem.ingredient;
                       return ListTile(
                         leading: Checkbox(
                           value: false,
                           onChanged: (value) {},
                         ),
-                        title: Text(item.name),
+                        title: Text('${ingredient.name} (x${listItem.quantity})'),
                         subtitle: Text(
-                          'Cost: £${item.cost.toStringAsFixed(2)} | Dist: ${item.distance}km | Cal: ${item.calories}',
+                          'Total Cost: \$${listItem.totalCost.toStringAsFixed(2)} | Dist: ${ingredient.distance}km | Cal: ${listItem.totalCalories}',
                         ),
                       );
                     },
