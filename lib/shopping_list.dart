@@ -1,3 +1,4 @@
+import 'models/ingredient.dart';
 import 'mock_data.dart';
 
 class ShoppingList {
