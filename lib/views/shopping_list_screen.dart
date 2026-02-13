@@ -92,7 +92,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                         ),
                         title: Text(item.name),
                         subtitle: Text(
-                          'Cost: \$${item.cost.toStringAsFixed(2)} | Dist: ${item.distance}km | Cal: ${item.calories}',
+                          'Cost: £${item.cost.toStringAsFixed(2)} | Dist: ${item.distance}km | Cal: ${item.calories}',
                         ),
                       );
                     },

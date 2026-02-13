@@ -1,8 +1,8 @@
 class Ingredient {
   final String name;
-  final double cost; // Cost in currency units
-  final double distance; // Distance in km or miles
-  final int calories; // Nutritional value
+  final double cost;
+  final double distance;
+  final int calories;
 
   Ingredient({
     required this.name,
