@@ -63,12 +63,12 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: mockRecipes.keys.map((recipeId) {
+                children: mockRecipes.map((recipe) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: ElevatedButton(
-                      onPressed: () => _addRecipeToShoppingList(recipeId),
-                      child: Text('Add $recipeId'),
+                      onPressed: () => _addRecipeToShoppingList(recipe.id),
+                      child: Text('Add ${recipe.name}'),
                     ),
                   );
                 }).toList(),

@@ -21,10 +21,12 @@ class ShoppingList {
   }
 
   List<Ingredient> _fetchIngredients(String recipeId) {
-    if (mockRecipes.containsKey(recipeId)) {
-      return List.from(mockRecipes[recipeId]!);
+    try {
+      final recipe = mockRecipes.firstWhere((r) => r.id == recipeId);
+      return List.from(recipe.ingredients);
+    } catch (_) {
+      return [];
     }
-    return [];
   }
 
   List<Ingredient> _processIngredients(List<Ingredient> ingredients, String sortBy) {
