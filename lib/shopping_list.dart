@@ -24,7 +24,6 @@ class ShoppingList {
   }
 
   void _addOrIncrementIngredient(Ingredient ingredient) {
-    // Check if ingredient exists by name
     try {
       final existingItem = shoppingItems.firstWhere(
         (item) => item.ingredient.name == ingredient.name
@@ -33,6 +32,15 @@ class ShoppingList {
     } catch (_) {
       // Not found, add new
       shoppingItems.add(ShoppingListItem(ingredient: ingredient));
+    }
+  }
+
+  void updateQuantity(int index, int change) {
+    if (index >= 0 && index < shoppingItems.length) {
+      shoppingItems[index].quantity += change;
+      if (shoppingItems[index].quantity <= 0) {
+        shoppingItems.removeAt(index);
+      }
     }
   }
 
@@ -51,8 +59,6 @@ class ShoppingList {
         shoppingItems.sort((a, b) => a.totalCost.compareTo(b.totalCost));
         break;
       case 'distance':
-        // Assuming distance is per trip, maybe grouping items from same location? 
-        // For now, sorting by ingredient distance.
         shoppingItems.sort((a, b) => a.ingredient.distance.compareTo(b.ingredient.distance));
         break;
       case 'nutritional_value':
