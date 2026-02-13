@@ -12,8 +12,21 @@ class ShoppingList {
   ShoppingList._internal();
 
   final List<ShoppingListItem> shoppingItems = [];
+  final List<String> _addedRecipeHistory = [];
 
   void addRecipe(String recipeId, String sortBy) {
+    _addedRecipeHistory.add(recipeId);
+    _processRecipeAddition(recipeId, sortBy);
+  }
+
+  void regenerateList(String sortBy) {
+    shoppingItems.clear();
+    for (var recipeId in _addedRecipeHistory) {
+      _processRecipeAddition(recipeId, sortBy);
+    }
+  }
+
+  void _processRecipeAddition(String recipeId, String sortBy) {
     final requiredIngredientNames = _fetchRequirements(recipeId);
 
     for (var name in requiredIngredientNames) {
