@@ -28,9 +28,29 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     }
   }
 
+  Widget _buildFocusButton(String label, String value, IconData icon) {
+    final isSelected = selectedSort == value;
+    return ElevatedButton.icon(
+      onPressed: () => _regenerateList(value),
+      icon: Icon(icon, color: isSelected ? Colors.white : null),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected ? Theme.of(context).primaryColor : null,
+        foregroundColor: isSelected ? Colors.white : null,
+      ),
+    );
+  }
+
   void _addRecipeToShoppingList(String recipeId) {
     setState(() {
       shoppingList.addRecipe(recipeId, selectedSort);
+    });
+  }
+
+  void _regenerateList(String newSort) {
+    setState(() {
+      selectedSort = newSort;
+      shoppingList.regenerateList(newSort);
     });
   }
 
@@ -39,24 +59,22 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shopping List'),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
-            onSelected: (value) {
-              setState(() {
-                selectedSort = value;
-              });
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'cost', child: Text('Sort by Cost')),
-              const PopupMenuItem(value: 'distance', child: Text('Sort by Distance')),
-              const PopupMenuItem(value: 'calories', child: Text('Sort by Calories')),
-            ],
-          ),
-        ],
       ),
       body: Column(
         children: [
+          // Focus Selection Buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildFocusButton('Cost', 'cost', Icons.attach_money),
+                _buildFocusButton('Distance', 'distance', Icons.location_on),
+                _buildFocusButton('Health', 'calories', Icons.favorite),
+              ],
+            ),
+          ),
+          
           // Test Controls
           Padding(
             padding: const EdgeInsets.all(8.0),
