@@ -47,7 +47,7 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
     return LineChart(
       LineChartData(
         lineBarsData: [
-          LineChartBarData(spots: formatData(), color: Colors.green),
+          LineChartBarData(spots: formatData(), color: Colors.green, isCurved: true),
         ],
         minX: 1,
         maxX: 7,
