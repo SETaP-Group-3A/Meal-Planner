@@ -91,9 +91,34 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                           value: false,
                           onChanged: (value) {},
                         ),
-                        title: Text('${ingredient.name} (x${listItem.quantity})'),
+                        title: Text(ingredient.name),
                         subtitle: Text(
                           'Total Cost: \$${listItem.totalCost.toStringAsFixed(2)} | Dist: ${ingredient.distance}km | Cal: ${listItem.totalCalories}',
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove),
+                              onPressed: () {
+                                setState(() {
+                                  shoppingList.updateQuantity(index, -1);
+                                });
+                              },
+                            ),
+                            Text(
+                              '${listItem.quantity}',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              onPressed: () {
+                                setState(() {
+                                  shoppingList.updateQuantity(index, 1);
+                                });
+                              },
+                            ),
+                          ],
                         ),
                       );
                     },
