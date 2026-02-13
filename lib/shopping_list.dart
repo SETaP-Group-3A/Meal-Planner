@@ -1,4 +1,12 @@
 class ShoppingList {
+  static final ShoppingList _instance = ShoppingList._internal();
+
+  factory ShoppingList() {
+    return _instance;
+  }
+
+  ShoppingList._internal();
+
   final List<String> shoppingItems = [];
 
   // [x] 1. Method for adding a recipe with specific conditions
