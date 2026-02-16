@@ -20,6 +20,25 @@ class RecipePage extends StatelessWidget {
           ),
         ],
       ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.bold)),
+            ...recipe.requiredIngredients.map(
+              (ingredient) => ListTile(title: Text(ingredient)),
+            ),
+            SizedBox(height: 18),
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Add isFavourite button logic later
+              },
+              child: Text('Add to Shopping List'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
