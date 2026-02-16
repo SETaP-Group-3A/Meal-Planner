@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import 'mock_data.dart'; // for mockRecipes
+import 'models/recipe.dart';
 
-// Class for the recipe page
-class Recipe {
-  final String name;
-  final String imageUrl;
-  final List<String> ingredients;
-  final List<String> allegens;
-  final int calories;
-  final Map<String, double> macros;
-  bool isFavourite;
+class RecipePage extends StatelessWidget {
+  final Recipe recipe;
+  const RecipePage({Key? key, required this.recipe}) : super(key: key);
 
-  Recipe({
-    required this.name,
-    required this.imageUrl,
-    required this.ingredients,
-    required this.allegens,
-    required this.calories,
-    required this.macros,
-    this.isFavourite = false,
-  });
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(recipe.name),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.favorite_border),
+            onPressed: () {
+              // TODO: Add isFavourite button logic later
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
