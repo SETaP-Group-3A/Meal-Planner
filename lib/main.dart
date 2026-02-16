@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'views/shopping_list_screen.dart';
+import 'graph_widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -88,6 +89,11 @@ class _MyHomePageState extends State<MyHomePage> {
               icon: const Icon(Icons.shopping_cart),
               label: const Text("Go to Shopping List"),
             ),
+            SizedBox(
+              width: 300,
+              height: 200,
+              child: ProgressGraphWidget(userData: null),
+            )     
           ],
         ),
       ),
