@@ -26,26 +26,49 @@ class CategoriesScreen extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // image placeholder using picsum with category id as seed
-                    Image.network(
-                      'https://picsum.photos/seed/${Uri.encodeComponent(c.id)}/600/600',
-                      fit: BoxFit.cover,
-                      errorBuilder: (ctx, err, st) => Container(color: Colors.grey.shade300),
-                    ),
-                    Container(
-                      color: Colors.black26,
-                    ),
-                    Positioned(
-                      left: 8,
-                      right: 8,
-                      bottom: 8,
-                      child: Text(
-                        c.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          shadows: [Shadow(blurRadius: 4, color: Colors.black54)],
+                    // image loader (asset or network)
+                    Builder(builder: (_) {
+                      final img = c.imageUrl;
+                      if (img == null || img.isEmpty) {
+                        return Image.network(
+                          'https://picsum.photos/seed/${Uri.encodeComponent(c.id)}/600/600',
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, err, st) => Container(color: Colors.grey.shade300),
+                        );
+                      }
+                      if (img.startsWith('asset:')) {
+                        final assetPath = img.replaceFirst('asset:', '');
+                        return Image.asset(
+                          assetPath,
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, err, st) => Container(color: Colors.grey.shade300),
+                        );
+                      }
+                      return Image.network(
+                        img,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, st) => Container(color: Colors.grey.shade300),
+                      );
+                    }),
+                    // dark overlay to improve text contrast
+                    Container(color: Colors.black26),
+                    // centered large text
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          c.name,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20, // increase for larger text
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(blurRadius: 6, color: Colors.black54, offset: Offset(0, 2)),
+                            ],
+                          ),
                         ),
                       ),
                     ),

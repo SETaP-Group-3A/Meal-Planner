@@ -7,11 +7,23 @@ class CategoryService {
   CategoryService._internal();
 
   final List<Category> _categories = [
-    // starter categories with sample recipe ids (must match mockRecipes ids)
-    Category(id: 'c-snacks', name: 'Snacks', targetRoute: '/category', recipeIds: ['r-1', 'r-2']),
-    Category(id: 'c-healthy', name: 'Healthy', targetRoute: '/category', recipeIds: ['r-2', 'r-3']),
-    // Persistent favourites category (initialized empty)
-    Category(id: 'c-favourites', name: 'Favourites', targetRoute: '/category', recipeIds: []),
+    Category(
+      id: 'c-snacks',
+      name: 'Snacks',
+      targetRoute: '/category',
+      recipeIds: ['r-1', 'r-2'],
+      // example using an asset (prefix with "asset:")
+      imageUrl: 'https://img.freepik.com/premium-psd/appetizer-platter-with-crackers-dip-delicious-snack-parties-gatherings_1270823-26939.jpg?semt=ais_hybrid&w=740&q=80',
+    ),
+    Category(
+      id: 'c-healthy',
+      name: 'Healthy',
+      targetRoute: '/category',
+      recipeIds: ['r-2', 'r-3'],
+      // example using a network image
+      imageUrl: 'https://freepngimg.com/png/13866-healthy-food-png-pic',
+    ),
+    Category(id: 'c-favourites', name: 'Favourites', targetRoute: '/category', recipeIds: [], imageUrl: 'https://www.freepik.com/free-photos-vectors/stars-png'),
   ];
 
   List<Category> get categories => List.unmodifiable(_categories);
@@ -42,7 +54,7 @@ class CategoryService {
     return null;
   }
 
-  // RECIPE LIST MANAGEMENT ----------------------------------------------
+ 
 
   List<String> getRecipeIdsForCategory(String id) {
     final c = getById(id);

@@ -71,9 +71,9 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
   void _toggleFavourite(String recipeId) {
     final fav = CategoryService.instance.getById('c-favourites');
     if (fav == null) {
-      // create a favourites category (shouldn't be necessary if CategoryService has it)
+
       final created = CategoryService.instance.addCategory(name: 'Favourites', targetRoute: '/category', recipeIds: [recipeId]);
-      // ensure created id persists; we won't rely on fixed id here but earlier we added c-favourites
+
     } else {
       if (fav.recipeIds.contains(recipeId)) {
         CategoryService.instance.removeRecipeFromCategory(fav.id, recipeId);
@@ -159,7 +159,6 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                   final r = assignedRecipes[i];
                   final totalCal = _calcTotalCalories(r);
 
-                  // title area with heart button
                   final titleWidget = Row(
                     children: [
                       Expanded(
@@ -186,7 +185,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
 
                   return ExpansionTile(
                     title: titleWidget,
-                    // no separate subtitle now (handled in titleWidget)
+                    
                     children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -209,7 +208,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                             },
                             child: const Text('Add ingredients to shopping list'),
                           ),
-                          // show remove button only if viewing the Favourites category
+
                           if (category!.id == 'c-favourites')
                             TextButton(
                               onPressed: () {
