@@ -1,9 +1,28 @@
 import 'package:flutter/material.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
+import 'db_maneger.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(const MyApp());
+
+  // Run after UI starts; still prints to console.
+  Future<void>(() async {
+    try {
+      final db = DatabaseService();
+      await db.seedTrialVegetables();
+      final vegs = await db.getAllVegetables();
+      for (final v in vegs) {
+        // ignore: avoid_print
+        print('Vegetable: $v');
+      }
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('DB init/query failed: $e\n$st');
+    }
+  });
 }
 
 class MyApp extends StatelessWidget {
