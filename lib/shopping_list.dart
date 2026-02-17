@@ -5,14 +5,31 @@ import 'mock_data.dart';
 class ShoppingList {
   static final ShoppingList _instance = ShoppingList._internal();
 
-  factory ShoppingList() {
-    return _instance;
-  }
+  factory ShoppingList() => _instance;
 
   ShoppingList._internal();
 
   final List<ShoppingListItem> shoppingItems = [];
   final List<String> _addedRecipeHistory = [];
+
+
+  final List<String> _ingredientNames = [];
+
+
+  List<String> get ingredientNames => List.unmodifiable(_ingredientNames);
+
+
+  void addIngredientName(String name) {
+    if (!_ingredientNames.contains(name)) {
+      _ingredientNames.add(name);
+    }
+  }
+
+
+  void addRecipeById(String recipeId) {
+
+    addRecipe(recipeId, 'cost');
+  }
 
   void addRecipe(String recipeId, String sortBy) {
     _addedRecipeHistory.add(recipeId);
@@ -72,7 +89,7 @@ class ShoppingList {
       );
       existingItem.quantity++;
     } catch (_) {
-      // Not found, add new
+
       shoppingItems.add(ShoppingListItem(ingredient: ingredient));
     }
   }
