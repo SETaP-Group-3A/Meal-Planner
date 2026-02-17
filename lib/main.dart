@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
+import 'category_service.dart';
+import 'views/categories_screen.dart';
+import 'views/category_content_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,6 +24,11 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
         '/shopping-list': (context) => const ShoppingListScreen(),
+        '/categories': (context) => const CategoriesScreen(),
+        '/category': (context) {
+          final id = ModalRoute.of(context)!.settings.arguments as String?;
+          return CategoryContentScreen(categoryId: id);
+        },
       },
     );
   }
@@ -39,9 +47,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final categories = CategoryService.instance.categories;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
       drawer: Drawer(
@@ -52,27 +60,28 @@ class _MyHomePageState extends State<MyHomePage> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
               ),
-              child: const Text(
-                'Meal Planner',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
+              child: const Text('Meal Planner', style: TextStyle(color: Colors.white, fontSize: 24)),
             ),
             ListTile(
               leading: const Icon(Icons.home),
               title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context); // Close the drawer
-              },
+              onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.shopping_cart),
               title: const Text('Shopping List'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.pop(context);
                 Navigator.pushNamed(context, '/shopping-list');
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('Categories'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/categories');
               },
             ),
           ],
@@ -89,11 +98,12 @@ class _MyHomePageState extends State<MyHomePage> {
               icon: const Icon(Icons.shopping_cart),
               label: const Text("Go to Shopping List"),
             ),
+            const SizedBox(height: 16),
             SizedBox(
               width: 300,
               height: 200,
               child: ProgressGraphWidget(userData: null),
-            )     
+            ),
           ],
         ),
       ),
