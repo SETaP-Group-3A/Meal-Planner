@@ -36,7 +36,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,10 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               child: const Text(
                 'Meal Planner',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
             ListTile(
@@ -93,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
               width: 300,
               height: 200,
               child: ProgressGraphWidget(userData: null),
-            )     
+            ),
           ],
         ),
       ),
