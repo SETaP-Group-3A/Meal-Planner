@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/views/categories_screen.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
-import 'category_service.dart';
-import 'views/categories_screen.dart';
-import 'views/category_content_screen.dart';
+import 'views/category_detail_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,8 +25,10 @@ class MyApp extends StatelessWidget {
         '/shopping-list': (context) => const ShoppingListScreen(),
         '/categories': (context) => const CategoriesScreen(),
         '/category': (context) {
-          final id = ModalRoute.of(context)!.settings.arguments as String?;
-          return CategoryContentScreen(categoryId: id);
+          final args = ModalRoute.of(context)!.settings.arguments;
+          return CategoryDetailScreen(
+            title: args is String ? args : 'Category',
+          );
         },
       },
     );
@@ -44,14 +45,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   Widget build(BuildContext context) {
-    final categories = CategoryService.instance.categories;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
+      appBar: AppBar(title: Text(widget.title)),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -60,7 +57,10 @@ class _MyHomePageState extends State<MyHomePage> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
               ),
-              child: const Text('Meal Planner', style: TextStyle(color: Colors.white, fontSize: 24)),
+              child: const Text(
+                'Meal Planner',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.home),
@@ -91,6 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pushNamed(context, '/shopping-list');
@@ -98,7 +99,6 @@ class _MyHomePageState extends State<MyHomePage> {
               icon: const Icon(Icons.shopping_cart),
               label: const Text("Go to Shopping List"),
             ),
-            const SizedBox(height: 16),
             SizedBox(
               width: 300,
               height: 200,
