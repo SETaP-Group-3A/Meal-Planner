@@ -28,13 +28,6 @@ class RecipePage extends StatelessWidget {
             SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                // TODO: Implement open recipe logic (e.g., open a detailed view or external link)
-              },
-              child: Text('Open Recipe'),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
                 // TODO: Add to shopping list logic later
               },
               child: Text('Add to Shopping List'),
