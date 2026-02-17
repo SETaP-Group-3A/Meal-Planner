@@ -4,6 +4,7 @@ import '../models/category.dart';
 import '../models/recipe.dart';
 import '../mock_data.dart';
 import '../shopping_list.dart';
+import '../recipe_page.dart';
 
 class CategoryContentScreen extends StatefulWidget {
   final String? categoryId;
@@ -207,11 +208,12 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              try {
-                                Navigator.pushNamed(context, '/recipe', arguments: r.id);
-                              } catch (_) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Open recipe: ${r.name}')));
-                              }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RecipePage(recipe: r),
+                                ),
+                              );
                             },
                             child: const Text('Open recipe'),
                           ),
