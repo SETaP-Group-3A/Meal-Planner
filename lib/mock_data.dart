@@ -68,20 +68,20 @@ final List<Recipe> mockRecipes = [
   ),
 ];
 
-final List<Map<String, String>> mockAccounts = [
-  {
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "password": "johnspassword!"
-  },
-  {
-    "name": "Jane Doe",
-    "email": "jane.doe@example.com",
-    "password": "janespassword!"
-  },
-  {
-    "name": "Jane Johnson",
-    "email": "jane.johnson@example.com",
-    "password": "jjpassword"
-  },
+final List<Account> mockAccounts = [
+  Account(
+    name: "John Doe",
+    email: "john.doe@example.com",
+    password: "johnspassword!"
+  ),
+  Account(
+    name: "Jane Doe",
+    email: "jane.doe@example.com",
+    password: "janespassword!"
+  ),
+  Account(
+    name: "Jane Johnson",
+    email: "jane.johnson@example.com",
+    password: "jjpassword"
+  ),
 ];
