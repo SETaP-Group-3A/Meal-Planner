@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/views/categories_screen.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
 import 'mock_data.dart';
 import 'recipe_page.dart';
+import 'views/category_detail_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,6 +25,13 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
         '/shopping-list': (context) => const ShoppingListScreen(),
+        '/categories': (context) => const CategoriesScreen(),
+        '/category': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments;
+          return CategoryDetailScreen(
+            title: args is String ? args : 'Category',
+          );
+        },
       },
     );
   }
@@ -40,11 +49,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    // final categories = CategoryService.instance.categories;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
+      appBar: AppBar(title: Text(widget.title)),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -55,10 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               child: const Text(
                 'Meal Planner',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
             ListTile(
