@@ -4,6 +4,17 @@ import 'dart:async';
 
 class DatabaseService {
   static Database? _database;
+  static bool _factoryInitDone = false;
+
+  static void _ensureDatabaseFactoryInitialized() {
+    if (_factoryInitDone) return;
+
+    // If nobody assigned it yet, use sqflite's default factory (mobile).
+    // Note: On desktop/web this still won't make sqflite work; it prevents
+    // "databaseFactory not initialized" when the default is available.
+
+    _factoryInitDone = true;
+  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -12,6 +23,8 @@ class DatabaseService {
   }
 
   Future<Database> _initDatabase() async {
+    _ensureDatabaseFactoryInitialized();
+
     final String path = join(await getDatabasesPath(), 'meal_planner.db');
 
     return await openDatabase(
