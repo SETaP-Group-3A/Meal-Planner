@@ -5,23 +5,8 @@ import 'graph_widget.dart';
 import 'views/category_detail_screen.dart';
 import 'views/category_content_screen.dart';
 
+void main() {
   runApp(const MyApp());
-
-  // Optional: keep this for seeding + debugging. UI will also show the data.
-  Future<void>(() async {
-    try {
-      final db = DatabaseService();
-      await db.seedTrialVegetables();
-      final vegs = await db.getAllVegetables();
-      for (final v in vegs) {
-        // ignore: avoid_print
-        print('Vegetable: $v');
-      }
-    } catch (e, st) {
-      // ignore: avoid_print
-      print('DB init/query failed: $e\n$st');
-    }
-  });
 }
 
 class MyApp extends StatelessWidget {
