@@ -20,6 +20,9 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// will add functionality later today
+// will make it look pretty in the future
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
