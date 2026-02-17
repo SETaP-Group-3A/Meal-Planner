@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
+import 'mock_data.dart';
+import 'recipe_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -38,7 +40,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    final categories = CategoryService.instance.categories;
+    // final categories = CategoryService.instance.categories;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
