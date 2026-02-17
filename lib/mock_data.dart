@@ -1,5 +1,6 @@
 import 'models/ingredient.dart';
 import 'models/recipe.dart';
+import 'models/account.dart';
 
 final Map<String, List<Ingredient>> marketInventory = {
   'Flour': [
@@ -65,4 +66,22 @@ final List<Recipe> mockRecipes = [
     name: 'Berry Smoothie',
     requiredIngredients: ['Banana', 'Berries', 'Yogurt'],
   ),
+];
+
+final List<Map<String, String>> mockAccounts = [
+  {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "password": "johnspassword!"
+  },
+  {
+    "name": "Jane Doe",
+    "email": "jane.doe@example.com",
+    "password": "janespassword!"
+  },
+  {
+    "name": "Jane Johnson",
+    "email": "jane.johnson@example.com",
+    "password": "jjpassword"
+  },
 ];
