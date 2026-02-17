@@ -8,7 +8,7 @@ Future<void> main() async {
 
   runApp(const MyApp());
 
-  // Run after UI starts; still prints to console.
+  // Optional: keep this for seeding + debugging. UI will also show the data.
   Future<void>(() async {
     try {
       final db = DatabaseService();
@@ -55,6 +55,40 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String _vegText = '';
+  bool _loadingVeg = true;
+  String? _vegError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVegetablesForDisplay();
+  }
+
+  Future<void> _loadVegetablesForDisplay() async {
+    setState(() {
+      _loadingVeg = true;
+      _vegError = null;
+    });
+
+    try {
+      final db = DatabaseService();
+      await db.seedTrialVegetables();
+      final text = await db.getAllVegetablesAsText();
+      if (!mounted) return;
+      setState(() {
+        _vegText = text;
+        _loadingVeg = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _vegError = e.toString();
+        _loadingVeg = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,6 +142,47 @@ class _MyHomePageState extends State<MyHomePage> {
               width: 300,
               height: 200,
               child: ProgressGraphWidget(userData: null),
+            ),
+
+            const SizedBox(height: 16),
+
+            SizedBox(
+              width: 320,
+              height: 160,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Theme.of(context).colorScheme.surface,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: _loadingVeg
+                      ? const Center(child: CircularProgressIndicator())
+                      : _vegError != null
+                      ? SingleChildScrollView(
+                          child: Text(
+                            'Error loading vegetables:\n$_vegError',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          child: SelectableText(
+                            _vegText,
+                            style: const TextStyle(fontFamily: 'monospace'),
+                          ),
+                        ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            TextButton(
+              onPressed: _loadVegetablesForDisplay,
+              child: const Text('Refresh vegetables'),
             ),
           ],
         ),

@@ -63,4 +63,15 @@ class DatabaseService {
     final db = await database;
     return db.query('vegetables', orderBy: 'id ASC');
   }
+
+  Future<String> getAllVegetablesAsText() async {
+    final vegs = await getAllVegetables();
+    if (vegs.isEmpty) return 'No vegetables found.';
+
+    final b = StringBuffer();
+    for (final v in vegs) {
+      b.writeln('#${v['id']}: ${v['name']} — ${v['quantity']} ${v['unit']}');
+    }
+    return b.toString().trimRight();
+  }
 }
