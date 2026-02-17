@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
+import 'recipe_page.dart';
+import 'mock_data.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,6 +23,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
         '/shopping-list': (context) => const ShoppingListScreen(),
+        '/recipe': (context) => RecipePage(recipe: mockRecipes[0]), // Added recipe page route
       },
     );
   }
@@ -36,7 +39,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,10 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               child: const Text(
                 'Meal Planner',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
             ListTile(
@@ -89,11 +88,19 @@ class _MyHomePageState extends State<MyHomePage> {
               icon: const Icon(Icons.shopping_cart),
               label: const Text("Go to Shopping List"),
             ),
+            SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pushNamed(context, '/recipe');
+              },
+              icon: const Icon(Icons.restaurant_menu),
+              label: const Text("Go to Recipe Page"),
+            ),
             SizedBox(
               width: 300,
               height: 200,
               child: ProgressGraphWidget(userData: null),
-            )     
+            ),
           ],
         ),
       ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'mock_data.dart'; // for mockRecipes
 import 'models/recipe.dart';
 
 class RecipePage extends StatelessWidget {
@@ -11,14 +10,6 @@ class RecipePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(recipe.name),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.favorite_border),
-            onPressed: () {
-              // TODO: Add isFavourite button logic later
-            },
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -26,13 +17,11 @@ class RecipePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.bold)),
-            ...recipe.requiredIngredients.map(
-              (ingredient) => ListTile(title: Text(ingredient)),
-            ),
-            SizedBox(height: 18),
+            ...recipe.requiredIngredients.map((ingredient) => Text(ingredient)),
+            SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                // TODO: Add isFavourite button logic later
+                // TODO: Add to shopping list logic later
               },
               child: Text('Add to Shopping List'),
             ),
