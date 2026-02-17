@@ -3,6 +3,7 @@ import 'package:meal_planner/views/categories_screen.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
 import 'views/category_detail_screen.dart';
+import 'views/category_content_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,8 +27,8 @@ class MyApp extends StatelessWidget {
         '/categories': (context) => const CategoriesScreen(),
         '/category': (context) {
           final args = ModalRoute.of(context)!.settings.arguments;
-          return CategoryDetailScreen(
-            title: args is String ? args : 'Category',
+          return CategoryContentScreen(
+            categoryId: args is String ? args : null,
           );
         },
       },
