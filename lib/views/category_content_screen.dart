@@ -71,9 +71,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
   void _toggleFavourite(String recipeId) {
     final fav = CategoryService.instance.getById('c-favourites');
     if (fav == null) {
-
-      final created = CategoryService.instance.addCategory(name: 'Favourites', targetRoute: '/category', recipeIds: [recipeId]);
-
+      CategoryService.instance.addCategory(name: 'Favourites', targetRoute: '/category', recipeIds: [recipeId]);
     } else {
       if (fav.recipeIds.contains(recipeId)) {
         CategoryService.instance.removeRecipeFromCategory(fav.id, recipeId);
@@ -185,7 +183,6 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
 
                   return ExpansionTile(
                     title: titleWidget,
-                    
                     children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -208,7 +205,16 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                             },
                             child: const Text('Add ingredients to shopping list'),
                           ),
-
+                          TextButton(
+                            onPressed: () {
+                              try {
+                                Navigator.pushNamed(context, '/recipe', arguments: r.id);
+                              } catch (_) {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Open recipe: ${r.name}')));
+                              }
+                            },
+                            child: const Text('Open recipe'),
+                          ),
                           if (category!.id == 'c-favourites')
                             TextButton(
                               onPressed: () {

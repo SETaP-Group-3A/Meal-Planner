@@ -3,7 +3,6 @@ import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
 import 'category_service.dart';
 import 'views/categories_screen.dart';
-import 'views/category_detail_screen.dart';
 import 'views/category_content_screen.dart';
 
 void main() {
@@ -30,7 +29,6 @@ class MyApp extends StatelessWidget {
           final id = ModalRoute.of(context)!.settings.arguments as String?;
           return CategoryContentScreen(categoryId: id);
         },
-        '/category-detail': (context) => const CategoryDetailScreen(title: 'Category Detail'),
       },
     );
   }
@@ -52,7 +50,6 @@ class _MyHomePageState extends State<MyHomePage> {
     final categories = CategoryService.instance.categories;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
       drawer: Drawer(
@@ -63,20 +60,12 @@ class _MyHomePageState extends State<MyHomePage> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
               ),
-              child: const Text(
-                'Meal Planner',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
-             ),
+              child: const Text('Meal Planner', style: TextStyle(color: Colors.white, fontSize: 24)),
+            ),
             ListTile(
               leading: const Icon(Icons.home),
               title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.shopping_cart),
@@ -87,7 +76,6 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             const Divider(),
-            // single umbrella Categories entry (no individual category links in drawer)
             ListTile(
               leading: const Icon(Icons.category),
               title: const Text('Categories'),
@@ -96,9 +84,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.pushNamed(context, '/categories');
               },
             ),
-           ],
-         ),
-       ),
+          ],
+        ),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -110,11 +98,12 @@ class _MyHomePageState extends State<MyHomePage> {
               icon: const Icon(Icons.shopping_cart),
               label: const Text("Go to Shopping List"),
             ),
+            const SizedBox(height: 16),
             SizedBox(
               width: 300,
               height: 200,
               child: ProgressGraphWidget(userData: null),
-            )     
+            ),
           ],
         ),
       ),

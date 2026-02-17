@@ -12,23 +12,22 @@ class ShoppingList {
   final List<ShoppingListItem> shoppingItems = [];
   final List<String> _addedRecipeHistory = [];
 
-  // New: simple in-memory ingredient name list (keeps things safe if ShoppingListItem shape differs)
+
   final List<String> _ingredientNames = [];
 
-  // New: expose ingredient names (read-only)
+
   List<String> get ingredientNames => List.unmodifiable(_ingredientNames);
 
-  // New: add a single ingredient name (no duplicates)
+
   void addIngredientName(String name) {
     if (!_ingredientNames.contains(name)) {
       _ingredientNames.add(name);
     }
   }
 
-  // New: add all ingredients for the given recipe id (uses mockRecipes)
+
   void addRecipeById(String recipeId) {
-    // Use the same internal path as the UI 'addRecipe' flow so shoppingItems are populated
-    // Default sort is 'cost' — adjust if you want a different default behavior.
+
     addRecipe(recipeId, 'cost');
   }
 
@@ -90,7 +89,7 @@ class ShoppingList {
       );
       existingItem.quantity++;
     } catch (_) {
-      // Not found, add new
+
       shoppingItems.add(ShoppingListItem(ingredient: ingredient));
     }
   }

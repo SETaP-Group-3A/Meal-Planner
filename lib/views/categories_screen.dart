@@ -26,7 +26,6 @@ class CategoriesScreen extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // image loader (asset or network)
                     Builder(builder: (_) {
                       final img = c.imageUrl;
                       if (img == null || img.isEmpty) {
@@ -50,9 +49,9 @@ class CategoriesScreen extends StatelessWidget {
                         errorBuilder: (ctx, err, st) => Container(color: Colors.grey.shade300),
                       );
                     }),
-                    // dark overlay to improve text contrast
+
                     Container(color: Colors.black26),
-                    // centered large text
+
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -63,7 +62,7 @@ class CategoriesScreen extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 20, // increase for larger text
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             shadows: [
                               Shadow(blurRadius: 6, color: Colors.black54, offset: Offset(0, 2)),
