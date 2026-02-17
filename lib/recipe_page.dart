@@ -8,9 +8,7 @@ class RecipePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(recipe.name),
-      ),
+      appBar: AppBar(title: Text(recipe.name)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -19,6 +17,22 @@ class RecipePage extends StatelessWidget {
             Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.bold)),
             ...recipe.requiredIngredients.map((ingredient) => Text(ingredient)),
             SizedBox(height: 24),
+            Text(
+              'Instructions:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            // Placeholder
+            Text('1. Example instruction step 1.'),
+            Text('2. Example instruction step 2.'),
+            Text('3. Example instruction step 3.'),
+            SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Implement open recipe logic (e.g., open a detailed view or external link)
+              },
+              child: Text('Open Recipe'),
+            ),
+            SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
                 // TODO: Add to shopping list logic later

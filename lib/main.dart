@@ -23,7 +23,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
         '/shopping-list': (context) => const ShoppingListScreen(),
-        '/recipe': (context) => RecipePage(recipe: mockRecipes[0]), // Added recipe page route
+        '/recipe': (context) =>
+            RecipePage(recipe: mockRecipes[0]), // Added recipe page route
       },
     );
   }
@@ -81,6 +82,21 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            // Add a list of recipes for the user to pick from
+            Text('Select a Recipe:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            ...mockRecipes.map((recipe) => ListTile(
+                  title: Text(recipe.name),
+                  trailing: Icon(Icons.arrow_forward),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RecipePage(recipe: recipe),
+                      ),
+                    );
+                  },
+                )),
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pushNamed(context, '/shopping-list');
