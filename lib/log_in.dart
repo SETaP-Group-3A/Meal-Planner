@@ -20,18 +20,48 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// will add functionality later today
+// will make it look pretty in the future
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
-      body: const Center(
-        child: Text('Hello, Flutter!'),
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Login Page'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const TextField(
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                ),
+              ),
+              const SizedBox(height: 16),
+              const TextField(
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  // Handle login logic here
+                },
+                child: const Text('Login'),
+              ),
+            ],
+          ),
+          
+        ),
       ),
     );
   }
 }
+      
