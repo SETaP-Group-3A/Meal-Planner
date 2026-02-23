@@ -10,7 +10,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'My App',
+      debugShowCheckedModeBanner: false, // Remove debug banner for visual appeal
+      title: 'Login Page',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -19,10 +20,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// will add functionality later today
-// will make it look pretty in the future
-
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
