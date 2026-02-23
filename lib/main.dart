@@ -1,28 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/views/categories_screen.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
-import 'db_maneger.dart';
+import 'views/category_detail_screen.dart';
+import 'views/category_content_screen.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
+void main() {
   runApp(const MyApp());
-
-  // Optional: keep this for seeding + debugging. UI will also show the data.
-  Future<void>(() async {
-    try {
-      final db = DatabaseService();
-      await db.seedTrialVegetables();
-      final vegs = await db.getAllVegetables();
-      for (final v in vegs) {
-        // ignore: avoid_print
-        print('Vegetable: $v');
-      }
-    } catch (e, st) {
-      // ignore: avoid_print
-      print('DB init/query failed: $e\n$st');
-    }
-  });
 }
 
 class MyApp extends StatelessWidget {
@@ -40,6 +24,13 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
         '/shopping-list': (context) => const ShoppingListScreen(),
+        '/categories': (context) => const CategoriesScreen(),
+        '/category': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments;
+          return CategoryContentScreen(
+            categoryId: args is String ? args : null,
+          );
+        },
       },
     );
   }
@@ -55,47 +46,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _vegText = '';
-  bool _loadingVeg = true;
-  String? _vegError;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadVegetablesForDisplay();
-  }
-
-  Future<void> _loadVegetablesForDisplay() async {
-    setState(() {
-      _loadingVeg = true;
-      _vegError = null;
-    });
-
-    try {
-      final db = DatabaseService();
-      await db.seedTrialVegetables();
-      final text = await db.getAllVegetablesAsText();
-      if (!mounted) return;
-      setState(() {
-        _vegText = text;
-        _loadingVeg = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _vegError = e.toString();
-        _loadingVeg = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
+      appBar: AppBar(title: Text(widget.title)),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -112,16 +66,23 @@ class _MyHomePageState extends State<MyHomePage> {
             ListTile(
               leading: const Icon(Icons.home),
               title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context); // Close the drawer
-              },
+              onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.shopping_cart),
               title: const Text('Shopping List'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.pop(context);
                 Navigator.pushNamed(context, '/shopping-list');
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('Categories'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/categories');
               },
             ),
           ],
@@ -131,6 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pushNamed(context, '/shopping-list');
@@ -142,47 +104,6 @@ class _MyHomePageState extends State<MyHomePage> {
               width: 300,
               height: 200,
               child: ProgressGraphWidget(userData: null),
-            ),
-
-            const SizedBox(height: 16),
-
-            SizedBox(
-              width: 320,
-              height: 160,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Theme.of(context).dividerColor),
-                  borderRadius: BorderRadius.circular(8),
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: _loadingVeg
-                      ? const Center(child: CircularProgressIndicator())
-                      : _vegError != null
-                      ? SingleChildScrollView(
-                          child: Text(
-                            'Error loading vegetables:\n$_vegError',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          child: SelectableText(
-                            _vegText,
-                            style: const TextStyle(fontFamily: 'monospace'),
-                          ),
-                        ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            TextButton(
-              onPressed: _loadVegetablesForDisplay,
-              child: const Text('Refresh vegetables'),
             ),
           ],
         ),
