@@ -52,20 +52,20 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('Account Settings')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(16),
-              child: TextField(
+        child: Container(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: 'Username',
                   border: OutlineInputBorder(),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
