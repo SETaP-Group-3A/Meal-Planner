@@ -16,8 +16,9 @@ class SettingsScreen extends StatelessWidget {
           ),
           ListTile(
             title: Text('Accessibility'),
-            onTap: () => Navigator.pushNamed(context, '/settings/accessibility'),
-          )
+            onTap: () =>
+                Navigator.pushNamed(context, '/settings/accessibility'),
+          ),
         ],
       ),
     );
@@ -32,7 +33,6 @@ class AccountSettingsScreen extends StatefulWidget {
 }
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
-
   late final TextEditingController _usernameController;
 
   @override
@@ -51,19 +51,23 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Account Settings')),
-      body: Center(child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TextField(
-            controller: _usernameController,
-            decoration: InputDecoration(
-              labelText: 'Username',
-              border: OutlineInputBorder(),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(16),
+              child: TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  border: OutlineInputBorder(),
+                ),
+              ),
             ),
-        
-          ),
-        ],
-      )),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -72,11 +76,12 @@ class AccessibilitySettingsScreen extends StatefulWidget {
   const AccessibilitySettingsScreen({super.key});
 
   @override
-  State<AccessibilitySettingsScreen> createState() => _AccessibilitySettingsScreenState();
+  State<AccessibilitySettingsScreen> createState() =>
+      _AccessibilitySettingsScreenState();
 }
 
-class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScreen> {
-
+class _AccessibilitySettingsScreenState
+    extends State<AccessibilitySettingsScreen> {
   bool _isDarkMode = false;
 
   @override
@@ -105,21 +110,23 @@ class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Accessibility Settings')),
-      body: Center(child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SwitchListTile(
-            title: Text('Dark Mode'),
-            value: _isDarkMode,
-            onChanged: (value) {
-              setState(() {
-                _isDarkMode = value;
-              });
-              saveSettings(value);
-            },
-          )
-        ],
-      )),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SwitchListTile(
+              title: Text('Dark Mode'),
+              value: _isDarkMode,
+              onChanged: (value) {
+                setState(() {
+                  _isDarkMode = value;
+                });
+                saveSettings(value);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
