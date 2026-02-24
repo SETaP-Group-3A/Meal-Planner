@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meal_planner/views/categories_screen.dart';
+import 'package:meal_planner/views/settings_screen.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
 import 'views/category_detail_screen.dart';
@@ -31,6 +32,9 @@ class MyApp extends StatelessWidget {
             categoryId: args is String ? args : null,
           );
         },
+        '/settings': (context) => const SettingsScreen(),
+        '/settings/account': (context) => const AccountSettingsScreen(),
+        '/settings/accessibility': (context) => const AccessibilitySettingsScreen(),
       },
     );
   }
