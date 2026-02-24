@@ -23,8 +23,14 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-class AccountSettingsScreen extends StatelessWidget {
+class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
+
+  @override
+  State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
+}
+
+class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +41,14 @@ class AccountSettingsScreen extends StatelessWidget {
   }
 }
 
-class AccessibilitySettingsScreen extends StatelessWidget {
+class AccessibilitySettingsScreen extends StatefulWidget {
   const AccessibilitySettingsScreen({super.key});
 
+  @override
+  State<AccessibilitySettingsScreen> createState() => _AccessibilitySettingsScreenState();
+}
+
+class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
