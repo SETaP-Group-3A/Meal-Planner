@@ -26,7 +26,13 @@ class SettingsScreen extends StatelessWidget {
 }
 
 class AccountSettingsScreen extends StatefulWidget {
-  const AccountSettingsScreen({super.key});
+  AccountSettingsScreen({super.key});
+
+  final List<String> testGoals = [
+    "Save Money",
+    "Eat Healthier",
+    "Travel Less",
+  ];
 
   @override
   State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
@@ -64,6 +70,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
+              Text("I want to..."),
+              DropdownButton(hint: Text(widget.testGoals[0]), items: widget.testGoals.map((goal) {
+                return DropdownMenuItem(
+                  value: goal,
+                  child: Text(goal),
+                );
+              }).toList(), onChanged: (value) {}),
             ],
           ),
         ),
