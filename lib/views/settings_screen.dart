@@ -49,11 +49,27 @@ class AccessibilitySettingsScreen extends StatefulWidget {
 }
 
 class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScreen> {
+
+  bool _isDarkMode = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Accessibility Settings')),
-      body: Center(child: Text('Accessibility settings go here')),
+      body: Center(child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SwitchListTile(
+            title: Text('Dark Mode'),
+            value: _isDarkMode,
+            onChanged: (value) {
+              setState(() {
+                _isDarkMode = value;
+              });
+            },
+          )
+        ],
+      )),
     );
   }
 }
