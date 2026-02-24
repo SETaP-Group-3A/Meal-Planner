@@ -25,6 +25,15 @@ class MyApp extends StatelessWidget {
           bodyMedium: AppStyles.normalText,
         ),
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.dark(),
+        useMaterial3: true,
+        textTheme: TextTheme(
+          bodyMedium: AppStyles.normalText,
+        ),
+      ),
+      //Also check settings
+      themeMode: ThemeMode.system,
       initialRoute: '/',
       routes: {
         '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
