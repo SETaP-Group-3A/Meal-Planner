@@ -68,7 +68,7 @@ class _MyAppState extends State<MyApp> {
           );
         },
         '/settings': (context) => const SettingsScreen(),
-        '/settings/account': (context) => const AccountSettingsScreen(),
+        '/settings/account': (context) => AccountSettingsScreen(),
         '/settings/accessibility': (context) => const AccessibilitySettingsScreen(),
       },
     );
