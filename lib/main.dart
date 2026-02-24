@@ -21,7 +21,9 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
 
-  bool _isDarkMode = false;
+  bool _isDarkMode =
+      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+      Brightness.dark;
 
   @override
   void initState() {
@@ -32,7 +34,9 @@ class _MyAppState extends State<MyApp> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      _isDarkMode = prefs.getBool('isDarkMode') ??
+          WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+              Brightness.dark;
     });
   }
 
