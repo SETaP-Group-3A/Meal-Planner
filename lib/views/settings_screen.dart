@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -53,6 +54,28 @@ class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScree
   bool _isDarkMode = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    });
+  }
+
+  Future<void> saveSettings(bool isDarkMode) async {
+    setState(() {
+      _isDarkMode = isDarkMode;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', isDarkMode);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Accessibility Settings')),
@@ -66,6 +89,7 @@ class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScree
               setState(() {
                 _isDarkMode = value;
               });
+              saveSettings(value);
             },
           )
         ],
