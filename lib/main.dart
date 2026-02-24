@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/views/app_styles.dart';
 import 'package:meal_planner/views/categories_screen.dart';
 import 'package:meal_planner/views/settings_screen.dart';
 import 'views/shopping_list_screen.dart';
@@ -20,6 +21,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        textTheme: TextTheme(
+          bodyMedium: AppStyles.normalText,
+        ),
       ),
       initialRoute: '/',
       routes: {
