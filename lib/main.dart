@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/views/app_styles.dart';
 import 'package:meal_planner/views/categories_screen.dart';
+import 'package:meal_planner/views/settings_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
 import 'views/category_detail_screen.dart';
@@ -9,8 +12,29 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  bool _isDarkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +43,19 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        textTheme: TextTheme(
+          bodyMedium: AppStyles.normalText,
+        ),
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.dark(),
+        useMaterial3: true,
+        textTheme: TextTheme(
+          bodyMedium: AppStyles.normalText,
+        ),
+      ),
+      //Also check settings
+      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       initialRoute: '/',
       routes: {
         '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
@@ -31,6 +67,9 @@ class MyApp extends StatelessWidget {
             categoryId: args is String ? args : null,
           );
         },
+        '/settings': (context) => const SettingsScreen(),
+        '/settings/account': (context) => const AccountSettingsScreen(),
+        '/settings/accessibility': (context) => const AccessibilitySettingsScreen(),
       },
     );
   }
@@ -46,6 +85,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,6 +125,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.pushNamed(context, '/categories');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/settings');
+              },
+            )
           ],
         ),
       ),
