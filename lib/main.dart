@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:meal_planner/views/categories_screen.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
-import 'views/category_detail_screen.dart';
 import 'views/category_content_screen.dart';
+import 'database_test_widget.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const MaterialApp(home: DatabaseTestWidget()));
 }
 
 class MyApp extends StatelessWidget {
