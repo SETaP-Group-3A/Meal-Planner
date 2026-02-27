@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/services/database_service.dart';
 import 'package:meal_planner/views/app_styles.dart';
 import 'package:meal_planner/views/categories_screen.dart';
 import 'package:meal_planner/views/settings_screen.dart';
@@ -8,7 +9,10 @@ import 'graph_widget.dart';
 import 'views/category_detail_screen.dart';
 import 'views/category_content_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize the database
+  await DatabaseService.instance.database;
   runApp(const MyApp());
 }
 
