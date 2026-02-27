@@ -19,13 +19,20 @@ class ShoppingListScreen extends StatefulWidget {
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
   final ShoppingList shoppingList = ShoppingList();
   String selectedSort = 'cost';
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.initialRecipeId != null && widget.initialSortBy != null) {
-      shoppingList.addRecipe(widget.initialRecipeId!, widget.initialSortBy!);
+      _addInitialRecipe();
     }
+  }
+
+  Future<void> _addInitialRecipe() async {
+    setState(() => _isLoading = true);
+    await shoppingList.addRecipe(widget.initialRecipeId!, widget.initialSortBy!); // Assuming correct handling
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Widget _buildFocusButton(String label, String value, IconData icon) {
@@ -41,17 +48,21 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     );
   }
 
-  void _addRecipeToShoppingList(String recipeId) {
-    setState(() {
-      shoppingList.addRecipe(recipeId, selectedSort);
-    });
+  Future<void> _addRecipeToShoppingList(String recipeId) async {
+    setState(() => _isLoading = true);
+    await shoppingList.addRecipe(recipeId, selectedSort);
+    if (mounted) setState(() => _isLoading = false);
   }
 
-  void _regenerateList(String newSort) {
-    setState(() {
-      selectedSort = newSort;
-      shoppingList.regenerateList(newSort);
-    });
+  Future<void> _regenerateList(String newSort) async {
+    setState(() => _isLoading = true);
+    await shoppingList.regenerateList(newSort);
+    if (mounted) {
+      setState(() {
+        selectedSort = newSort;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -95,7 +106,9 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           ),
           const Divider(),
           Expanded(
-            child: shoppingList.shoppingItems.isEmpty
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator())
+              : shoppingList.shoppingItems.isEmpty
                 ? const Center(
                     child: Text('Your shopping list is empty.'),
                   )

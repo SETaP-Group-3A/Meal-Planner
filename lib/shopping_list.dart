@@ -1,6 +1,6 @@
 import 'models/ingredient.dart';
 import 'models/shopping_list_item.dart';
-import 'mock_data.dart';
+import 'services/database_service.dart';
 
 class ShoppingList {
   static final ShoppingList _instance = ShoppingList._internal();
@@ -26,28 +26,27 @@ class ShoppingList {
   }
 
 
-  void addRecipeById(String recipeId) {
-
-    addRecipe(recipeId, 'cost');
+  Future<void> addRecipeById(String recipeId) async {
+    await addRecipe(recipeId, 'cost');
   }
 
-  void addRecipe(String recipeId, String sortBy) {
+  Future<void> addRecipe(String recipeId, String sortBy) async {
     _addedRecipeHistory.add(recipeId);
-    _processRecipeAddition(recipeId, sortBy);
+    await _processRecipeAddition(recipeId, sortBy);
   }
 
-  void regenerateList(String sortBy) {
+  Future<void> regenerateList(String sortBy) async {
     shoppingItems.clear();
     for (var recipeId in _addedRecipeHistory) {
-      _processRecipeAddition(recipeId, sortBy);
+      await _processRecipeAddition(recipeId, sortBy);
     }
   }
 
-  void _processRecipeAddition(String recipeId, String sortBy) {
-    final requiredIngredientNames = _fetchRequirements(recipeId);
+  Future<void> _processRecipeAddition(String recipeId, String sortBy) async {
+    final requiredIngredientNames = await _fetchRequirements(recipeId);
 
     for (var name in requiredIngredientNames) {
-      final bestOption = _findBestIngredientOption(name, sortBy);
+      final bestOption = await _findBestIngredientOption(name, sortBy);
       
       if (bestOption != null) {
         _addOrIncrementIngredient(bestOption);
@@ -57,10 +56,10 @@ class ShoppingList {
     _sortItems(sortBy);
   }
 
-  Ingredient? _findBestIngredientOption(String ingredientName, String sortBy) {
-    if (!marketInventory.containsKey(ingredientName)) return null;
-
-    final options = List<Ingredient>.from(marketInventory[ingredientName]!);
+  Future<Ingredient?> _findBestIngredientOption(String ingredientName, String sortBy) async {
+    final db = DatabaseService.instance;
+    // Get all options for the generic ingredient (e.g. "Flour" -> ["Flour (Aldi)", "Flour (Waitrose)"])
+    final options = await db.getIngredientsByGenericName(ingredientName);
     
     if (options.isEmpty) return null;
 
@@ -103,10 +102,11 @@ class ShoppingList {
     }
   }
 
-  List<String> _fetchRequirements(String recipeId) {
+  Future<List<String>> _fetchRequirements(String recipeId) async {
     try {
-      final recipe = mockRecipes.firstWhere((r) => r.id == recipeId);
-      return recipe.requiredIngredients;
+      final db = DatabaseService.instance;
+      final recipe = await db.getRecipeById(recipeId);
+      return recipe?.requiredIngredients ?? [];
     } catch (_) {
       return [];
     }
@@ -122,7 +122,7 @@ class ShoppingList {
         break;
       case 'nutritional_value':
       case 'calories':
-        shoppingItems.sort((a, b) => a.totalCalories.compareTo(b.totalCalories));
+        shoppingItems.sort((a, b) => b.ingredient.calories.compareTo(a.ingredient.calories));
         break;
       default:
         break;
