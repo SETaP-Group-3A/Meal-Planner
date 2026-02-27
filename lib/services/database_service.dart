@@ -40,16 +40,68 @@ class DatabaseService {
     const realType = 'REAL NOT NULL';
     const intType = 'INTEGER NOT NULL';
 
-    final tables = [
-      'CREATE TABLE categories (id $idType, name $textType, targetRoute TEXT, imageUrl TEXT)',
-      'CREATE TABLE recipes (id $idType, name $textType, categoryId TEXT, FOREIGN KEY (categoryId) REFERENCES categories (id) ON DELETE CASCADE)',
-      'CREATE TABLE ingredients (name $idType, genericName $textType, cost $realType, distance $realType, calories $intType)',
-      'CREATE TABLE recipe_ingredients (recipeId TEXT NOT NULL, ingredientName TEXT NOT NULL, PRIMARY KEY (recipeId, ingredientName), FOREIGN KEY (recipeId) REFERENCES recipes (id) ON DELETE CASCADE)',
-      'CREATE TABLE category_recipes (categoryId TEXT NOT NULL, recipeId TEXT NOT NULL, PRIMARY KEY (categoryId, recipeId), FOREIGN KEY (categoryId) REFERENCES categories (id) ON DELETE CASCADE, FOREIGN KEY (recipeId) REFERENCES recipes (id) ON DELETE CASCADE)',
-      'CREATE TABLE shopping_list (ingredientName TEXT PRIMARY KEY, quantity $intType, FOREIGN KEY (ingredientName) REFERENCES ingredients (name) ON DELETE CASCADE)'
-    ];
+    // Define table schemas here for easy editing
+    final tableSchemas = {
+      'categories': '''
+        CREATE TABLE categories (
+          id $idType,
+          name $textType,
+          targetRoute TEXT,
+          imageUrl TEXT
+        )
+      ''',
+      
+      'recipes': '''
+        CREATE TABLE recipes (
+          id $idType,
+          name $textType,
+          categoryId TEXT,
+          FOREIGN KEY (categoryId) REFERENCES categories (id) ON DELETE CASCADE
+        )
+      ''',
+      
+      'ingredients': '''
+        CREATE TABLE ingredients (
+          name $idType,
+          genericName $textType,
+          cost $realType,
+          distance $realType,
+          calories $intType
+        )
+      ''',
+      
+      'recipe_ingredients': '''
+        CREATE TABLE recipe_ingredients (
+          recipeId TEXT NOT NULL,
+          ingredientName TEXT NOT NULL,
+          PRIMARY KEY (recipeId, ingredientName),
+          FOREIGN KEY (recipeId) REFERENCES recipes (id) ON DELETE CASCADE
+        )
+      ''',
+      
+      'category_recipes': '''
+        CREATE TABLE category_recipes (
+          categoryId TEXT NOT NULL,
+          recipeId TEXT NOT NULL,
+          PRIMARY KEY (categoryId, recipeId),
+          FOREIGN KEY (categoryId) REFERENCES categories (id) ON DELETE CASCADE,
+          FOREIGN KEY (recipeId) REFERENCES recipes (id) ON DELETE CASCADE
+        )
+      ''',
+      
+      'shopping_list': '''
+        CREATE TABLE shopping_list (
+          ingredientName TEXT PRIMARY KEY,
+          quantity $intType,
+          FOREIGN KEY (ingredientName) REFERENCES ingredients (name) ON DELETE CASCADE
+        )
+      '''
+    };
 
-    for (var table in tables) await db.execute(table);
+    // Execute creating tables
+    for (var schema in tableSchemas.values) {
+      await db.execute(schema);
+    }
     
     await _seedDatabase(db);
   }
