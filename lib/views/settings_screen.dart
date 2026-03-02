@@ -106,7 +106,8 @@ class _AccessibilitySettingsScreenState
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      _isDarkMode = prefs.getBool('isDarkMode') ?? WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+      Brightness.dark;
     });
   }
 
