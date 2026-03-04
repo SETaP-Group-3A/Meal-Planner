@@ -16,8 +16,9 @@ class SettingsScreen extends StatelessWidget {
           ),
           ListTile(
             title: Text('Accessibility'),
-            onTap: () => Navigator.pushNamed(context, '/settings/accessibility'),
-          )
+            onTap: () =>
+                Navigator.pushNamed(context, '/settings/accessibility'),
+          ),
         ],
       ),
     );
@@ -25,19 +26,61 @@ class SettingsScreen extends StatelessWidget {
 }
 
 class AccountSettingsScreen extends StatefulWidget {
-  const AccountSettingsScreen({super.key});
+  AccountSettingsScreen({super.key});
+
+  final List<String> testGoals = [
+    "Save Money",
+    "Eat Healthier",
+    "Travel Less",
+  ];
 
   @override
   State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
 }
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
+  late final TextEditingController _usernameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController = TextEditingController(text: 'JohnDoe');
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Account Settings')),
-      body: Center(child: Text('Account settings go here')),
+      body: Center(
+        child: Container(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              Text("I want to..."),
+              DropdownButton(hint: Text(widget.testGoals[0]), items: widget.testGoals.map((goal) {
+                return DropdownMenuItem(
+                  value: goal,
+                  child: Text(goal),
+                );
+              }).toList(), onChanged: (value) {}),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -46,11 +89,12 @@ class AccessibilitySettingsScreen extends StatefulWidget {
   const AccessibilitySettingsScreen({super.key});
 
   @override
-  State<AccessibilitySettingsScreen> createState() => _AccessibilitySettingsScreenState();
+  State<AccessibilitySettingsScreen> createState() =>
+      _AccessibilitySettingsScreenState();
 }
 
-class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScreen> {
-
+class _AccessibilitySettingsScreenState
+    extends State<AccessibilitySettingsScreen> {
   bool _isDarkMode = false;
 
   @override
@@ -62,7 +106,8 @@ class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScree
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      _isDarkMode = prefs.getBool('isDarkMode') ?? WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+      Brightness.dark;
     });
   }
 
@@ -79,21 +124,23 @@ class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Accessibility Settings')),
-      body: Center(child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SwitchListTile(
-            title: Text('Dark Mode'),
-            value: _isDarkMode,
-            onChanged: (value) {
-              setState(() {
-                _isDarkMode = value;
-              });
-              saveSettings(value);
-            },
-          )
-        ],
-      )),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SwitchListTile(
+              title: Text('Dark Mode'),
+              value: _isDarkMode,
+              onChanged: (value) {
+                setState(() {
+                  _isDarkMode = value;
+                });
+                saveSettings(value);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
