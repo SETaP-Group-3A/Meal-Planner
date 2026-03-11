@@ -10,6 +10,9 @@ class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
   static Database? _database;
 
+//------------------------------------------------------------------------------------------------------------------
+//Create Database
+
   DatabaseService._init();
 
   Future<Database> get database async {
@@ -134,6 +137,9 @@ class DatabaseService {
     }
   }
 
+//------------------------------------------------------------------------------------------------------------------
+//Categories
+
   // Category CRUD operations
   Future<void> createCategory(Category category) async {
     final db = await instance.database;
@@ -209,6 +215,9 @@ class DatabaseService {
     await db.delete('categories', where: 'id = ?', whereArgs: [id]);
   }
 
+//------------------------------------------------------------------------------------------------------------------
+//Recipes
+
   // Recipe CRUD operations
   Future<void> createRecipe(Recipe recipe, {String? categoryId}) async {
     final db = await instance.database;
@@ -273,6 +282,9 @@ class DatabaseService {
     final db = await instance.database;
     await db.delete('recipes', where: 'id = ?', whereArgs: [id]);
   }
+
+//------------------------------------------------------------------------------------------------------------------
+//Ingredients
 
   // Ingredient CRUD operations
   Future<void> createIngredient(Ingredient ingredient) async {
@@ -342,6 +354,9 @@ class DatabaseService {
     final db = await instance.database;
     await db.delete('ingredients', where: 'name = ?', whereArgs: [name]);
   }
+
+//------------------------------------------------------------------------------------------------------------------
+//Shopping List
 
   // Shopping List operations
   Future<void> addToShoppingList(String ingredientName, int quantity) async {
