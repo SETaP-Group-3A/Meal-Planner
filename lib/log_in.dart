@@ -1,33 +1,12 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key, this.successRouteName = '/'});
 
-// ------------------- MyApp -------------------
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String successRouteName;
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Meal Planner',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      home: const HomePage(),
-    );
-  }
-}
-
-// ------------------- HomePage -------------------
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 // ------------------- AuthService -------------------
@@ -42,8 +21,7 @@ class AuthService {
   }
 }
 
-// ------------------- _HomePageState -------------------
-class _HomePageState extends State<HomePage> {
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -62,65 +40,60 @@ class _HomePageState extends State<HomePage> {
 
   // ------------------- Login Handler -------------------
   void _handleLogin() async {
-  final email = _emailController.text.trim();
-  final password = _passwordController.text;
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
 
-  setState(() {
-    _emailError = null;
-    _passwordError = null;
-    _loginError = null;
-  });
-
-  bool hasError = false;
-
-  // ------------------- Email Validation -------------------
-  if (email.isEmpty) {
-    _emailError = "Email is required";
-    hasError = true;
-  } else if (!email.contains("@")) {
-    _emailError = "Email must contain '@'";
-    hasError = true;
-  }
-
-  // ------------------- Password Validation -------------------
-  final letterCount = password.replaceAll(RegExp(r'[^A-Za-z]'), '').length;
-  final numberCount = password.replaceAll(RegExp(r'[^0-9]'), '').length;
-
-  if (password.isEmpty) {
-    _passwordError = "Password is required";
-    hasError = true;
-  } else if (letterCount < 7 || numberCount < 1) { // numberCount >=1 now
-    _passwordError =
-        "Password must have at least 7 letters and at least 1 number";
-    hasError = true;
-  }
-
-  if (hasError) {
-    setState(() {}); // Update UI with errors
-    return;
-  }
-
-  // ------------------- Call AuthService -------------------
-  bool success = await _authService.login(email, password);
-
-  if (success) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoggedInHome()),
-    );
-  } else {
     setState(() {
-      _loginError = "Invalid email or password";
+      _emailError = null;
+      _passwordError = null;
+      _loginError = null;
     });
-  }
-}
 
-  // ------------------- Build UI -------------------
+    bool hasError = false;
+
+    if (email.isEmpty) {
+      _emailError = 'Email is required';
+      hasError = true;
+    } else if (!email.contains('@')) {
+      _emailError = "Email must contain '@'";
+      hasError = true;
+    }
+
+    final letterCount = password.replaceAll(RegExp(r'[^A-Za-z]'), '').length;
+    final numberCount = password.replaceAll(RegExp(r'[^0-9]'), '').length;
+
+    if (password.isEmpty) {
+      _passwordError = 'Password is required';
+      hasError = true;
+    } else if (letterCount < 7 || numberCount < 1) {
+      _passwordError =
+          'Password must have at least 7 letters and at least 1 number';
+      hasError = true;
+    }
+
+    if (hasError) {
+      setState(() {});
+      return;
+    }
+
+    final success = await _authService.login(email, password);
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.pushReplacementNamed(context, widget.successRouteName);
+    } else {
+      setState(() {
+        _loginError = 'Invalid email or password';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login Page'),
+        title: const Text('Login'),
       ),
       body: Center(
         child: Column(
@@ -166,27 +139,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-// ------------------- Placeholder Home After Login -------------------
-class LoggedInHome extends StatelessWidget {
-  const LoggedInHome({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Logged In Home'),
-      ),
-      body: const Center(
-        child: Text(
-          'Welcome! You are logged in.',
-          style: TextStyle(fontSize: 20),
-        ),
-      ),
-    );
-  }
-}
-      
-      
-//create accounts when database is linked
 
