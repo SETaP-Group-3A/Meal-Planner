@@ -31,8 +31,8 @@ class DatabaseService {
         ? join(Directory.current.path, filePath)
         : join(await getDatabasesPath(), filePath);
 
-    // Delete existing DB on start (Remove this line for production!)
-    if (await databaseExists(dbPath)) await deleteDatabase(dbPath);
+    // Delete existing DB on start
+    //if (await databaseExists(dbPath)) await deleteDatabase(dbPath);
 
     return await openDatabase(dbPath, version: 1, onCreate: _createDB);
   }
