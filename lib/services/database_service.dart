@@ -247,6 +247,7 @@ class DatabaseService {
         id: recipeMap['id'] as String,
         name: recipeMap['name'] as String,
         requiredIngredients: ingredients,
+        cookingTime: recipeMap['cookingTime'] as int, 
       ));
     }
     return recipes;
@@ -265,6 +266,7 @@ class DatabaseService {
       id: recipeMap['id'] as String,
       name: recipeMap['name'] as String,
       requiredIngredients: ingredients,
+      cookingTime: recipeMap['cookingTime'] as int,
     );
   }
 

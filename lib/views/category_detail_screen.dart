@@ -31,7 +31,7 @@ class CategoryDetailScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => RecipePage(recipe: recipe),
+                          builder: (context) => RecipePage(recipeId: recipe.id),
                         ),
                       );
                     },
