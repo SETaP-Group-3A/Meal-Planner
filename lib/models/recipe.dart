@@ -44,9 +44,23 @@ class Recipe {
       instructions: map['instructions'] as String?,
     );
   }
-  
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'requiredIngredients': jsonEncode(requiredIngredients),
+      'cookingTime': cookingTime,
+      'allergens': allergens != null ? jsonEncode(allergens) : null,
+      'calories': calories,
+      'macros': macros != null ? jsonEncode(macros) : null,
+      'nutrients': nutrients != null ? jsonEncode(nutrients) : null,
+      'instructions': instructions,
+    };
+  }
+
   @override
   String toString() {
-    return 'Recipe(id: $id, name: $name, requirements: ${requiredIngredients.length})';
+    return 'Recipe(id: $id, name: $name, cookingTime: $cookingTime, calories: $calories)';
   }
 }
