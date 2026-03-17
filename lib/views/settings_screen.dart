@@ -1,0 +1,146 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Settings')),
+      body: ListView(
+        children: [
+          ListTile(
+            title: Text('Account'),
+            onTap: () => Navigator.pushNamed(context, '/settings/account'),
+          ),
+          ListTile(
+            title: Text('Accessibility'),
+            onTap: () =>
+                Navigator.pushNamed(context, '/settings/accessibility'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AccountSettingsScreen extends StatefulWidget {
+  AccountSettingsScreen({super.key});
+
+  final List<String> testGoals = [
+    "Save Money",
+    "Eat Healthier",
+    "Travel Less",
+  ];
+
+  @override
+  State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
+}
+
+class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
+  late final TextEditingController _usernameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController = TextEditingController(text: 'JohnDoe');
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Account Settings')),
+      body: Center(
+        child: Container(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              Text("I want to..."),
+              DropdownButton(hint: Text(widget.testGoals[0]), items: widget.testGoals.map((goal) {
+                return DropdownMenuItem(
+                  value: goal,
+                  child: Text(goal),
+                );
+              }).toList(), onChanged: (value) {}),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AccessibilitySettingsScreen extends StatefulWidget {
+  const AccessibilitySettingsScreen({super.key});
+
+  @override
+  State<AccessibilitySettingsScreen> createState() =>
+      _AccessibilitySettingsScreenState();
+}
+
+class _AccessibilitySettingsScreenState
+    extends State<AccessibilitySettingsScreen> {
+  bool _isDarkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkMode = prefs.getBool('isDarkMode') ?? WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+      Brightness.dark;
+    });
+  }
+
+  Future<void> saveSettings(bool isDarkMode) async {
+    setState(() {
+      _isDarkMode = isDarkMode;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', isDarkMode);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Accessibility Settings')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SwitchListTile(
+              title: Text('Dark Mode'),
+              value: _isDarkMode,
+              onChanged: (value) {
+                setState(() {
+                  _isDarkMode = value;
+                });
+                saveSettings(value);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
