@@ -33,16 +33,19 @@ final List<Recipe> mockRecipes = [
   Recipe(
     id: 'r-1',
     name: 'Scrambled Eggs on Toast',
-    requiredIngredients: ['Eggs', 'Milk', 'Flour'],
+    requiredIngredients: ['Eggs', 'Milk', 'Flour'], // flour used for toast example
+    cookingTime: 10,
   ),
   Recipe(
     id: 'r-2',
     name: 'Tomato & Cucumber Salad',
     requiredIngredients: ['Tomatoes', 'Cucumber', 'Lettuce'],
+    cookingTime: 5,
   ),
   Recipe(
     id: 'r-3',
     name: 'Simple Pasta',
     requiredIngredients: ['Pasta', 'Tomatoes', 'Milk'],
+    cookingTime: 15,
   ),
 ];
