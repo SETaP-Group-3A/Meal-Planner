@@ -70,10 +70,10 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
           final dbOptions = await DatabaseService.instance.getIngredientsByGenericName(ingredientName);
           if (dbOptions.isNotEmpty) return dbOptions;
         } catch (_) {
-
+          // ignore DB errors and fall back to mock
         }
         final options = marketInventory[ingredientName] ?? [];
-
+        // convert mock option objects to Ingredient for uniform rendering
         return options
             .map((o) => Ingredient(name: o.name, cost: o.cost, distance: o.distance, calories: o.calories))
             .toList();
@@ -94,15 +94,18 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
           );
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: options.map((opt) {
-            return ListTile(
-              dense: true,
-              title: Text(opt.name),
-              subtitle: Text('Cost: £${opt.cost.toStringAsFixed(2)} · Dist: ${opt.distance}km · ${opt.calories} cal'),
-            );
-          }).toList(),
+        // pick the single cheapest option, tie-breaker lower distance
+        options.sort((a, b) {
+          final costCmp = a.cost.compareTo(b.cost);
+          if (costCmp != 0) return costCmp;
+          return a.distance.compareTo(b.distance);
+        });
+        final chosen = options.first;
+
+        return ListTile(
+          dense: true,
+          title: Text(chosen.name),
+          subtitle: Text('Cost: £${chosen.cost.toStringAsFixed(2)} · Dist: ${chosen.distance}km · ${chosen.calories} cal'),
         );
       },
     );
@@ -111,8 +114,19 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
   int _calcTotalCalories(Recipe r) {
     var sum = 0;
     for (final ing in r.requiredIngredients) {
-      final opt = marketInventory[ing]?.first;
-      if (opt != null) sum += opt.calories;
+      final options = marketInventory[ing];
+      if (options != null && options.isNotEmpty) {
+        // choose cheapest mock option
+        options.sort((a, b) {
+          final costCmp = a.cost.compareTo(b.cost);
+          if (costCmp != 0) return costCmp;
+          return a.distance.compareTo(b.distance);
+        });
+        final opt = options.first;
+        sum += opt.calories;
+      } else {
+        // no mock option; try DB synchronously is not possible here - assume 0
+      }
     }
     return sum;
   }
