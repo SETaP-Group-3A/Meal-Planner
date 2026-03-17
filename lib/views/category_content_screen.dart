@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import '../category_service.dart';
 import '../models/category.dart';
 import '../models/recipe.dart';
+import '../models/ingredient.dart';
 import '../mock_data.dart';
 import '../shopping_list.dart';
 import '../recipe_page.dart';
+import '../services/database_service.dart';
 
 class CategoryContentScreen extends StatefulWidget {
   final String? categoryId;
@@ -16,41 +18,93 @@ class CategoryContentScreen extends StatefulWidget {
 
 class _CategoryContentScreenState extends State<CategoryContentScreen> {
   Category? category;
+  List<Recipe> assignedRecipes = [];
+  Set<String> favouriteIds = {};
+  bool loading = true;
 
   @override
   void initState() {
     super.initState();
     if (widget.categoryId != null) {
-      category = CategoryService.instance.getById(widget.categoryId!);
+      _loadCategory(widget.categoryId!);
+    } else {
+      setState(() {
+        loading = false;
+        category = null;
+      });
     }
   }
 
-  Recipe? _findRecipeById(String id) {
-    try {
-      return mockRecipes.firstWhere((r) => r.id == id);
-    } catch (_) {
-      return null;
+  Future<void> _loadCategory(String id) async {
+    setState(() => loading = true);
+
+    final cat = await CategoryService.instance.getById(id);
+    if (cat == null) {
+      setState(() {
+        category = null;
+        assignedRecipes = [];
+        favouriteIds = {};
+        loading = false;
+      });
+      return;
     }
+
+    final recipes = await CategoryService.instance.getRecipesForCategory(id);
+
+
+    final fav = await CategoryService.instance.getById('c-favourites');
+    final favIds = fav?.recipeIds.toSet() ?? <String>{};
+
+    setState(() {
+      category = cat;
+      assignedRecipes = recipes;
+      favouriteIds = favIds;
+      loading = false;
+    });
   }
 
   Widget _buildIngredientRow(String ingredientName) {
-    final options = marketInventory[ingredientName];
-    if (options == null || options.isEmpty) {
-      return ListTile(
-        title: Text(ingredientName),
-        subtitle: const Text('No market options'),
-      );
-    }
+    return FutureBuilder<List<Ingredient>>(
+      future: () async {
+        try {
+          final dbOptions = await DatabaseService.instance.getIngredientsByGenericName(ingredientName);
+          if (dbOptions.isNotEmpty) return dbOptions;
+        } catch (_) {
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: options.map((opt) {
-        return ListTile(
-          dense: true,
-          title: Text(opt.name),
-          subtitle: Text('Cost: £${opt.cost.toStringAsFixed(2)} · Dist: ${opt.distance}km · ${opt.calories} cal'),
+        }
+        final options = marketInventory[ingredientName] ?? [];
+
+        return options
+            .map((o) => Ingredient(name: o.name, cost: o.cost, distance: o.distance, calories: o.calories))
+            .toList();
+      }(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return ListTile(
+            title: Text(ingredientName),
+            subtitle: const Text('Loading options...'),
+          );
+        }
+
+        final options = snapshot.data ?? [];
+        if (options.isEmpty) {
+          return ListTile(
+            title: Text(ingredientName),
+            subtitle: const Text('No market options'),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: options.map((opt) {
+            return ListTile(
+              dense: true,
+              title: Text(opt.name),
+              subtitle: Text('Cost: £${opt.cost.toStringAsFixed(2)} · Dist: ${opt.distance}km · ${opt.calories} cal'),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 
@@ -64,76 +118,82 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
   }
 
   bool _isFavourite(String recipeId) {
-    final fav = CategoryService.instance.getById('c-favourites');
-    if (fav == null) return false;
-    return fav.recipeIds.contains(recipeId);
+    return favouriteIds.contains(recipeId);
   }
 
-  void _toggleFavourite(String recipeId) {
-    final fav = CategoryService.instance.getById('c-favourites');
+  Future<void> _toggleFavourite(String recipeId) async {
+    final fav = await CategoryService.instance.getById('c-favourites');
     if (fav == null) {
-      CategoryService.instance.addCategory(name: 'Favourites', targetRoute: '/category', recipeIds: [recipeId]);
+      await CategoryService.instance.addCategory(name: 'Favourites', targetRoute: '/category', recipeIds: [recipeId]);
     } else {
       if (fav.recipeIds.contains(recipeId)) {
-        CategoryService.instance.removeRecipeFromCategory(fav.id, recipeId);
+        await CategoryService.instance.removeRecipeFromCategory(fav.id, recipeId);
       } else {
-        CategoryService.instance.addRecipeToCategory(fav.id, recipeId);
+        await CategoryService.instance.addRecipeToCategory(fav.id, recipeId);
       }
     }
-    setState(() {});
+
+    final refreshedFav = await CategoryService.instance.getById('c-favourites');
+    setState(() {
+      favouriteIds = refreshedFav?.recipeIds.toSet() ?? {};
+    });
   }
 
-  void _refresh() {
+  Future<void> _refresh() async {
     if (category != null) {
-      category = CategoryService.instance.getById(category!.id);
-      setState(() {});
+      await _loadCategory(category!.id);
     }
   }
 
   void _showAddItemDialog() async {
     if (category == null) return;
 
-    final available = mockRecipes.where((r) => !category!.recipeIds.contains(r.id)).toList();
+    // get all recipes from DB, fall back to mockRecipes on error
+    List<Recipe> allRecipes = [];
+    try {
+      allRecipes = await DatabaseService.instance.getAllRecipes();
+    } catch (_) {
+      allRecipes = mockRecipes;
+    }
+
+    final available = allRecipes.where((r) => !category!.recipeIds.contains(r.id)).toList();
     if (available.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No available recipes to add')));
       return;
     }
 
-    final selected = await showDialog<Recipe?>(
-      context: context,
-      builder: (ctx) {
-        return SimpleDialog(
-          title: const Text('Add recipe to category'),
-          children: available.map((r) {
-            return SimpleDialogOption(
-              child: Text(r.name),
-              onPressed: () => Navigator.pop(ctx, r),
-            );
-          }).toList(),
-        );
-      },
-    );
+    final selected = await showDialog<Recipe?>(context: context, builder: (ctx) {
+      return SimpleDialog(
+        title: const Text('Add recipe to category'),
+        children: available.map((r) {
+          return SimpleDialogOption(
+            child: Text(r.name),
+            onPressed: () => Navigator.pop(ctx, r),
+          );
+        }).toList(),
+      );
+    });
 
     if (selected != null) {
-      CategoryService.instance.addRecipeToCategory(category!.id, selected.id);
-      _refresh();
+      await CategoryService.instance.addRecipeToCategory(category!.id, selected.id);
+      await _refresh();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Category')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     if (category == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Category')),
         body: const Center(child: Text('Category not found')),
       );
-    }
-
-    final assignedIds = category!.recipeIds;
-    final assignedRecipes = <Recipe>[];
-    for (final id in assignedIds) {
-      final r = _findRecipeById(id);
-      if (r != null) assignedRecipes.add(r);
     }
 
     return Scaffold(
@@ -219,9 +279,9 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                           ),
                           if (category!.id == 'c-favourites')
                             TextButton(
-                              onPressed: () {
-                                CategoryService.instance.removeRecipeFromCategory(category!.id, r.id);
-                                _refresh();
+                              onPressed: () async {
+                                await CategoryService.instance.removeRecipeFromCategory(category!.id, r.id);
+                                await _refresh();
                               },
                               child: const Text('Remove from favourites'),
                             ),
