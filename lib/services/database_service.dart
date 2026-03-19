@@ -105,7 +105,16 @@ class DatabaseService {
           quantity $intType,
           FOREIGN KEY (ingredientName) REFERENCES ingredients (name) ON DELETE CASCADE
         )
-      '''
+      ''',
+
+      'account': '''
+        CREATE TABLE account (
+          id $idType,
+          username $textType UNIQUE,
+          email $textType,
+          address TEXT,
+        )
+      ''',
     };
 
     // Execute creating tables
@@ -453,9 +462,15 @@ class DatabaseService {
     await db.delete('shopping_list');
   }
 
-  // Close database
+//------------------------------------------------------------------------------------------------------------------
+// Account
+
+//------------------------------------------------------------------------------------------------------------------
+//Close Database
+
   Future close() async {
     final db = await instance.database;
     db.close();
   }
 }
+
