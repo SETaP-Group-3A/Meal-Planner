@@ -54,6 +54,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
         textTheme: TextTheme(
           bodyMedium: AppStyles.normalText,
+          headlineLarge: AppStyles.titleText,
         ),
       ),
       darkTheme: ThemeData(
