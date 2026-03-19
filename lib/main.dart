@@ -127,6 +127,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.pushNamed(context, '/shopping-list');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.book),
+              title: const Text('Diary'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/diary');
+              },
+            ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.category),
