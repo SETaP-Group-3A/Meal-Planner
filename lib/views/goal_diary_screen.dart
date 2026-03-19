@@ -9,12 +9,22 @@ class GoalDiaryScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Goal Diary'),
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DayGoalWidget(day: 'Monday', goal: '£500'),
-            DayGoalWidget(day: 'Tuesday', goal: '£20'),
+            Text('Diary', style: Theme.of(context).textTheme.headlineLarge),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Total:'),
+                SizedBox(width: 8),
+                Text('Savings:')
+              ],
+            ),
+            Container(height: 16),
+            const DayGoalWidget(day: 'Monday', goal: '£500'),
+            const DayGoalWidget(day: 'Tuesday', goal: '£20'),
           ],
         ),
       ),
@@ -32,10 +42,20 @@ class DayGoalWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: ListTile(
-        title: Text(day),
-        subtitle: Text(goal),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(day),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(goal),
+          ),
+        ],
+      )
     );
   }
 }
