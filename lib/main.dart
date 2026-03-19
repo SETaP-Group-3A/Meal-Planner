@@ -3,6 +3,7 @@ import 'package:meal_planner/services/database_service.dart';
 import 'package:meal_planner/views/app_styles.dart';
 import 'package:meal_planner/views/categories_screen.dart';
 import 'package:meal_planner/views/settings_screen.dart';
+import 'package:meal_planner/views/goal_diary_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meal_planner/log_in.dart';
 import 'views/shopping_list_screen.dart';
@@ -76,6 +77,7 @@ class _MyAppState extends State<MyApp> {
             categoryId: args is String ? args : null,
           );
         },
+        '/diary': (context) => const GoalDiaryScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/settings/account': (context) => AccountSettingsScreen(),
         '/settings/accessibility': (context) => const AccessibilitySettingsScreen(),
