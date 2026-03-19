@@ -4,9 +4,9 @@ import 'package:meal_planner/views/app_styles.dart';
 import 'package:meal_planner/views/categories_screen.dart';
 import 'package:meal_planner/views/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:meal_planner/log_in.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
-import 'views/category_detail_screen.dart';
 import 'views/category_content_screen.dart';
 
 void main() async {
@@ -64,9 +64,10 @@ class _MyAppState extends State<MyApp> {
       ),
       //Also check settings
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      initialRoute: '/',
+      initialRoute: '/login',
       routes: {
         '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
+        '/login': (context) => const LoginScreen(successRouteName: '/'),
         '/shopping-list': (context) => const ShoppingListScreen(),
         '/categories': (context) => const CategoriesScreen(),
         '/category': (context) {
