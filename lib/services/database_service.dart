@@ -109,10 +109,30 @@ class DatabaseService {
 
       'account': '''
         CREATE TABLE account (
-          id $idType,
+          account_id $idType,
           username $textType UNIQUE,
           email $textType,
-          address TEXT,
+          address $textType,
+        )
+      ''',
+
+      'goal': '''
+        CREATE TABLE goal (
+          goal_id TEXT NOT NULL,
+          day_id INTEGER NOT NULL,
+          goal_value $realType,
+          date DATE,
+          PRIMARY KEY (goal_id, day_id)
+        )
+      ''',
+
+      'week_goal': '''
+        CREATE TABLE week_goal (
+          week_goal_id $idType,
+          account_id TEXT NOT NULL,
+          goal_id TEXT NOT NULL,
+          FOREIGN KEY (account_id) REFERENCES account (account_id) ON DELETE CASCADE,
+          FOREIGN KEY (goal_id) REFERENCES goal (goal_id) ON DELETE CASCADE
         )
       ''',
     };
@@ -464,6 +484,16 @@ class DatabaseService {
 
 //------------------------------------------------------------------------------------------------------------------
 // Account
+
+  Future<void> createAccount(String id, String username, String email, String address) async {
+    final db = await instance.database;
+    await db.insert('account', {
+      'id': id,
+      'username': username,
+      'email': email,
+      'address': address,
+    });
+  }
 
 //------------------------------------------------------------------------------------------------------------------
 //Close Database
