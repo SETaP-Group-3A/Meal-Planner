@@ -10,7 +10,13 @@ class GoalDiaryScreen extends StatelessWidget {
         title: const Text('Goal Diary'),
       ),
       body: const Center(
-        child: Text('This is the Goal Diary Screen'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            DayGoalWidget(day: 'Monday', goal: '£500'),
+            DayGoalWidget(day: 'Tuesday', goal: '£20'),
+          ],
+        ),
       ),
     );
   }
