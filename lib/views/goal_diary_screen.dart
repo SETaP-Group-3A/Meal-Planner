@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/repositories/goal_repository.dart';
 
 class GoalDiaryScreen extends StatefulWidget {
@@ -12,6 +13,7 @@ class GoalDiaryScreen extends StatefulWidget {
 class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
 
   final GoalRepository repository = GoalRepository();
+  final List<WeeklyGoals> weeklyGoals = [];
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +35,13 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
               ],
             ),
             Container(height: 16),
-            const DayGoalWidget(day: 'Monday', goal: '£500'),
-            const DayGoalWidget(day: 'Tuesday', goal: '£20'),
+            for (WeeklyGoals wg in weeklyGoals)
+              for (final goalsForWeek in wg.goals.values)
+                for (final goalItem in goalsForWeek)
+                  DayGoalWidget(
+                    day: 'Day ${goalItem.day + 1}',
+                    goal: goalItem.value.toString(),
+                  ),
           ],
         ),
       ),
