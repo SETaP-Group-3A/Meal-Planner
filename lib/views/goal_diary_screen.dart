@@ -52,7 +52,13 @@ class DayGoalWidget extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Text(goal),
+            child: TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              controller: TextEditingController(text: goal),
+              onChanged: (value) => {},
+            ),
           ),
         ],
       )
