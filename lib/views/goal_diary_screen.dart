@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/repositories/goal_repository.dart';
 
-class GoalDiaryScreen extends StatelessWidget {
+class GoalDiaryScreen extends StatefulWidget {
+
   const GoalDiaryScreen({super.key});
+
+  @override
+  State<GoalDiaryScreen> createState() => _GoalDiaryScreenState();
+}
+
+class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
+
+  final GoalRepository repository = GoalRepository();
 
   @override
   Widget build(BuildContext context) {
