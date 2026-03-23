@@ -57,28 +57,7 @@ class ShoppingList {
   }
 
   Future<Ingredient?> _findBestIngredientOption(String ingredientName, String sortBy) async {
-    final db = DatabaseService.instance;
-    // Get all options for the generic ingredient (e.g. "Flour" -> ["Flour (Aldi)", "Flour (Waitrose)"])
-    final options = await db.getIngredientsByGenericName(ingredientName);
-    
-    if (options.isEmpty) return null;
-
-    switch (sortBy.toLowerCase()) {
-      case 'cost':
-        options.sort((a, b) => a.cost.compareTo(b.cost));
-        break;
-      case 'distance':
-        options.sort((a, b) => a.distance.compareTo(b.distance));
-        break;
-      case 'nutritional_value':
-      case 'calories':
-        options.sort((a, b) => a.calories.compareTo(b.calories));
-        break;
-      default:
-        break;
-    }
-
-    return options.first;
+    return DatabaseService.instance.getBestIngredientOption(ingredientName, sortBy);
   }
 
   void _addOrIncrementIngredient(Ingredient ingredient) {
@@ -104,9 +83,7 @@ class ShoppingList {
 
   Future<List<String>> _fetchRequirements(String recipeId) async {
     try {
-      final db = DatabaseService.instance;
-      final recipe = await db.getRecipeById(recipeId);
-      return recipe?.requiredIngredients ?? [];
+      return await DatabaseService.instance.getRequiredIngredientsForRecipe(recipeId);
     } catch (_) {
       return [];
     }
@@ -120,7 +97,6 @@ class ShoppingList {
       case 'distance':
         shoppingItems.sort((a, b) => a.ingredient.distance.compareTo(b.ingredient.distance));
         break;
-      case 'nutritional_value':
       case 'calories':
         shoppingItems.sort((a, b) => b.ingredient.calories.compareTo(a.ingredient.calories));
         break;
