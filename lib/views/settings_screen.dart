@@ -44,6 +44,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   static const _kPrefUsername = 'user.username';
   static const _kPrefEmail = 'user.email';
   static const _kPrefAddress = 'user.address';
+  static const _kPrefAddressOptOut = 'user.addressOptOut';
+
+  bool _addressOptOut = false;
 
   @override
   void initState() {
@@ -59,10 +62,31 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     if (!mounted) return;
 
     setState(() {
+      _addressOptOut = prefs.getBool(_kPrefAddressOptOut) ?? false;
+
       _usernameController.text = prefs.getString(_kPrefUsername) ?? 'JohnDoe';
       _emailController.text = prefs.getString(_kPrefEmail) ?? '';
-      _addressController.text = prefs.getString(_kPrefAddress) ?? '';
+      _addressController.text = _addressOptOut
+          ? ''
+          : (prefs.getString(_kPrefAddress) ?? '');
     });
+  }
+
+  Future<void> _setAddressOptOut(bool value) async {
+    setState(() {
+      _addressOptOut = value;
+      if (_addressOptOut) {
+        _addressController.clear();
+      }
+      _formKey.currentState?.validate();
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kPrefAddressOptOut, value);
+
+    if (value) {
+      await prefs.remove(_kPrefAddress);
+    }
   }
 
   Future<void> _saveUserDetails() async {
@@ -71,7 +95,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kPrefUsername, _usernameController.text.trim());
     await prefs.setString(_kPrefEmail, _emailController.text.trim());
-    await prefs.setString(_kPrefAddress, _addressController.text.trim());
+
+    await prefs.setBool(_kPrefAddressOptOut, _addressOptOut);
+    if (_addressOptOut) {
+      await prefs.remove(_kPrefAddress);
+    } else {
+      await prefs.setString(_kPrefAddress, _addressController.text.trim());
+    }
 
     if (!mounted) return;
     ScaffoldMessenger.of(
@@ -149,20 +179,49 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 ),
                 const SizedBox(height: 12),
 
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Address (optional)',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
+                    Tooltip(
+                      message:
+                          'If you opt out, features that rely on your location/address '
+                          '(like distance calculations) may not be functinal or accurate.',
+                      child: const Icon(Icons.info_outline, size: 18),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('I prefer not to provide an address'),
+                  value: _addressOptOut,
+                  onChanged: _setAddressOptOut,
+                ),
+                const SizedBox(height: 8),
+
                 TextFormField(
                   controller: _addressController,
-                  decoration: const InputDecoration(
+                  enabled: !_addressOptOut,
+                  decoration: InputDecoration(
                     labelText: 'Address',
-                    helperText:
-                        'Used for shopping lists and distance calculation.',
-                    border: OutlineInputBorder(),
+                    helperText: _addressOptOut
+                        ? 'Address is disabled because you opted out.'
+                        : 'Used for shopping lists and distance calculation.',
+                    border: const OutlineInputBorder(),
                   ),
                   textInputAction: TextInputAction.done,
                   minLines: 2,
                   maxLines: 3,
                   validator: (v) {
+                    if (_addressOptOut) return null;
                     final s = (v ?? '').trim();
-                    if (s.isEmpty) return 'Address is required';
+                    if (s.isEmpty)
+                      return 'Address is required (or opt out above)';
                     return null;
                   },
                 ),
