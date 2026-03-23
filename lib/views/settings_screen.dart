@@ -96,13 +96,26 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           padding: EdgeInsets.all(16),
           child: Form(
             key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: ListView(
+              shrinkWrap: true,
               children: [
+                Text(
+                  'Your details',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Update the information used for your account and distance calculation to shops. '
+                  'These details are stored locally on this device.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+
                 TextFormField(
                   controller: _usernameController,
                   decoration: const InputDecoration(
                     labelText: 'Username',
+                    helperText: 'This is how your name will appear in the app.',
                     border: OutlineInputBorder(),
                   ),
                   textInputAction: TextInputAction.next,
@@ -115,10 +128,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   },
                 ),
                 const SizedBox(height: 12),
+
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
                     labelText: 'Email',
+                    helperText:
+                        'We’ll use this for account-related communication.',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
@@ -132,10 +148,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   },
                 ),
                 const SizedBox(height: 12),
+
                 TextFormField(
                   controller: _addressController,
                   decoration: const InputDecoration(
                     labelText: 'Address',
+                    helperText:
+                        'Used for shopping lists and distance calculation.',
                     border: OutlineInputBorder(),
                   ),
                   textInputAction: TextInputAction.done,
@@ -147,6 +166,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -155,7 +175,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     child: const Text('Save'),
                   ),
                 ),
-                const SizedBox(height: 16),
+
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 12),
+
+                Text('Goals', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 6),
+                Text(
+                  'Choose what you want to focus on so we can tailor recepies and items to help you best.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 8),
+
                 Text("I want to..."),
                 DropdownButton(
                   hint: Text(widget.testGoals[0]),
