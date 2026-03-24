@@ -9,4 +9,5 @@ class AppStyles {
 
   static TextStyle get normalText => TextStyle(fontSize: _baseFontSize);
   static TextStyle get titleText => TextStyle(fontSize: _baseFontSize + 4, fontWeight: FontWeight.bold);
+  static TextStyle get subtitleText => TextStyle(fontSize: _baseFontSize + 2, fontWeight: FontWeight.w600);
 }
