@@ -81,7 +81,7 @@ class _MyAppState extends State<MyApp> {
         },
         '/diary': (context) => GoalDiaryScreen(weeklyGoals: [
           WeeklyGoals()
-            ..goals[0] = [Goal(id: 'money', day: 0, value: 100.0)],
+            ..goals[0] = [Goal(id: 'money', day: 0, value: 100.0), Goal(id: 'money', day: 2, value: 50.0)],
         ]),
         '/settings': (context) => const SettingsScreen(),
         '/settings/account': (context) => AccountSettingsScreen(),
