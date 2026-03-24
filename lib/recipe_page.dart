@@ -3,7 +3,7 @@ import 'models/recipe.dart';
 
 class RecipePage extends StatelessWidget {
   final Recipe recipe;
-  const RecipePage({Key? key, required this.recipe}) : super(key: key);
+  const RecipePage({super.key, required this.recipe});
 
   @override
   Widget build(BuildContext context) {

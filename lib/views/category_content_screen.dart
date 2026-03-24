@@ -153,7 +153,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
             ? const Center(child: Text('No recipes in this category yet.'))
             : ListView.separated(
                 itemCount: assignedRecipes.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, i) {
                   final r = assignedRecipes[i];
                   final totalCal = _calcTotalCalories(r);
@@ -194,7 +194,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                           }).toList(),
                         ),
                       ),
-                      ButtonBar(
+                      OverflowBar(
                         children: [
                           TextButton(
                             onPressed: () {
