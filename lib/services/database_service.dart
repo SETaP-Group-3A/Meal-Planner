@@ -106,35 +106,6 @@ class DatabaseService {
           FOREIGN KEY (ingredientName) REFERENCES ingredients (name) ON DELETE CASCADE
         )
       ''',
-
-      'account': '''
-        CREATE TABLE account (
-          account_id $idType,
-          username $textType UNIQUE,
-          email $textType,
-          address $textType,
-        )
-      ''',
-
-      'goal': '''
-        CREATE TABLE goal (
-          goal_id TEXT NOT NULL,
-          day_id INTEGER NOT NULL,
-          goal_value $realType,
-          date DATE,
-          PRIMARY KEY (goal_id, day_id)
-        )
-      ''',
-
-      'week_goal': '''
-        CREATE TABLE week_goal (
-          week_goal_id INTEGER NOT NULL,
-          account_id TEXT NOT NULL,
-          goal_id TEXT NOT NULL,
-          FOREIGN KEY (account_id) REFERENCES account (account_id) ON DELETE CASCADE,
-          PRIMARY KEY (week_goal_id, account_id, goal_id)
-        )
-      ''',
     };
 
     // Execute creating tables
@@ -480,19 +451,6 @@ class DatabaseService {
   Future<void> clearShoppingList() async {
     final db = await instance.database;
     await db.delete('shopping_list');
-  }
-
-//------------------------------------------------------------------------------------------------------------------
-// Account
-
-  Future<void> createAccount(String id, String username, String email, String address) async {
-    final db = await instance.database;
-    await db.insert('account', {
-      'id': id,
-      'username': username,
-      'email': email,
-      'address': address,
-    });
   }
 
 //------------------------------------------------------------------------------------------------------------------
