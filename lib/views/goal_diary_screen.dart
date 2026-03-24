@@ -23,7 +23,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
     final int? lastKey = (widget.weeklyGoals.isNotEmpty && widget.weeklyGoals[0].goals.isNotEmpty)
       ? widget.weeklyGoals[0].goals.keys.last
       : null;
-    final List<Goal> lastWeekGoals = lastKey != null
+    currentGoals = lastKey != null
       ? widget.weeklyGoals[0].goals[lastKey] ?? <Goal>[]
       : <Goal>[];
 
@@ -42,7 +42,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
               Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [Text('Total:'), SizedBox(width: 8), Text('Savings:')],
+                  children: [Text('Total: ${repository.totalAmount(currentGoals)}'), SizedBox(width: 8), Text('Savings:')],
                 ),
               ),
               Container(height: 16),
@@ -51,7 +51,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
                 DayGoalWidget(
                   day: 'Day ${i + 1}',
                   goal: (() {
-                    for (final g in lastWeekGoals) {
+                    for (final g in currentGoals) {
                       if (g.day == i) return g.value.toString();
                     }
                     return '';
