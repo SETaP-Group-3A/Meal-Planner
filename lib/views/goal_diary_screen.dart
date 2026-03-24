@@ -22,30 +22,33 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
       appBar: AppBar(
         title: const Text('Goal Diary'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Diary', style: Theme.of(context).textTheme.headlineLarge),
-            const SizedBox(height: 16),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Total:'),
-                SizedBox(width: 8),
-                Text('Savings:')
-              ],
-            ),
-            Container(height: 16),
-            
-            if (widget.weeklyGoals.isNotEmpty)
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Text('Diary', style: Theme.of(context).textTheme.headlineLarge)),
+              const SizedBox(height: 16),
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [Text('Total:'), SizedBox(width: 8), Text('Savings:')],
+                ),
+              ),
+              Container(height: 16),
+              if (widget.weeklyGoals.isNotEmpty)
                 for (int i = 0; i < 7; i++)
                   DayGoalWidget(
                     day: 'Day ${i + 1}',
-                    //Need to actually find correct goal instead of just 0
-                    goal: widget.weeklyGoals[0].goals[i]?.first.value.toString() ?? '',
-                  )
-          ],
+                    goal: (() {
+                      final list = widget.weeklyGoals[0].goals[i];
+                      if (list != null && list.isNotEmpty) return list.first.value.toString();
+                      return '';
+                    })(),
+                  ),
+            ],
+          ),
         ),
       ),
     );
