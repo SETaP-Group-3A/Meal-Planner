@@ -1,6 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// temp controller
+class ThemeController {
+  static const _kPrefThemeMode = 'theme.mode'; // 'system' | 'light' | 'dark'
+  static final ValueNotifier<ThemeMode> themeMode = ValueNotifier(
+    ThemeMode.system,
+  );
+
+  static Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kPrefThemeMode) ?? 'system';
+    themeMode.value = switch (raw) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+  }
+
+  static Future<void> setDarkMode(bool isDark) async {
+    final prefs = await SharedPreferences.getInstance();
+    themeMode.value = isDark ? ThemeMode.dark : ThemeMode.light;
+    await prefs.setString(_kPrefThemeMode, isDark ? 'dark' : 'light');
+  }
+}
+
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -274,52 +298,29 @@ class AccessibilitySettingsScreen extends StatefulWidget {
 
 class _AccessibilitySettingsScreenState
     extends State<AccessibilitySettingsScreen> {
-  bool _isDarkMode = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isDarkMode =
-          prefs.getBool('isDarkMode') ??
-          WidgetsBinding.instance.platformDispatcher.platformBrightness ==
-              Brightness.dark;
-    });
-  }
-
-  Future<void> saveSettings(bool isDarkMode) async {
-    setState(() {
-      _isDarkMode = isDarkMode;
-    });
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDarkMode', isDarkMode);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Accessibility Settings')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SwitchListTile(
-              title: Text('Dark Mode'),
-              value: _isDarkMode,
-              onChanged: (value) {
-                setState(() {
-                  _isDarkMode = value;
-                });
-                saveSettings(value);
-              },
-            ),
-          ],
+        child: ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeController.themeMode,
+          builder: (context, mode, _) {
+            final isDark = mode == ThemeMode.dark;
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SwitchListTile(
+                  title: Text('Dark Mode'),
+                  value: isDark,
+                  onChanged: (value) {
+                    // This will update app-wide once MaterialApp listens to ThemeController.themeMode.
+                    ThemeController.setDarkMode(value);
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
