@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/repositories/goal_repository.dart';
+import 'package:meal_planner/views/app_styles.dart';
 
 class GoalDiaryScreen extends StatefulWidget {
 
@@ -37,12 +38,12 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Text('Diary', style: Theme.of(context).textTheme.headlineLarge)),
+              Center(child: Text('Diary', style: AppStyles.titleText)),
               const SizedBox(height: 16),
               Center(
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [Text('Total: ${repository.totalAmount(currentGoals)}'), SizedBox(width: 8), Text('Savings:')],
+                  mainAxisSize: MainAxisSize.max,
+                  children: [Text('Total: ${repository.totalAmount(currentGoals)}', style: AppStyles.subtitleText), SizedBox(width: 8), Text('Savings:', style: AppStyles.subtitleText)],
                 ),
               ),
               Container(height: 16),
