@@ -42,8 +42,9 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
               const SizedBox(height: 16),
               Center(
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.max,
-                  children: [Text('Total: ${repository.totalAmount(currentGoals)}', style: AppStyles.subtitleText), SizedBox(width: 8), Text('Savings:', style: AppStyles.subtitleText)],
+                  children: [Text('Total: ${repository.totalAmount(currentGoals)}', style: AppStyles.subtitleText), SizedBox(width: 16), Text('Savings:', style: AppStyles.subtitleText)],
                 ),
               ),
               Container(height: 16),
