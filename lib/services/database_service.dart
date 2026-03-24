@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import '../models/recipe.dart';
@@ -59,12 +58,6 @@ class DatabaseService {
         CREATE TABLE recipes (
           id $idType,
           name $textType,
-          cookingTime $intType,
-          allergens TEXT,
-          calories INTEGER,
-          macros TEXT,
-          nutrients TEXT,
-          instructions TEXT,
           categoryId TEXT,
           FOREIGN KEY (categoryId) REFERENCES categories (id) ON DELETE CASCADE
         )
@@ -105,7 +98,7 @@ class DatabaseService {
           quantity $intType,
           FOREIGN KEY (ingredientName) REFERENCES ingredients (name) ON DELETE CASCADE
         )
-      ''',
+      '''
     };
 
     // Execute creating tables
@@ -133,20 +126,12 @@ class DatabaseService {
 
     // Seed Recipes from mockRecipes
     for (var recipe in mockRecipes) {
-      await db.insert('recipes', {
-        'id': recipe.id,
-        'name': recipe.name,
-        'cookingTime': recipe.cookingTime,
-        'allergens': recipe.allergens != null ? jsonEncode(recipe.allergens) : null,
-        'calories': recipe.calories,
-        'macros': recipe.macros != null ? jsonEncode(recipe.macros) : null,
-        'nutrients': recipe.nutrients != null ? jsonEncode(recipe.nutrients) : null,
-        'instructions': recipe.instructions,
-      });
+      await db.insert('recipes', {'id': recipe.id, 'name': recipe.name});
+
       for (var ing in recipe.requiredIngredients) {
         await db.insert('recipe_ingredients', {
           'recipeId': recipe.id,
-          'ingredientName': ing,
+          'ingredientName': ing, // e.g., 'Flour'
         });
       }
     }
@@ -254,6 +239,7 @@ class DatabaseService {
   Future<List<Recipe>> getAllRecipes() async {
     final db = await instance.database;
     final result = await db.query('recipes');
+
     List<Recipe> recipes = [];
     for (var recipeMap in result) {
       final ingredients = await _getIngredientsForRecipe(recipeMap['id'] as String);
@@ -261,18 +247,6 @@ class DatabaseService {
         id: recipeMap['id'] as String,
         name: recipeMap['name'] as String,
         requiredIngredients: ingredients,
-        cookingTime: recipeMap['cookingTime'] as int,
-        allergens: recipeMap['allergens'] != null && (recipeMap['allergens'] as String).isNotEmpty
-          ? List<String>.from(jsonDecode(recipeMap['allergens'] as String))
-          : null,
-        calories: recipeMap['calories'] as int?,
-        macros: recipeMap['macros'] != null && (recipeMap['macros'] as String).isNotEmpty
-          ? Map<String, double>.from(jsonDecode(recipeMap['macros'] as String))
-          : null,
-        nutrients: recipeMap['nutrients'] != null && (recipeMap['nutrients'] as String).isNotEmpty
-          ? Map<String, double>.from(jsonDecode(recipeMap['nutrients'] as String))
-          : null,
-        instructions: recipeMap['instructions'] as String?,
       ));
     }
     return recipes;
@@ -281,25 +255,16 @@ class DatabaseService {
   Future<Recipe?> getRecipeById(String id) async {
     final db = await instance.database;
     final result = await db.query('recipes', where: 'id = ?', whereArgs: [id]);
+    
     if (result.isEmpty) return null;
+    
     final recipeMap = result.first;
     final ingredients = await _getIngredientsForRecipe(id);
+    
     return Recipe(
       id: recipeMap['id'] as String,
       name: recipeMap['name'] as String,
       requiredIngredients: ingredients,
-      cookingTime: recipeMap['cookingTime'] as int,
-      allergens: recipeMap['allergens'] != null && (recipeMap['allergens'] as String).isNotEmpty
-        ? List<String>.from(jsonDecode(recipeMap['allergens'] as String))
-        : null,
-      calories: recipeMap['calories'] as int?,
-      macros: recipeMap['macros'] != null && (recipeMap['macros'] as String).isNotEmpty
-        ? Map<String, double>.from(jsonDecode(recipeMap['macros'] as String))
-        : null,
-      nutrients: recipeMap['nutrients'] != null && (recipeMap['nutrients'] as String).isNotEmpty
-        ? Map<String, double>.from(jsonDecode(recipeMap['nutrients'] as String))
-        : null,
-      instructions: recipeMap['instructions'] as String?,
     );
   }
 
@@ -453,12 +418,9 @@ class DatabaseService {
     await db.delete('shopping_list');
   }
 
-//------------------------------------------------------------------------------------------------------------------
-//Close Database
-
+  // Close database
   Future close() async {
     final db = await instance.database;
     db.close();
   }
 }
-

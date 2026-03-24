@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:meal_planner/repositories/graph_controller.dart';
+import 'package:meal_planner/graph_controller.dart';
 
 class ProgressGraphWidget extends StatefulWidget {
   final dynamic userData;

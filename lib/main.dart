@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/services/database_service.dart';
 import 'package:meal_planner/views/app_styles.dart';
 import 'package:meal_planner/views/categories_screen.dart';
 import 'package:meal_planner/views/settings_screen.dart';
-import 'package:meal_planner/views/goal_diary_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meal_planner/log_in.dart';
 import 'views/shopping_list_screen.dart';
@@ -55,7 +53,6 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
         textTheme: TextTheme(
           bodyMedium: AppStyles.normalText,
-          headlineLarge: AppStyles.titleText,
         ),
       ),
       darkTheme: ThemeData(
@@ -79,10 +76,6 @@ class _MyAppState extends State<MyApp> {
             categoryId: args is String ? args : null,
           );
         },
-        '/diary': (context) => GoalDiaryScreen(weeklyGoals: [
-          WeeklyGoals()
-            ..goals[0] = [Goal(id: 'money', day: 0, value: 100.0), Goal(id: 'money', day: 2, value: 50.0)],
-        ]),
         '/settings': (context) => const SettingsScreen(),
         '/settings/account': (context) => AccountSettingsScreen(),
         '/settings/accessibility': (context) => const AccessibilitySettingsScreen(),
@@ -130,14 +123,6 @@ class _MyHomePageState extends State<MyHomePage> {
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/shopping-list');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.book),
-              title: const Text('Diary'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/diary');
               },
             ),
             const Divider(),

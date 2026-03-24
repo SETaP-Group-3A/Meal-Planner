@@ -288,7 +288,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => RecipePage(recipeId: r.id),
+                                  builder: (context) => RecipePage(recipe: r),
                                 ),
                               );
                             },
