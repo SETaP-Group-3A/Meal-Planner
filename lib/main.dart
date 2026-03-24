@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/services/database_service.dart';
 import 'package:meal_planner/views/app_styles.dart';
 import 'package:meal_planner/views/categories_screen.dart';
@@ -78,7 +79,10 @@ class _MyAppState extends State<MyApp> {
             categoryId: args is String ? args : null,
           );
         },
-        '/diary': (context) => const GoalDiaryScreen(),
+        '/diary': (context) => GoalDiaryScreen(weeklyGoals: [
+          WeeklyGoals()
+            ..goals[0] = [Goal(id: 'money', day: 0, value: 100.0)],
+        ]),
         '/settings': (context) => const SettingsScreen(),
         '/settings/account': (context) => AccountSettingsScreen(),
         '/settings/accessibility': (context) => const AccessibilitySettingsScreen(),
