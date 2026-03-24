@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../shopping_list.dart';
 import '../mock_data.dart';
 
+// ------------------- ShoppingListScreen -------------------
 class ShoppingListScreen extends StatefulWidget {
   final String? initialRecipeId;
   final String? initialSortBy;
@@ -16,16 +17,24 @@ class ShoppingListScreen extends StatefulWidget {
   State<ShoppingListScreen> createState() => _ShoppingListScreenState();
 }
 
+// ------------------- _ShoppingListScreenState -------------------
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
   final ShoppingList shoppingList = ShoppingList();
   String selectedSort = 'cost';
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.initialRecipeId != null && widget.initialSortBy != null) {
-      shoppingList.addRecipe(widget.initialRecipeId!, widget.initialSortBy!);
+      _addInitialRecipe();
     }
+  }
+
+  Future<void> _addInitialRecipe() async {
+    setState(() => _isLoading = true);
+    await shoppingList.addRecipe(widget.initialRecipeId!, widget.initialSortBy!);
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Widget _buildFocusButton(String label, String value, IconData icon) {
@@ -41,19 +50,24 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     );
   }
 
-  void _addRecipeToShoppingList(String recipeId) {
-    setState(() {
-      shoppingList.addRecipe(recipeId, selectedSort);
-    });
+  Future<void> _addRecipeToShoppingList(String recipeId) async {
+    setState(() => _isLoading = true);
+    await shoppingList.addRecipe(recipeId, selectedSort);
+    if (mounted) setState(() => _isLoading = false);
   }
 
-  void _regenerateList(String newSort) {
-    setState(() {
-      selectedSort = newSort;
-      shoppingList.regenerateList(newSort);
-    });
+  Future<void> _regenerateList(String newSort) async {
+    setState(() => _isLoading = true);
+    await shoppingList.regenerateList(newSort);
+    if (mounted) {
+      setState(() {
+        selectedSort = newSort;
+        _isLoading = false;
+      });
+    }
   }
 
+  // ------------------- Build UI -------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,8 +88,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               ],
             ),
           ),
-          
-          // Test Controls
+
+          // Recipe Buttons
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: SingleChildScrollView(
@@ -93,54 +107,59 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               ),
             ),
           ),
+
           const Divider(),
+
+          // Shopping List Display
           Expanded(
-            child: shoppingList.shoppingItems.isEmpty
-                ? const Center(
-                    child: Text('Your shopping list is empty.'),
-                  )
-                : ListView.builder(
-                    itemCount: shoppingList.shoppingItems.length,
-                    itemBuilder: (context, index) {
-                      final listItem = shoppingList.shoppingItems[index];
-                      final ingredient = listItem.ingredient;
-                      return ListTile(
-                        leading: Checkbox(
-                          value: false,
-                          onChanged: (value) {},
-                        ),
-                        title: Text(ingredient.name),
-                        subtitle: Text(
-                          'Total Cost: \$${listItem.totalCost.toStringAsFixed(2)} | Dist: ${ingredient.distance}km | Cal: ${listItem.totalCalories}',
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove),
-                              onPressed: () {
-                                setState(() {
-                                  shoppingList.updateQuantity(index, -1);
-                                });
-                              },
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : shoppingList.shoppingItems.isEmpty
+                    ? const Center(
+                        child: Text('Your shopping list is empty.'),
+                      )
+                    : ListView.builder(
+                        itemCount: shoppingList.shoppingItems.length,
+                        itemBuilder: (context, index) {
+                          final listItem = shoppingList.shoppingItems[index];
+                          final ingredient = listItem.ingredient;
+                          return ListTile(
+                            leading: Checkbox(
+                              value: false,
+                              onChanged: (value) {},
                             ),
-                            Text(
-                              '${listItem.quantity}',
-                              style: Theme.of(context).textTheme.bodyLarge,
+                            title: Text(ingredient.name),
+                            subtitle: Text(
+                              'Total Cost: \$${listItem.totalCost.toStringAsFixed(2)} | Dist: ${ingredient.distance}km | Cal: ${listItem.totalCalories}',
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.add),
-                              onPressed: () {
-                                setState(() {
-                                  shoppingList.updateQuantity(index, 1);
-                                });
-                              },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove),
+                                  onPressed: () {
+                                    setState(() {
+                                      shoppingList.updateQuantity(index, -1);
+                                    });
+                                  },
+                                ),
+                                Text(
+                                  '${listItem.quantity}',
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  onPressed: () {
+                                    setState(() {
+                                      shoppingList.updateQuantity(index, 1);
+                                    });
+                                  },
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
