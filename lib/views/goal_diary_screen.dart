@@ -37,14 +37,14 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
               ],
             ),
             Container(height: 16),
-            for (WeeklyGoals wg in widget.weeklyGoals)
-              for (final goalsForWeek in wg.goals.values)
-                for (final goalItem in goalsForWeek)
+            
+            if (widget.weeklyGoals.isNotEmpty)
+                for (int i = 0; i < 7; i++)
                   DayGoalWidget(
-                    day: 'Day ${goalItem.day + 1}',
-                    goal: goalItem.value.toString(),
-                  ),
-            Text("Beneath DayGoalWidgets")
+                    day: 'Day ${i + 1}',
+                    //Need to actually find correct goal instead of just 0
+                    goal: widget.weeklyGoals[0].goals[i]?.first.value.toString() ?? '',
+                  )
           ],
         ),
       ),
