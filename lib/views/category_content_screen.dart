@@ -73,7 +73,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
           // ignore DB errors and fall back to mock
         }
         final options = marketInventory[ingredientName] ?? [];
-        // convert mock option objects to Ingredient for uniform rendering
+
         return options
             .map((o) => Ingredient(name: o.name, cost: o.cost, distance: o.distance, calories: o.calories))
             .toList();
@@ -94,7 +94,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
           );
         }
 
-        // pick the single cheapest option, tie-breaker lower distance
+  
         options.sort((a, b) {
           final costCmp = a.cost.compareTo(b.cost);
           if (costCmp != 0) return costCmp;
@@ -116,7 +116,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
     for (final ing in r.requiredIngredients) {
       final options = marketInventory[ing];
       if (options != null && options.isNotEmpty) {
-        // choose cheapest mock option
+ 
         options.sort((a, b) {
           final costCmp = a.cost.compareTo(b.cost);
           if (costCmp != 0) return costCmp;
@@ -125,7 +125,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
         final opt = options.first;
         sum += opt.calories;
       } else {
-        // no mock option; try DB synchronously is not possible here - assume 0
+
       }
     }
     return sum;
@@ -268,7 +268,10 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
                           }).toList(),
                         ),
                       ),
-                      ButtonBar(
+                      OverflowBar(
+                        spacing: 8,
+                        overflowSpacing: 8,
+                        alignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
                             onPressed: () {
