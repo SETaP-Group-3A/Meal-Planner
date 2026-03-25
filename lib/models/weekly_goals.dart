@@ -25,7 +25,7 @@ class WeeklyGoals {
 class Goal {
   final String id;
   final int day;
-  final double value;
+  double value;
 
   Goal({required this.id, required this.day, required this.value}); 
 }
