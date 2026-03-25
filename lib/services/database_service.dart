@@ -268,6 +268,17 @@ class DatabaseService {
     );
   }
 
+  Future<List<String>> getRequiredIngredientsForRecipe(String recipeId) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'recipe_ingredients',
+      columns: ['ingredientName'],
+      where: 'recipeId = ?',
+      whereArgs: [recipeId],
+    );
+    return result.map((row) => row['ingredientName'] as String).toList();
+  }
+
   Future<List<String>> _getIngredientsForRecipe(String recipeId) async {
     final db = await instance.database;
     final result = await db.query(
@@ -334,6 +345,41 @@ class DatabaseService {
       distance: ingredientMap['distance'] as double,
       calories: ingredientMap['calories'] as int,
     )).toList();
+  }
+
+  Future<Ingredient?> getBestIngredientOption(String ingredientName, String sortBy) async {
+    final options = await getIngredientsByGenericName(ingredientName);
+    if (options.isEmpty) return null;
+
+    switch (sortBy.toLowerCase()) {
+      case 'cost':
+        options.sort((a, b) => a.cost.compareTo(b.cost));
+        break;
+      case 'distance':
+        options.sort((a, b) => a.distance.compareTo(b.distance));
+        break;
+      case 'calories':
+        options.sort((a, b) => a.calories.compareTo(b.calories));
+        break;
+      default:
+        break;
+    }
+
+    return options.first;
+  }
+
+  Future<List<Ingredient>> getBestIngredientOptionsForRecipe(String recipeId, String sortBy) async {
+    final requiredIngredientNames = await getRequiredIngredientsForRecipe(recipeId);
+    final selectedIngredients = <Ingredient>[];
+
+    for (var ingredientName in requiredIngredientNames) {
+      final bestOption = await getBestIngredientOption(ingredientName, sortBy);
+      if (bestOption != null) {
+        selectedIngredients.add(bestOption);
+      }
+    }
+
+    return selectedIngredients;
   }
 
   Future<void> updateIngredient(Ingredient ingredient) async {
