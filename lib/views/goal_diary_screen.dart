@@ -37,6 +37,8 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
   Widget build(BuildContext context) {
     currentGoals = widget.weeklyGoals[0].getGoalsForCurrentWeek();
 
+    final List<Goal> lastWeekGoals = widget.weeklyGoals.length > 1 ? widget.weeklyGoals[0].getGoalsForWeek(widget.weeklyGoals[0].goals.keys.last - 1) : [];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Goal Diary'),
@@ -53,7 +55,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.max,
-                  children: [Text('Total: ${repository.totalAmount(currentGoals)}', style: AppStyles.subtitleText), SizedBox(width: 16), Text('Savings:', style: AppStyles.subtitleText)],
+                  children: [Text('Total: ${repository.totalAmount(currentGoals)}', style: AppStyles.subtitleText), SizedBox(width: 16), Text('Savings: ${repository.calculateSavings(currentGoals, lastWeekGoals)}', style: AppStyles.subtitleText)],
                 ),
               ),
               Container(height: 16),
