@@ -44,6 +44,8 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
       return weekSource.getGoalsForWeek(lastKey - 1);
     }();
 
+    final int savings = repository.calculateSavings(currentGoals, lastWeekGoals).toInt();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Goal Diary'),
@@ -60,7 +62,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.max,
-                  children: [Text('Total: ${repository.totalAmount(currentGoals)}', style: AppStyles.subtitleText), SizedBox(width: 16), Text('Savings: ${repository.calculateSavings(currentGoals, lastWeekGoals)}', style: AppStyles.subtitleText)],
+                  children: [Text('Total: ${repository.totalAmount(currentGoals)}'), SizedBox(width: 16), Text('Savings: $savings', style: AppStyles.hightlightSwitch(savings))],
                 ),
               ),
               Container(height: 16),
