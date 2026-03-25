@@ -174,7 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SizedBox(
               width: 300,
               height: 200,
-              child: ProgressGraphWidget(userData: null),
+              child: ProgressGraphWidget(userData: [Goal(id: 'money', day: 0, value: 100.0), Goal(id: 'money', day: 1, value: 0.0), Goal(id: 'money', day: 2, value: 50.0)]),
             ),
           ],
         ),
