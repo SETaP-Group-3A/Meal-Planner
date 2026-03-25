@@ -12,6 +12,14 @@ class WeeklyGoals {
     }
     goals[weekID]!.add(goal);  
   }
+
+  List<Goal> getGoalsForCurrentWeek() {
+    return getGoalsForWeek(goals.keys.isNotEmpty ? goals.keys.last : 0);
+  }
+
+  List<Goal> getGoalsForWeek(int weekID) {
+    return goals[weekID] ?? [];
+  }
 }
 
 class Goal {
