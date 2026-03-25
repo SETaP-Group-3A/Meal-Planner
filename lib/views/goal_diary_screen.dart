@@ -19,6 +19,20 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
 
   List<Goal> currentGoals = [];
 
+  void updateGoal(int day, String value) {
+    //Update the goal for the given day with the new value
+    setState(() {
+      final goal = currentGoals.firstWhere((g) => g.day == day, orElse: () => Goal(id: '', day: day, value: 0));
+      if (goal.id.isEmpty) {
+        // If no existing goal, add a new one
+        currentGoals.add(Goal(id: 'save money', day: day, value: double.tryParse(value) ?? 0));
+      } else {
+        // Update existing goal
+        goal.value = double.tryParse(value) ?? 0;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     currentGoals = widget.weeklyGoals[0].getGoalsForCurrentWeek();
@@ -47,6 +61,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
               for (int i = 0; i < 7; i++)
                 DayGoalWidget(
                   day: 'Day ${i + 1}',
+                  dayIndex: i,
                   goal: currentGoals
                       .firstWhere(
                         (g) => g.day == i,
@@ -54,6 +69,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
                       )
                       .value
                       .toString(),
+                  onGoalChanged: (day, value) => updateGoal(day, value),
                 ),
             ],
           ),
@@ -66,8 +82,11 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
 class DayGoalWidget extends StatefulWidget {
   final String day;
   final String goal;
+  final int dayIndex;
 
-  const DayGoalWidget({super.key, required this.day, required this.goal});
+  final Function(int, String)? onGoalChanged;
+
+  const DayGoalWidget({super.key, required this.day, required this.goal, required this.dayIndex, this.onGoalChanged});
 
   @override
   State<DayGoalWidget> createState() => _DayGoalWidgetState();
@@ -105,7 +124,9 @@ class _DayGoalWidgetState extends State<DayGoalWidget> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 controller: _controller,
-                onChanged: (value) {},
+                onChanged: (value) {
+                  widget.onGoalChanged?.call(widget.dayIndex, value);
+                },
               ),
             ),
           ],
