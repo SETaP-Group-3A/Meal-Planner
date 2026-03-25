@@ -21,12 +21,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final int? lastKey = (widget.weeklyGoals.isNotEmpty && widget.weeklyGoals[0].goals.isNotEmpty)
-      ? widget.weeklyGoals[0].goals.keys.last
-      : null;
-    currentGoals = lastKey != null
-      ? widget.weeklyGoals[0].goals[lastKey] ?? <Goal>[]
-      : <Goal>[];
+    currentGoals = widget.weeklyGoals[0].getGoalsForCurrentWeek();
 
     return Scaffold(
       appBar: AppBar(
@@ -48,16 +43,17 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
                 ),
               ),
               Container(height: 16),
-              // Render seven DayGoalWidget items from the list at the last key
+              // Render seven DayGoalWidget items for each day of the week
               for (int i = 0; i < 7; i++)
                 DayGoalWidget(
                   day: 'Day ${i + 1}',
-                  goal: (() {
-                    for (final g in currentGoals) {
-                      if (g.day == i) return g.value.toString();
-                    }
-                    return '';
-                  })(),
+                  goal: currentGoals
+                      .firstWhere(
+                        (g) => g.day == i,
+                        orElse: () => Goal(id: '', day: i, value: 0),
+                      )
+                      .value
+                      .toString(),
                 ),
             ],
           ),
