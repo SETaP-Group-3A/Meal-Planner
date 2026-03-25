@@ -43,21 +43,14 @@ class ShoppingList {
   }
 
   Future<void> _processRecipeAddition(String recipeId, String sortBy) async {
-    final requiredIngredientNames = await _fetchRequirements(recipeId);
+    final bestIngredients = await DatabaseService.instance
+        .getBestIngredientOptionsForRecipe(recipeId, sortBy);
 
-    for (var name in requiredIngredientNames) {
-      final bestOption = await _findBestIngredientOption(name, sortBy);
-      
-      if (bestOption != null) {
-        _addOrIncrementIngredient(bestOption);
-      }
+    for (var ingredient in bestIngredients) {
+      _addOrIncrementIngredient(ingredient);
     }
 
     _sortItems(sortBy);
-  }
-
-  Future<Ingredient?> _findBestIngredientOption(String ingredientName, String sortBy) async {
-    return DatabaseService.instance.getBestIngredientOption(ingredientName, sortBy);
   }
 
   void _addOrIncrementIngredient(Ingredient ingredient) {
@@ -78,14 +71,6 @@ class ShoppingList {
       if (shoppingItems[index].quantity <= 0) {
         shoppingItems.removeAt(index);
       }
-    }
-  }
-
-  Future<List<String>> _fetchRequirements(String recipeId) async {
-    try {
-      return await DatabaseService.instance.getRequiredIngredientsForRecipe(recipeId);
-    } catch (_) {
-      return [];
     }
   }
 

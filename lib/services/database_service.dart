@@ -368,6 +368,20 @@ class DatabaseService {
     return options.first;
   }
 
+  Future<List<Ingredient>> getBestIngredientOptionsForRecipe(String recipeId, String sortBy) async {
+    final requiredIngredientNames = await getRequiredIngredientsForRecipe(recipeId);
+    final selectedIngredients = <Ingredient>[];
+
+    for (var ingredientName in requiredIngredientNames) {
+      final bestOption = await getBestIngredientOption(ingredientName, sortBy);
+      if (bestOption != null) {
+        selectedIngredients.add(bestOption);
+      }
+    }
+
+    return selectedIngredients;
+  }
+
   Future<void> updateIngredient(Ingredient ingredient) async {
     final db = await instance.database;
     await db.update(
