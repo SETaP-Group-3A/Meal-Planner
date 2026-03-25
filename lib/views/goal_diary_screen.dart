@@ -35,9 +35,14 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    currentGoals = widget.weeklyGoals[0].getGoalsForCurrentWeek();
+    final WeeklyGoals weekSource = widget.weeklyGoals.isNotEmpty ? widget.weeklyGoals[0] : WeeklyGoals();
+    currentGoals = weekSource.getGoalsForCurrentWeek();
 
-    final List<Goal> lastWeekGoals = widget.weeklyGoals.length > 1 ? widget.weeklyGoals[0].getGoalsForWeek(widget.weeklyGoals[0].goals.keys.last - 1) : [];
+    final List<Goal> lastWeekGoals = () {
+      if (weekSource.goals.keys.length < 2) return <Goal>[];
+      final lastKey = weekSource.goals.keys.last;
+      return weekSource.getGoalsForWeek(lastKey - 1);
+    }();
 
     return Scaffold(
       appBar: AppBar(
