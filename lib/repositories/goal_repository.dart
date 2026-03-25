@@ -28,7 +28,7 @@ class GoalRepository {
     if (lastWeekGoals.isEmpty) {
       return 0;
     }
-    
-    return totalAmount(goals) - totalAmount(lastWeekGoals);
+
+    return totalAmount(lastWeekGoals) - totalAmount(goals);
   }
 }
