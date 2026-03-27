@@ -97,6 +97,8 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
   }
 
   void _onPointTapped(LineBarSpot touched) {
-    Navigator.of(context).pushNamed('/diary');
+    final x = touched.x.toInt();
+    final int dayIndex = (x - 1).clamp(0, 6);
+    Navigator.of(context).pushNamed('/diary', arguments: {'dayIndex': dayIndex});
   }
 }
