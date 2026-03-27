@@ -7,7 +7,9 @@ class GoalDiaryScreen extends StatefulWidget {
 
   final List<WeeklyGoals> weeklyGoals;
 
-  const GoalDiaryScreen({super.key, required this.weeklyGoals});
+  final int dayIndex;
+
+  const GoalDiaryScreen({super.key, required this.weeklyGoals, this.dayIndex = -1});
 
   @override
   State<GoalDiaryScreen> createState() => _GoalDiaryScreenState();
@@ -73,6 +75,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
                 DayGoalWidget(
                   day: 'Day ${i + 1}',
                   dayIndex: i,
+                  selectedDayIndex: widget.dayIndex,
                   goal: currentGoals
                       .firstWhere(
                         (g) => g.day == i,
@@ -94,10 +97,11 @@ class DayGoalWidget extends StatefulWidget {
   final String day;
   final String goal;
   final int dayIndex;
+  final int selectedDayIndex;
 
   final Function(int, String)? onGoalChanged;
 
-  const DayGoalWidget({super.key, required this.day, required this.goal, required this.dayIndex, this.onGoalChanged});
+  const DayGoalWidget({super.key, required this.day, required this.goal, required this.dayIndex, required this.selectedDayIndex, this.onGoalChanged});
 
   @override
   State<DayGoalWidget> createState() => _DayGoalWidgetState();
@@ -123,6 +127,7 @@ class _DayGoalWidgetState extends State<DayGoalWidget> {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: widget.dayIndex == widget.selectedDayIndex ? Theme.of(context).colorScheme.primary : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
         child: Row(
