@@ -57,6 +57,8 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(child: Text('Diary', style: AppStyles.titleText)),
+              const SizedBox(height: 8),
+              Center(child: Text('Week ${weekSource.currentWeek}', style: AppStyles.subtitleText)),
               const SizedBox(height: 16),
               Center(
                 child: Row(
