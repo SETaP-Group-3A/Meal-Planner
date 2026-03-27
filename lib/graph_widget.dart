@@ -49,6 +49,16 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
   Widget build(BuildContext context) {
     return LineChart(
       LineChartData(
+        lineTouchData: LineTouchData(
+          touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
+            if (event is FlTapUpEvent) {
+              final touched = response?.lineBarSpots?.first;
+              if (touched != null) {
+                _onPointTapped(touched);
+              }
+            }
+          },
+        ),
         lineBarsData: [
           LineChartBarData(
             spots: formatData(),
@@ -84,5 +94,9 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
 
   Widget xTitlesWidgets(double value, TitleMeta meta) {
     return SideTitleWidget(meta: meta, child: Text(xTitles[value.toInt() - 1]));
+  }
+
+  void _onPointTapped(LineBarSpot touched) {
+    Navigator.of(context).pushNamed('/diary');
   }
 }
