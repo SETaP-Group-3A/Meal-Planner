@@ -78,11 +78,15 @@ class _MyAppState extends State<MyApp> {
             categoryId: args is String ? args : null,
           );
         },
-        '/diary': (context) => GoalDiaryScreen(weeklyGoals: [
-          WeeklyGoals()
-            ..goals[0] = [Goal(id: 'money', day: 0, value: 100.0), Goal(id: 'money', day: 2, value: 50.0)]
-            ..goals[1] = [Goal(id: 'money', day: 0, value: 300.0), Goal(id: 'money', day: 1, value: 150.0)],
-        ]),
+        '/diary': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          final int dayIndex = args != null && args['dayIndex'] is int ? args['dayIndex'] as int : -1;
+          return GoalDiaryScreen(weeklyGoals: [
+            WeeklyGoals()
+              ..goals[0] = [Goal(id: 'money', day: 0, value: 100.0), Goal(id: 'money', day: 2, value: 50.0)]
+              ..goals[1] = [Goal(id: 'money', day: 0, value: 300.0), Goal(id: 'money', day: 1, value: 150.0)],
+          ], dayIndex: dayIndex);
+        },
         '/settings': (context) => const SettingsScreen(),
         '/settings/account': (context) => AccountSettingsScreen(),
         '/settings/accessibility': (context) => const AccessibilitySettingsScreen(),
