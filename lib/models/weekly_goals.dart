@@ -20,6 +20,8 @@ class WeeklyGoals {
   List<Goal> getGoalsForWeek(int weekID) {
     return goals[weekID] ?? [];
   }
+
+  int get currentWeek => goals.keys.isNotEmpty ? goals.keys.last : 0;
 }
 
 class Goal {
