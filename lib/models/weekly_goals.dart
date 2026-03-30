@@ -20,7 +20,14 @@ class WeeklyGoals extends ChangeNotifier {
     final list = goals[weekID]!;
     final idx = list.indexWhere((g) => g.day == day);
     if (idx == -1) {
-      list.add(Goal(id: id ?? 'goal', day: day, value: value));
+      // insert at correct position to keep list ordered by day
+      final newGoal = Goal(id: id ?? 'goal', day: day, value: value);
+      final insertAt = list.indexWhere((g) => g.day > day);
+      if (insertAt == -1) {
+        list.add(newGoal);
+      } else {
+        list.insert(insertAt, newGoal);
+      }
     } else {
       list[idx].value = value;
       if (id != null && list[idx].id.isEmpty) {
