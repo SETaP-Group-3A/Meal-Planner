@@ -6,6 +6,7 @@ import 'package:meal_planner/views/categories_screen.dart';
 import 'package:meal_planner/views/goal_diary_screen.dart';
 import 'package:meal_planner/views/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:meal_planner/log_in.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
@@ -52,7 +53,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return ChangeNotifierProvider<WeeklyGoals>.value(
+      value: weekSource,
+      child: MaterialApp(
       title: 'Meal Planner',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -72,7 +75,7 @@ class _MyAppState extends State<MyApp> {
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       initialRoute: '/login',
       routes: {
-        '/': (context) => MyHomePage(title: 'Meal Planner Home', weekSource: weekSource),
+        '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
         '/login': (context) => const LoginScreen(successRouteName: '/'),
         '/shopping-list': (context) => const ShoppingListScreen(),
         '/categories': (context) => const CategoriesScreen(),
@@ -85,21 +88,21 @@ class _MyAppState extends State<MyApp> {
         '/diary': (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           final int dayIndex = args != null && args['dayIndex'] is int ? args['dayIndex'] as int : -1;
-          return GoalDiaryScreen(weeklyGoals: [weekSource], dayIndex: dayIndex);
+          return GoalDiaryScreen(dayIndex: dayIndex);
         },
         '/settings': (context) => const SettingsScreen(),
         '/settings/account': (context) => AccountSettingsScreen(),
         '/settings/accessibility': (context) => const AccessibilitySettingsScreen(),
       },
+    ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title, required this.weekSource});
+  const MyHomePage({super.key, required this.title});
 
   final String title;
-  final WeeklyGoals weekSource;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -109,6 +112,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final weekly = Provider.of<WeeklyGoals>(context);
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       drawer: Drawer(
@@ -180,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SizedBox(
               width: 300,
               height: 200,
-              child: ProgressGraphWidget(userData: widget.weekSource.getGoalsForCurrentWeek()),
+              child: ProgressGraphWidget(userData: weekly.getGoalsForCurrentWeek().toList()),
             ),
           ],
         ),
