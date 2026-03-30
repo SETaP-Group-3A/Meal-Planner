@@ -18,11 +18,15 @@ class WeeklyGoals extends ChangeNotifier {
   void setGoalValue(int weekID, int day, double value, {String? id}) {
     if (!goals.containsKey(weekID)) goals[weekID] = [];
     final list = goals[weekID]!;
-    final existing = list.firstWhere((g) => g.day == day, orElse: () => Goal(id: id ?? '', day: day, value: double.nan));
-    if (existing.id.isEmpty) {
+    final idx = list.indexWhere((g) => g.day == day);
+    if (idx == -1) {
       list.add(Goal(id: id ?? 'goal', day: day, value: value));
     } else {
-      existing.value = value;
+      list[idx].value = value;
+      if (id != null && list[idx].id.isEmpty) {
+        // set id if it was empty
+        list[idx] = Goal(id: id, day: list[idx].day, value: list[idx].value);
+      }
     }
     notifyListeners();
   }
