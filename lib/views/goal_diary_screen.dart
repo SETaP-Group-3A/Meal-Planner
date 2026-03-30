@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:meal_planner/models/weekly_goals.dart';
+import 'package:provider/provider.dart';
 import 'package:meal_planner/repositories/goal_repository.dart';
 import 'package:meal_planner/views/app_styles.dart';
 
 class GoalDiaryScreen extends StatefulWidget {
 
-  final List<WeeklyGoals> weeklyGoals;
-
   final int dayIndex;
 
-  const GoalDiaryScreen({super.key, required this.weeklyGoals, this.dayIndex = -1});
+  const GoalDiaryScreen({super.key, this.dayIndex = -1});
 
   @override
   State<GoalDiaryScreen> createState() => _GoalDiaryScreenState();
@@ -22,22 +21,16 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
   List<Goal> currentGoals = [];
 
   void updateGoal(int day, String value) {
-    //Update the goal for the given day with the new value
-    setState(() {
-      final goal = currentGoals.firstWhere((g) => g.day == day, orElse: () => Goal(id: '', day: day, value: 0));
-      if (goal.id.isEmpty) {
-        // If no existing goal, add a new one
-        currentGoals.add(Goal(id: 'save money', day: day, value: double.tryParse(value) ?? 0));
-      } else {
-        // Update existing goal
-        goal.value = double.tryParse(value) ?? 0;
-      }
-    });
+    final weekly = Provider.of<WeeklyGoals>(context, listen: false);
+    final weekId = weekly.currentWeek;
+    final parsed = double.tryParse(value) ?? 0;
+    weekly.setGoalValue(weekId, day, parsed, id: 'money');
+    setState(() { currentGoals = weekly.getGoalsForCurrentWeek(); });
   }
 
   @override
   Widget build(BuildContext context) {
-    final WeeklyGoals weekSource = widget.weeklyGoals.isNotEmpty ? widget.weeklyGoals[0] : WeeklyGoals();
+    final WeeklyGoals weekSource = Provider.of<WeeklyGoals>(context);
     currentGoals = weekSource.getGoalsForCurrentWeek();
 
     final List<Goal> lastWeekGoals = () {
