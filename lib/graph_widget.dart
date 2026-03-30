@@ -63,7 +63,7 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
           LineChartBarData(
             spots: formatData(),
             color: Colors.green,
-            isCurved: true,
+            isCurved: false,
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(
