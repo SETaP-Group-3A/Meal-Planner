@@ -31,6 +31,10 @@ class _MyAppState extends State<MyApp> {
       WidgetsBinding.instance.platformDispatcher.platformBrightness ==
       Brightness.dark;
 
+  WeeklyGoals weekSource = WeeklyGoals()
+    ..goals[0] = [Goal(id: 'money', day: 0, value: 200.0), Goal(id: 'money', day: 2, value: 50.0)]
+    ..goals[1] = [Goal(id: 'money', day: 0, value: 500.0), Goal(id: 'money', day: 1, value: 150.0)];
+
   @override
   void initState() {
     super.initState();
@@ -68,7 +72,7 @@ class _MyAppState extends State<MyApp> {
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       initialRoute: '/login',
       routes: {
-        '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
+        '/': (context) => MyHomePage(title: 'Meal Planner Home', weekSource: weekSource),
         '/login': (context) => const LoginScreen(successRouteName: '/'),
         '/shopping-list': (context) => const ShoppingListScreen(),
         '/categories': (context) => const CategoriesScreen(),
@@ -81,11 +85,7 @@ class _MyAppState extends State<MyApp> {
         '/diary': (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           final int dayIndex = args != null && args['dayIndex'] is int ? args['dayIndex'] as int : -1;
-          return GoalDiaryScreen(weeklyGoals: [
-            WeeklyGoals()
-              ..goals[0] = [Goal(id: 'money', day: 0, value: 100.0), Goal(id: 'money', day: 2, value: 50.0)]
-              ..goals[1] = [Goal(id: 'money', day: 0, value: 300.0), Goal(id: 'money', day: 1, value: 150.0)],
-          ], dayIndex: dayIndex);
+          return GoalDiaryScreen(weeklyGoals: [weekSource], dayIndex: dayIndex);
         },
         '/settings': (context) => const SettingsScreen(),
         '/settings/account': (context) => AccountSettingsScreen(),
@@ -96,9 +96,10 @@ class _MyAppState extends State<MyApp> {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.weekSource});
 
   final String title;
+  final WeeklyGoals weekSource;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -179,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SizedBox(
               width: 300,
               height: 200,
-              child: ProgressGraphWidget(userData: [Goal(id: 'money', day: 0, value: 100.0), Goal(id: 'money', day: 1, value: 0.0), Goal(id: 'money', day: 2, value: 50.0)]),
+              child: ProgressGraphWidget(userData: widget.weekSource.getGoalsForCurrentWeek()),
             ),
           ],
         ),
