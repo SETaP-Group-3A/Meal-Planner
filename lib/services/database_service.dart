@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import '../models/recipe.dart';
@@ -98,7 +99,27 @@ class DatabaseService {
           quantity $intType,
           FOREIGN KEY (ingredientName) REFERENCES ingredients (name) ON DELETE CASCADE
         )
-      '''
+      ''',
+
+      'goal': '''
+        CREATE TABLE goal (
+          goal_id TEXT NOT NULL,
+          day_id INTEGER NOT NULL,
+          goal_value $realType,
+          date DATE,
+          PRIMARY KEY (goal_id, day_id)
+        )
+      ''',
+
+      'week_goal': '''
+        CREATE TABLE week_goal (
+          week_goal_id INTEGER NOT NULL,
+          account_id TEXT NOT NULL,
+          goal_id TEXT NOT NULL,
+          FOREIGN KEY (account_id) REFERENCES account (account_id) ON DELETE CASCADE,
+          PRIMARY KEY (week_goal_id, account_id, goal_id)
+        )
+      ''',
     };
 
     // Execute creating tables
@@ -468,5 +489,46 @@ class DatabaseService {
   Future close() async {
     final db = await instance.database;
     db.close();
+  }
+
+//------------------------------------------------------------------------------------------------------------------
+//Goals
+
+  Future<void> createWeeklyGoal(String accountId, WeeklyGoals weeklyGoals) async {
+    final db = await instance.database;
+
+    for (var entry in weeklyGoals.goals.entries) {
+      final weekId = entry.key;
+      final goalsForWeek = entry.value;
+
+      for (var goal in goalsForWeek) {
+        //Need to actually set correct date
+        await setGoal(goal.id, goal.day, goal.value, DateTime.now());
+
+        await db.insert(
+          'week_goal',
+          {
+            'week_goal_id': weekId,
+            'account_id': accountId,
+            'goal_id': goal.id,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+  }
+
+  Future<void> setGoal(String goalId, int dayId, double goalValue, DateTime date) async {
+    final db = await instance.database;
+    await db.insert(
+      'goal',
+      {
+        'goal_id': goalId,
+        'day_id': dayId,
+        'goal_value': goalValue,
+        'date': date.toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 }
