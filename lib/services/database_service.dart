@@ -518,6 +518,29 @@ class DatabaseService {
     }
   }
 
+  Future<void> updateWeeklyGoal(String accountId, WeeklyGoals weeklyGoals) async {
+    final db = await instance.database;
+
+    for (var entry in weeklyGoals.goals.entries) {
+      final weekId = entry.key;
+      final goalsForWeek = entry.value;
+
+      for (var goal in goalsForWeek) {
+        //Need to actually set correct date
+        await setGoal(goal.id, goal.day, goal.value, DateTime.now());
+
+        await db.update(
+          'week_goal',
+          {
+            'goal_id': goal.id,
+          },
+          where: 'week_goal_id = ? AND account_id = ?',
+          whereArgs: [weekId, accountId],
+        );
+      }
+    }
+  }
+
   Future<void> setGoal(String goalId, int dayId, double goalValue, DateTime date) async {
     final db = await instance.database;
     await db.insert(
