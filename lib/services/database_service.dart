@@ -503,7 +503,7 @@ class DatabaseService {
 
       for (var goal in goalsForWeek) {
         //Need to actually set correct date
-        await setGoal(goal.id, goal.day, goal.value, DateTime.now());
+        await createGoal(goal.id, goal.day, goal.value, DateTime.now());
 
         await db.insert(
           'week_goal',
@@ -527,7 +527,7 @@ class DatabaseService {
 
       for (var goal in goalsForWeek) {
         //Need to actually set correct date
-        await setGoal(goal.id, goal.day, goal.value, DateTime.now());
+        await updateGoal(goal.id, goal.day, goal.value, DateTime.now());
 
         await db.update(
           'week_goal',
@@ -541,7 +541,7 @@ class DatabaseService {
     }
   }
 
-  Future<void> setGoal(String goalId, int dayId, double goalValue, DateTime date) async {
+  Future<void> createGoal(String goalId, int dayId, double goalValue, DateTime date) async {
     final db = await instance.database;
     await db.insert(
       'goal',
@@ -552,6 +552,19 @@ class DatabaseService {
         'date': date.toIso8601String(),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateGoal(String goalId, int dayId, double goalValue, DateTime date) async {
+    final db = await instance.database;
+    await db.update(
+      'goal',
+      {
+        'goal_value': goalValue,
+        'date': date.toIso8601String(),
+      },
+      where: 'goal_id = ? AND day_id = ?',
+      whereArgs: [goalId, dayId],
     );
   }
 }
