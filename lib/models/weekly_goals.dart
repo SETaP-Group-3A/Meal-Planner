@@ -29,6 +29,17 @@ class GoalTypes {
         return '$value km';
     }
   }
+
+  static double parseValue(GoalType type, String s) {
+    switch (type) {
+      case GoalType.money:
+        return double.tryParse(s.replaceAll('£', '')) ?? 0;
+      case GoalType.calories:
+        return double.tryParse(s.replaceAll(' cal', '')) ?? 0;
+      case GoalType.distance:
+        return double.tryParse(s.replaceAll(' km', '')) ?? 0;
+    }
+  }
 }
 
 class WeeklyGoals extends ChangeNotifier {
