@@ -503,14 +503,14 @@ class DatabaseService {
 
       for (var goal in goalsForWeek) {
         //Need to actually set correct date
-        await createGoal(goal.id, goal.day, goal.value, DateTime.now());
+        await createGoal(goal.id.toString(), goal.day, goal.value, DateTime.now());
 
         await db.insert(
           'week_goal',
           {
             'week_goal_id': weekId,
             'account_id': accountId,
-            'goal_id': goal.id,
+            'goal_id': goal.id.toString(),
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -527,12 +527,12 @@ class DatabaseService {
 
       for (var goal in goalsForWeek) {
         //Need to actually set correct date
-        await updateGoal(goal.id, goal.day, goal.value, DateTime.now());
+        await updateGoal(goal.id.toString(), goal.day, goal.value, DateTime.now());
 
         await db.update(
           'week_goal',
           {
-            'goal_id': goal.id,
+            'goal_id': goal.id.toString(),
           },
           where: 'week_goal_id = ? AND account_id = ?',
           whereArgs: [weekId, accountId],
