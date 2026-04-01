@@ -19,6 +19,9 @@ class GoalTypes {
   static String displayGoal(GoalType type, String value) {
     switch (type) {
       case GoalType.money:
+        if (double.tryParse(value)! < 0) {
+          return '-£${value.substring(1)}'; // remove decimal if it's a whole number
+        }
         return '£$value';
       case GoalType.calories:
         return '$value cal';
