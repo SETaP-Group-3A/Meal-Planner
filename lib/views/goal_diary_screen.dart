@@ -22,11 +22,10 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
 
   List<Goal> currentGoals = [];
 
-  void updateGoal(int day, String value) {
+  void updateGoal(int day, double value) {
     final weekly = Provider.of<WeeklyGoals>(context, listen: false);
     final weekId = weekly.currentWeek;
-    final parsed = double.tryParse(value) ?? 0;
-    weekly.setGoalValue(weekId, day, parsed, id: GoalType.money);
+    weekly.setGoalValue(weekId, day, value, id: GoalType.money);
     setState(() { currentGoals = weekly.getGoalsForCurrentWeek(); });
   }
 
@@ -94,7 +93,7 @@ class DayGoalWidget extends StatefulWidget {
   final int dayIndex;
   final int selectedDayIndex;
 
-  final Function(int, String)? onGoalChanged;
+  final Function(int, double)? onGoalChanged;
 
   const DayGoalWidget({super.key, required this.day, required this.goal, required this.dayIndex, required this.selectedDayIndex, this.onGoalChanged});
 
@@ -136,7 +135,7 @@ class _DayGoalWidgetState extends State<DayGoalWidget> {
                 ),
                 controller: _controller,
                 onChanged: (value) {
-                  widget.onGoalChanged?.call(widget.dayIndex, value);
+                  widget.onGoalChanged?.call(widget.dayIndex, GoalTypes.parseValue(widget.goal.id, value));
                 },
               ),
             ),
