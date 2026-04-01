@@ -33,8 +33,8 @@ class _MyAppState extends State<MyApp> {
       Brightness.dark;
 
   WeeklyGoals weekSource = WeeklyGoals()
-    ..goals[0] = [Goal(id: 'money', day: 0, value: 200.0), Goal(id: 'money', day: 2, value: 50.0)]
-    ..goals[1] = [Goal(id: 'money', day: 0, value: 500.0), Goal(id: 'money', day: 1, value: 150.0)];
+    ..goals[0] = [Goal(id: GoalType.money, day: 0, value: 200.0), Goal(id: GoalType.money, day: 2, value: 50.0)]
+    ..goals[1] = [Goal(id: GoalType.money, day: 0, value: 500.0), Goal(id: GoalType.money, day: 1, value: 150.0)];
 
   @override
   void initState() {
