@@ -8,7 +8,7 @@ class GraphController {
     updateGraph(userData[0].id);
   }
 
-  List<int> updateGraph(String goal) {  
+  List<int> updateGraph(GoalType goal) {  
     // Produce a fixed 7-element list mapping days 0..6 to values for `goal`.
     final result = List<int>.filled(7, 0);
     for (final g in userData) {
