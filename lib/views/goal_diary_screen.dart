@@ -24,7 +24,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
     final weekly = Provider.of<WeeklyGoals>(context, listen: false);
     final weekId = weekly.currentWeek;
     final parsed = double.tryParse(value) ?? 0;
-    weekly.setGoalValue(weekId, day, parsed, id: 'money');
+    weekly.setGoalValue(weekId, day, parsed, id: GoalType.money);
     setState(() { currentGoals = weekly.getGoalsForCurrentWeek(); });
   }
 
@@ -72,7 +72,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
                   goal: currentGoals
                       .firstWhere(
                         (g) => g.day == i,
-                        orElse: () => Goal(id: '', day: i, value: 0),
+                        orElse: () => Goal(id: GoalType.money, day: i, value: 0),
                       )
                       .value
                       .toString(),
