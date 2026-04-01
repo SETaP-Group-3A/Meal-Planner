@@ -18,6 +18,8 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
 
   final GoalRepository repository = GoalRepository();
 
+  GoalType selectedGoalType = GoalType.money;
+
   List<Goal> currentGoals = [];
 
   void updateGoal(int day, String value) {
@@ -32,6 +34,8 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
   Widget build(BuildContext context) {
     final WeeklyGoals weekSource = Provider.of<WeeklyGoals>(context);
     currentGoals = weekSource.getGoalsForCurrentWeek();
+
+    selectedGoalType = currentGoals.isNotEmpty ? currentGoals[0].id : GoalType.money;
 
     final List<Goal> lastWeekGoals = () {
       if (weekSource.goals.keys.length < 2) return <Goal>[];
@@ -59,7 +63,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.max,
-                  children: [Text('Total: ${repository.totalAmount(currentGoals)}'), SizedBox(width: 16), Text('Savings: $savings', style: AppStyles.hightlightSwitch(savings))],
+                  children: [Text('Total: ${GoalTypes.displayGoal(selectedGoalType, repository.totalAmount(currentGoals).toString())}'), SizedBox(width: 16), Text('Savings: ${GoalTypes.displayGoal(selectedGoalType, savings.toString())}', style: AppStyles.hightlightSwitch(savings))],
                 ),
               ),
               Container(height: 16),
@@ -73,9 +77,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
                       .firstWhere(
                         (g) => g.day == i,
                         orElse: () => Goal(id: GoalType.money, day: i, value: 0),
-                      )
-                      .value
-                      .toString(),
+                      ),
                   onGoalChanged: (day, value) => updateGoal(day, value),
                 ),
             ],
@@ -88,7 +90,7 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
 
 class DayGoalWidget extends StatefulWidget {
   final String day;
-  final String goal;
+  final Goal goal;
   final int dayIndex;
   final int selectedDayIndex;
 
@@ -106,7 +108,7 @@ class _DayGoalWidgetState extends State<DayGoalWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.goal);
+    _controller = TextEditingController(text: GoalTypes.displayGoal(widget.goal.id, widget.goal.value.toString()));
   }
 
   @override
