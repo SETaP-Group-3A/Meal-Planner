@@ -2,6 +2,32 @@ import 'package:flutter/foundation.dart';
 
 enum GoalType { money, calories, distance }
 
+class GoalTypes { 
+  static GoalType fromString(String s) {
+    switch (s) {
+      case 'money':
+        return GoalType.money;
+      case 'calories':
+        return GoalType.calories;
+      case 'distance':
+        return GoalType.distance;
+      default:
+        throw ArgumentError('Unknown goal type: $s');
+    }
+  }
+
+  static String displayGoal(GoalType type, String value) {
+    switch (type) {
+      case GoalType.money:
+        return '£$value';
+      case GoalType.calories:
+        return '$value cal';
+      case GoalType.distance:
+        return '$value km';
+    }
+  }
+}
+
 class WeeklyGoals extends ChangeNotifier {
   Map<int, List<Goal>> goals = {};
 
