@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+enum GoalType { money, calories, distance }
+
 class WeeklyGoals extends ChangeNotifier {
   Map<int, List<Goal>> goals = {};
 
@@ -15,13 +17,13 @@ class WeeklyGoals extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setGoalValue(int weekID, int day, double value, {String? id}) {
+  void setGoalValue(int weekID, int day, double value, {GoalType? id}) {
     if (!goals.containsKey(weekID)) goals[weekID] = [];
     final list = goals[weekID]!;
     final idx = list.indexWhere((g) => g.day == day);
     if (idx == -1) {
       // insert at correct position to keep list ordered by day
-      final newGoal = Goal(id: id ?? 'goal', day: day, value: value);
+      final newGoal = Goal(id: id ?? GoalType.money, day: day, value: value);
       final insertAt = list.indexWhere((g) => g.day > day);
       if (insertAt == -1) {
         list.add(newGoal);
@@ -30,7 +32,7 @@ class WeeklyGoals extends ChangeNotifier {
       }
     } else {
       list[idx].value = value;
-      if (id != null && list[idx].id.isEmpty) {
+      if (id != null) {
         // set id if it was empty
         list[idx] = Goal(id: id, day: list[idx].day, value: list[idx].value);
       }
@@ -50,7 +52,7 @@ class WeeklyGoals extends ChangeNotifier {
 }
 
 class Goal {
-  final String id;
+  final GoalType id;
   final int day;
   double value;
 
