@@ -48,3 +48,21 @@ Future<double?> getDistance(
 
   return null;
 }
+
+// combines the nominatim api function (getCoordinates) and the osrm api function (getDistance) to get the distance between two postocodes
+Future<double?> getDistanceFromPostcodes(
+  String postcode1,
+  String postcode2,
+) async {
+  final coord1 = await getCoordinates(postcode1);
+  final coord2 = await getCoordinates(postcode2);
+
+  if (coord1 == null || coord2 == null) return null;
+
+  return await getDistance(
+    coord1['lat']!,
+    coord1['lon']!,
+    coord2['lat']!,
+    coord2['lon']!,
+  );
+}
