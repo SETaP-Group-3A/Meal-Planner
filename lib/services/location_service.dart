@@ -25,3 +25,26 @@ Future<Map<String, double>?> getCoordinates(String postcode) async {
   }
   return null;
 }
+
+Future<double?> getDistance(
+  double lat1,
+  double lon1,
+  double lat2,
+  double lon2,
+) async {
+  final url = Uri.parse(
+    'http://router.project-osrm.org/route/v1/driving/'
+    '$lon1,$lat1;$lon2,$lat2?overview=false'
+  );
+
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+
+    final distanceMeters = data['routes'][0]['distance'];
+    return distanceMeters / 1000; // convert to km
+  }
+
+  return null;
+}
