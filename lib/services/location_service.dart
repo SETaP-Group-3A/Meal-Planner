@@ -1,7 +1,23 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+// limiting function for nominatim api to 1 req/sec to not get blocked 
+class _RateLimiter {
+  Future<void> _lastRequest = Future.value();
+
+  Future<void> schedule() {
+    _lastRequest = _lastRequest.then((_) async {
+      await Future.delayed(const Duration(seconds: 1));
+    });
+    return _lastRequest;
+  }
+}
+
+final _nominatimLimiter = _RateLimiter();
+
 Future<Map<String, double>?> getCoordinates(String postcode) async {
+  await _nominatimLimiter.schedule();
+
   final url = Uri.parse(
     'https://nominatim.openstreetmap.org/search?postalcode=$postcode&country=UK&format=json'
   );
