@@ -27,6 +27,22 @@ CREATE TABLE recipe_ingredients (
   FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
 );
 
+CREATE TABLE goal (
+  goal_id TEXT NOT NULL,
+  day_id INTEGER NOT NULL,
+  goal_value REAL NOT NULL,
+  date DATE,
+  PRIMARY KEY (goal_id, day_id)
+);
+
+CREATE TABLE week_goal (
+  week_goal_id INTEGER NOT NULL,
+  account_id TEXT NOT NULL,
+  goal_id TEXT NOT NULL,
+  FOREIGN KEY (account_id) REFERENCES account (account_id) ON DELETE CASCADE,
+  PRIMARY KEY (week_goal_id, account_id, goal_id)
+);
+
 CREATE INDEX idx_ingredients_name ON ingredients(name);
 CREATE INDEX idx_recipe_ingredients_recipe ON recipe_ingredients(recipe_id);
 
