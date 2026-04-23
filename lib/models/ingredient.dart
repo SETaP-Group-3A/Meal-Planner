@@ -3,16 +3,19 @@ class Ingredient {
   final double cost;
   final double distance;
   final int calories;
-
-  Ingredient({
+  final String? storeId;
+ 
+  const Ingredient({
     required this.name,
     required this.cost,
     required this.distance,
     required this.calories,
+    this.storeId,
   });
-
+ 
   @override
   String toString() {
-    return '$name (Cost: $cost, Dist: $distance, Cal: $calories)';
+    final storePart = storeId != null ? ', Store: $storeId' : '';
+    return '$name (Cost: $cost, Dist: $distance, Cal: $calories$storePart)';
   }
 }
