@@ -11,6 +11,7 @@ import 'package:meal_planner/log_in.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
 import 'views/category_content_screen.dart';
+import 'package:meal_planner/sign_up.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,6 +78,7 @@ class _MyAppState extends State<MyApp> {
       routes: {
         '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
         '/login': (context) => const LoginScreen(successRouteName: '/'),
+        '/signup': (context) => const SignUpScreen(),
         '/shopping-list': (context) => const ShoppingListScreen(),
         '/categories': (context) => const CategoriesScreen(),
         '/category': (context) {
