@@ -1,0 +1,100 @@
+import 'package:flutter/foundation.dart';
+
+enum GoalType { money, calories, distance }
+
+class GoalTypes { 
+  static GoalType fromString(String s) {
+    switch (s) {
+      case 'money':
+        return GoalType.money;
+      case 'calories':
+        return GoalType.calories;
+      case 'distance':
+        return GoalType.distance;
+      default:
+        throw ArgumentError('Unknown goal type: $s');
+    }
+  }
+
+  static String displayGoal(GoalType type, String value) {
+    switch (type) {
+      case GoalType.money:
+        if (double.tryParse(value)! < 0) {
+          return '-£${value.substring(1)}'; // remove decimal if it's a whole number
+        }
+        return '£$value';
+      case GoalType.calories:
+        return '$value cal';
+      case GoalType.distance:
+        return '$value km';
+    }
+  }
+
+  static double parseValue(GoalType type, String s) {
+    switch (type) {
+      case GoalType.money:
+        return double.tryParse(s.replaceAll('£', '')) ?? 0;
+      case GoalType.calories:
+        return double.tryParse(s.replaceAll(' cal', '')) ?? 0;
+      case GoalType.distance:
+        return double.tryParse(s.replaceAll(' km', '')) ?? 0;
+    }
+  }
+}
+
+class WeeklyGoals extends ChangeNotifier {
+  Map<int, List<Goal>> goals = {};
+
+  void addGoal(Goal goal, int weekID) {
+    if (weekID < 0) {
+      throw ArgumentError('Week ID must be non-negative');
+    }
+
+    if (!goals.containsKey(weekID)) {
+      goals[weekID] = [];
+    }
+    goals[weekID]!.add(goal);
+    notifyListeners();
+  }
+
+  void setGoalValue(int weekID, int day, double value, {GoalType? id}) {
+    if (!goals.containsKey(weekID)) goals[weekID] = [];
+    final list = goals[weekID]!;
+    final idx = list.indexWhere((g) => g.day == day);
+    if (idx == -1) {
+      // insert at correct position to keep list ordered by day
+      final newGoal = Goal(id: id ?? GoalType.money, day: day, value: value);
+      final insertAt = list.indexWhere((g) => g.day > day);
+      if (insertAt == -1) {
+        list.add(newGoal);
+      } else {
+        list.insert(insertAt, newGoal);
+      }
+    } else {
+      list[idx].value = value;
+      if (id != null) {
+        // set id if it was empty
+        list[idx] = Goal(id: id, day: list[idx].day, value: list[idx].value);
+      }
+    }
+    notifyListeners();
+  }
+
+  List<Goal> getGoalsForCurrentWeek() {
+    return getGoalsForWeek(goals.keys.isNotEmpty ? goals.keys.last : 0);
+  }
+
+  List<Goal> getGoalsForWeek(int weekID) {
+    return goals[weekID] ?? [];
+  }
+
+  int get currentWeek => goals.keys.isNotEmpty ? goals.keys.last : 0;
+}
+
+class Goal {
+  final GoalType id;
+  final int day;
+  double value;
+
+  Goal({required this.id, required this.day, required this.value}); 
+}

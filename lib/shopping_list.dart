@@ -1,6 +1,6 @@
 import 'models/ingredient.dart';
 import 'models/shopping_list_item.dart';
-import 'mock_data.dart';
+import 'services/database_service.dart';
 
 class ShoppingList {
   static final ShoppingList _instance = ShoppingList._internal();
@@ -26,60 +26,31 @@ class ShoppingList {
   }
 
 
-  void addRecipeById(String recipeId) {
-
-    addRecipe(recipeId, 'cost');
+  Future<void> addRecipeById(String recipeId) async {
+    await addRecipe(recipeId, 'cost');
   }
 
-  void addRecipe(String recipeId, String sortBy) {
+  Future<void> addRecipe(String recipeId, String sortBy) async {
     _addedRecipeHistory.add(recipeId);
-    _processRecipeAddition(recipeId, sortBy);
+    await _processRecipeAddition(recipeId, sortBy);
   }
 
-  void regenerateList(String sortBy) {
+  Future<void> regenerateList(String sortBy) async {
     shoppingItems.clear();
     for (var recipeId in _addedRecipeHistory) {
-      _processRecipeAddition(recipeId, sortBy);
+      await _processRecipeAddition(recipeId, sortBy);
     }
   }
 
-  void _processRecipeAddition(String recipeId, String sortBy) {
-    final requiredIngredientNames = _fetchRequirements(recipeId);
+  Future<void> _processRecipeAddition(String recipeId, String sortBy) async {
+    final bestIngredients = await DatabaseService.instance
+        .getBestIngredientOptionsForRecipe(recipeId, sortBy);
 
-    for (var name in requiredIngredientNames) {
-      final bestOption = _findBestIngredientOption(name, sortBy);
-      
-      if (bestOption != null) {
-        _addOrIncrementIngredient(bestOption);
-      }
+    for (var ingredient in bestIngredients) {
+      _addOrIncrementIngredient(ingredient);
     }
 
     _sortItems(sortBy);
-  }
-
-  Ingredient? _findBestIngredientOption(String ingredientName, String sortBy) {
-    if (!marketInventory.containsKey(ingredientName)) return null;
-
-    final options = List<Ingredient>.from(marketInventory[ingredientName]!);
-    
-    if (options.isEmpty) return null;
-
-    switch (sortBy.toLowerCase()) {
-      case 'cost':
-        options.sort((a, b) => a.cost.compareTo(b.cost));
-        break;
-      case 'distance':
-        options.sort((a, b) => a.distance.compareTo(b.distance));
-        break;
-      case 'nutritional_value':
-      case 'calories':
-        options.sort((a, b) => a.calories.compareTo(b.calories));
-        break;
-      default:
-        break;
-    }
-
-    return options.first;
   }
 
   void _addOrIncrementIngredient(Ingredient ingredient) {
@@ -103,15 +74,6 @@ class ShoppingList {
     }
   }
 
-  List<String> _fetchRequirements(String recipeId) {
-    try {
-      final recipe = mockRecipes.firstWhere((r) => r.id == recipeId);
-      return recipe.requiredIngredients;
-    } catch (_) {
-      return [];
-    }
-  }
-
   void _sortItems(String sortBy) {
     switch (sortBy.toLowerCase()) {
       case 'cost':
@@ -120,9 +82,8 @@ class ShoppingList {
       case 'distance':
         shoppingItems.sort((a, b) => a.ingredient.distance.compareTo(b.ingredient.distance));
         break;
-      case 'nutritional_value':
       case 'calories':
-        shoppingItems.sort((a, b) => a.totalCalories.compareTo(b.totalCalories));
+        shoppingItems.sort((a, b) => b.ingredient.calories.compareTo(a.ingredient.calories));
         break;
       default:
         break;

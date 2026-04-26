@@ -1,9 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:meal_planner/graph_controller.dart';
+import 'package:meal_planner/models/weekly_goals.dart';
+import 'package:meal_planner/repositories/graph_controller.dart';
 
 class ProgressGraphWidget extends StatefulWidget {
-  final dynamic userData;
+
+  final List<Goal> userData;
+
   const ProgressGraphWidget({super.key, required this.userData});
 
   @override
@@ -20,7 +23,7 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
   void initState() {
     super.initState();
     controller = GraphController(widget.userData);
-    goalData = controller.updateGraph("calories");
+    goalData = controller.updateGraph(widget.userData[0].id);
   }
 
   @override
@@ -29,7 +32,7 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
     if (widget.userData != oldWidget.userData) {
       controller = GraphController(widget.userData);
       setState(() {
-        goalData = controller.updateGraph("calories");
+        goalData = controller.updateGraph(widget.userData[0].id);
       });
     }
   }
@@ -46,11 +49,21 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
   Widget build(BuildContext context) {
     return LineChart(
       LineChartData(
+        lineTouchData: LineTouchData(
+          touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
+            if (event is FlTapUpEvent) {
+              final touched = response?.lineBarSpots?.first;
+              if (touched != null) {
+                _onPointTapped(touched);
+              }
+            }
+          },
+        ),
         lineBarsData: [
           LineChartBarData(
             spots: formatData(),
             color: Colors.green,
-            isCurved: true,
+            isCurved: false,
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(
@@ -81,5 +94,11 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
 
   Widget xTitlesWidgets(double value, TitleMeta meta) {
     return SideTitleWidget(meta: meta, child: Text(xTitles[value.toInt() - 1]));
+  }
+
+  void _onPointTapped(LineBarSpot touched) {
+    final x = touched.x.toInt();
+    final int dayIndex = (x - 1).clamp(0, 6);
+    Navigator.of(context).pushNamed('/diary', arguments: {'dayIndex': dayIndex});
   }
 }

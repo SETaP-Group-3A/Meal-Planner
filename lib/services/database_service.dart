@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:convert';
+import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import '../models/recipe.dart';
@@ -59,12 +59,6 @@ class DatabaseService {
         CREATE TABLE recipes (
           id $idType,
           name $textType,
-          cookingTime $intType,
-          allergens TEXT,
-          calories INTEGER,
-          macros TEXT,
-          nutrients TEXT,
-          instructions TEXT,
           categoryId TEXT,
           FOREIGN KEY (categoryId) REFERENCES categories (id) ON DELETE CASCADE
         )
@@ -105,7 +99,27 @@ class DatabaseService {
           quantity $intType,
           FOREIGN KEY (ingredientName) REFERENCES ingredients (name) ON DELETE CASCADE
         )
-      '''
+      ''',
+
+      'goal': '''
+        CREATE TABLE goal (
+          goal_id TEXT NOT NULL,
+          day_id INTEGER NOT NULL,
+          goal_value $realType,
+          date DATE,
+          PRIMARY KEY (goal_id, day_id)
+        )
+      ''',
+
+      'week_goal': '''
+        CREATE TABLE week_goal (
+          week_goal_id INTEGER NOT NULL,
+          account_id TEXT NOT NULL,
+          goal_id TEXT NOT NULL,
+          FOREIGN KEY (account_id) REFERENCES account (account_id) ON DELETE CASCADE,
+          PRIMARY KEY (week_goal_id, account_id, goal_id)
+        )
+      ''',
     };
 
     // Execute creating tables
@@ -133,20 +147,12 @@ class DatabaseService {
 
     // Seed Recipes from mockRecipes
     for (var recipe in mockRecipes) {
-      await db.insert('recipes', {
-        'id': recipe.id,
-        'name': recipe.name,
-        'cookingTime': recipe.cookingTime,
-        'allergens': recipe.allergens != null ? jsonEncode(recipe.allergens) : null,
-        'calories': recipe.calories,
-        'macros': recipe.macros != null ? jsonEncode(recipe.macros) : null,
-        'nutrients': recipe.nutrients != null ? jsonEncode(recipe.nutrients) : null,
-        'instructions': recipe.instructions,
-      });
+      await db.insert('recipes', {'id': recipe.id, 'name': recipe.name});
+
       for (var ing in recipe.requiredIngredients) {
         await db.insert('recipe_ingredients', {
           'recipeId': recipe.id,
-          'ingredientName': ing,
+          'ingredientName': ing, // e.g., 'Flour'
         });
       }
     }
@@ -254,6 +260,7 @@ class DatabaseService {
   Future<List<Recipe>> getAllRecipes() async {
     final db = await instance.database;
     final result = await db.query('recipes');
+
     List<Recipe> recipes = [];
     for (var recipeMap in result) {
       final ingredients = await _getIngredientsForRecipe(recipeMap['id'] as String);
@@ -261,18 +268,6 @@ class DatabaseService {
         id: recipeMap['id'] as String,
         name: recipeMap['name'] as String,
         requiredIngredients: ingredients,
-        cookingTime: recipeMap['cookingTime'] as int,
-        allergens: recipeMap['allergens'] != null && (recipeMap['allergens'] as String).isNotEmpty
-          ? List<String>.from(jsonDecode(recipeMap['allergens'] as String))
-          : null,
-        calories: recipeMap['calories'] as int?,
-        macros: recipeMap['macros'] != null && (recipeMap['macros'] as String).isNotEmpty
-          ? Map<String, double>.from(jsonDecode(recipeMap['macros'] as String))
-          : null,
-        nutrients: recipeMap['nutrients'] != null && (recipeMap['nutrients'] as String).isNotEmpty
-          ? Map<String, double>.from(jsonDecode(recipeMap['nutrients'] as String))
-          : null,
-        instructions: recipeMap['instructions'] as String?,
       ));
     }
     return recipes;
@@ -281,26 +276,28 @@ class DatabaseService {
   Future<Recipe?> getRecipeById(String id) async {
     final db = await instance.database;
     final result = await db.query('recipes', where: 'id = ?', whereArgs: [id]);
+    
     if (result.isEmpty) return null;
+    
     final recipeMap = result.first;
     final ingredients = await _getIngredientsForRecipe(id);
+    
     return Recipe(
       id: recipeMap['id'] as String,
       name: recipeMap['name'] as String,
       requiredIngredients: ingredients,
-      cookingTime: recipeMap['cookingTime'] as int,
-      allergens: recipeMap['allergens'] != null && (recipeMap['allergens'] as String).isNotEmpty
-        ? List<String>.from(jsonDecode(recipeMap['allergens'] as String))
-        : null,
-      calories: recipeMap['calories'] as int?,
-      macros: recipeMap['macros'] != null && (recipeMap['macros'] as String).isNotEmpty
-        ? Map<String, double>.from(jsonDecode(recipeMap['macros'] as String))
-        : null,
-      nutrients: recipeMap['nutrients'] != null && (recipeMap['nutrients'] as String).isNotEmpty
-        ? Map<String, double>.from(jsonDecode(recipeMap['nutrients'] as String))
-        : null,
-      instructions: recipeMap['instructions'] as String?,
     );
+  }
+
+  Future<List<String>> getRequiredIngredientsForRecipe(String recipeId) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'recipe_ingredients',
+      columns: ['ingredientName'],
+      where: 'recipeId = ?',
+      whereArgs: [recipeId],
+    );
+    return result.map((row) => row['ingredientName'] as String).toList();
   }
 
   Future<List<String>> _getIngredientsForRecipe(String recipeId) async {
@@ -369,6 +366,41 @@ class DatabaseService {
       distance: ingredientMap['distance'] as double,
       calories: ingredientMap['calories'] as int,
     )).toList();
+  }
+
+  Future<Ingredient?> getBestIngredientOption(String ingredientName, String sortBy) async {
+    final options = await getIngredientsByGenericName(ingredientName);
+    if (options.isEmpty) return null;
+
+    switch (sortBy.toLowerCase()) {
+      case 'cost':
+        options.sort((a, b) => a.cost.compareTo(b.cost));
+        break;
+      case 'distance':
+        options.sort((a, b) => a.distance.compareTo(b.distance));
+        break;
+      case 'calories':
+        options.sort((a, b) => a.calories.compareTo(b.calories));
+        break;
+      default:
+        break;
+    }
+
+    return options.first;
+  }
+
+  Future<List<Ingredient>> getBestIngredientOptionsForRecipe(String recipeId, String sortBy) async {
+    final requiredIngredientNames = await getRequiredIngredientsForRecipe(recipeId);
+    final selectedIngredients = <Ingredient>[];
+
+    for (var ingredientName in requiredIngredientNames) {
+      final bestOption = await getBestIngredientOption(ingredientName, sortBy);
+      if (bestOption != null) {
+        selectedIngredients.add(bestOption);
+      }
+    }
+
+    return selectedIngredients;
   }
 
   Future<void> updateIngredient(Ingredient ingredient) async {
@@ -457,5 +489,82 @@ class DatabaseService {
   Future close() async {
     final db = await instance.database;
     db.close();
+  }
+
+//------------------------------------------------------------------------------------------------------------------
+//Goals
+
+  Future<void> createWeeklyGoal(String accountId, WeeklyGoals weeklyGoals) async {
+    final db = await instance.database;
+
+    for (var entry in weeklyGoals.goals.entries) {
+      final weekId = entry.key;
+      final goalsForWeek = entry.value;
+
+      for (var goal in goalsForWeek) {
+        //Need to actually set correct date
+        await createGoal(goal.id.toString(), goal.day, goal.value, DateTime.now());
+
+        await db.insert(
+          'week_goal',
+          {
+            'week_goal_id': weekId,
+            'account_id': accountId,
+            'goal_id': goal.id.toString(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+  }
+
+  Future<void> updateWeeklyGoal(String accountId, WeeklyGoals weeklyGoals) async {
+    final db = await instance.database;
+
+    for (var entry in weeklyGoals.goals.entries) {
+      final weekId = entry.key;
+      final goalsForWeek = entry.value;
+
+      for (var goal in goalsForWeek) {
+        //Need to actually set correct date
+        await updateGoal(goal.id.toString(), goal.day, goal.value, DateTime.now());
+
+        await db.update(
+          'week_goal',
+          {
+            'goal_id': goal.id.toString(),
+          },
+          where: 'week_goal_id = ? AND account_id = ?',
+          whereArgs: [weekId, accountId],
+        );
+      }
+    }
+  }
+
+  Future<void> createGoal(String goalId, int dayId, double goalValue, DateTime date) async {
+    final db = await instance.database;
+    await db.insert(
+      'goal',
+      {
+        'goal_id': goalId,
+        'day_id': dayId,
+        'goal_value': goalValue,
+        'date': date.toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateGoal(String goalId, int dayId, double goalValue, DateTime date) async {
+    final db = await instance.database;
+    await db.update(
+      'goal',
+      {
+        'goal_value': goalValue,
+        'date': date.toIso8601String(),
+      },
+      where: 'goal_id = ? AND day_id = ?',
+      whereArgs: [goalId, dayId],
+    );
   }
 }

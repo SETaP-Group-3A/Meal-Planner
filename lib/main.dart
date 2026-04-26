@@ -1,28 +1,82 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/models/weekly_goals.dart';
+import 'package:meal_planner/services/database_service.dart';
+import 'package:meal_planner/views/app_styles.dart';
 import 'package:meal_planner/views/categories_screen.dart';
+import 'package:meal_planner/views/goal_diary_screen.dart';
+import 'package:meal_planner/views/settings_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:meal_planner/log_in.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
-import 'views/category_detail_screen.dart';
 import 'views/category_content_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize the database
+  await DatabaseService.instance.database;
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  bool _isDarkMode =
+      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+      Brightness.dark;
+
+  WeeklyGoals weekSource = WeeklyGoals()
+    ..goals[0] = [Goal(id: GoalType.money, day: 0, value: 200.0), Goal(id: GoalType.money, day: 2, value: 50.0)]
+    ..goals[1] = [Goal(id: GoalType.money, day: 0, value: 500.0), Goal(id: GoalType.money, day: 1, value: 150.0)];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkMode = prefs.getBool('isDarkMode') ??
+          WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+              Brightness.dark;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return ChangeNotifierProvider<WeeklyGoals>.value(
+      value: weekSource,
+      child: MaterialApp(
       title: 'Meal Planner',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        textTheme: TextTheme(
+          bodyMedium: AppStyles.normalText,
+        ),
       ),
-      initialRoute: '/',
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.dark(),
+        useMaterial3: true,
+        textTheme: TextTheme(
+          bodyMedium: AppStyles.normalText,
+        ),
+      ),
+      //Also check settings
+      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      initialRoute: '/login',
       routes: {
         '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
+        '/login': (context) => const LoginScreen(successRouteName: '/'),
         '/shopping-list': (context) => const ShoppingListScreen(),
         '/categories': (context) => const CategoriesScreen(),
         '/category': (context) {
@@ -31,7 +85,16 @@ class MyApp extends StatelessWidget {
             categoryId: args is String ? args : null,
           );
         },
+        '/diary': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          final int dayIndex = args != null && args['dayIndex'] is int ? args['dayIndex'] as int : -1;
+          return GoalDiaryScreen(dayIndex: dayIndex);
+        },
+        '/settings': (context) => const SettingsScreen(),
+        '/settings/account': (context) => AccountSettingsScreen(),
+        '/settings/accessibility': (context) => const AccessibilitySettingsScreen(),
       },
+    ),
     );
   }
 }
@@ -46,8 +109,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
   @override
   Widget build(BuildContext context) {
+    final weekly = Provider.of<WeeklyGoals>(context);
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       drawer: Drawer(
@@ -76,6 +142,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.pushNamed(context, '/shopping-list');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.book),
+              title: const Text('Diary'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/diary');
+              },
+            ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.category),
@@ -85,6 +159,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.pushNamed(context, '/categories');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/settings');
+              },
+            )
           ],
         ),
       ),
@@ -103,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SizedBox(
               width: 300,
               height: 200,
-              child: ProgressGraphWidget(userData: null),
+              child: ProgressGraphWidget(userData: weekly.getGoalsForCurrentWeek().toList()),
             ),
           ],
         ),
