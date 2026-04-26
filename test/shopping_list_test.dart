@@ -21,5 +21,33 @@ void main() {
         ),
       );
     });
+
+    test('Increment quantity of shopping list item', () {
+      final shoppingList = ShoppingList();
+      shoppingList.updateQuantity(0, 1);
+
+      expect(shoppingList.items[0].quantity, 2);
+    });
+
+    test('Decrement quantity of shopping list item removes item at zero', () {
+      final shoppingList = ShoppingList();
+      shoppingList.updateQuantity(0, -1);
+
+      expect(shoppingList.items.length, 0);
+    });
+
+    test('Invalid index for updating quantity does nothing', () {
+      final shoppingList = ShoppingList();
+      shoppingList.updateQuantity(-1, 1);
+
+      expect(shoppingList.items[0].quantity, 1);
+    });
+
+    test('Zero change keeps quantity the same', () {
+      final shoppingList = ShoppingList();
+      shoppingList.updateQuantity(0, 0);
+
+      expect(shoppingList.items[0].quantity, 1);
+    });
   });
 }
