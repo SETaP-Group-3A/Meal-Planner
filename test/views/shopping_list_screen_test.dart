@@ -59,4 +59,47 @@ void main() {
 		expect(find.text('1'), findsOneWidget);
 		expect(find.text('Your shopping list is empty.'), findsNothing);
 	});
+
+	testWidgets('pressing plus increments quantity', (tester) async {
+		shoppingList.shoppingItems.add(
+			ShoppingListItem(
+				ingredient: Ingredient(
+					name: 'Flour (Aldi)',
+					cost: 0.80,
+					distance: 3.0,
+					calories: 360,
+				),
+			),
+		);
+
+		await pumpScreen(tester);
+
+		await tester.tap(find.byIcon(Icons.add));
+		await tester.pumpAndSettle();
+
+		expect(find.text('2'), findsOneWidget);
+		expect(shoppingList.shoppingItems.first.quantity, 2);
+	});
+
+	testWidgets('tapping minus decreases quantity', (tester) async {
+		shoppingList.shoppingItems.add(
+			ShoppingListItem(
+				ingredient: Ingredient(
+					name: 'Flour (Aldi)',
+					cost: 0.80,
+					distance: 3.0,
+					calories: 360,
+				),
+				quantity: 2,
+			),
+		);
+
+		await pumpScreen(tester);
+
+		await tester.tap(find.byIcon(Icons.remove));
+		await tester.pumpAndSettle();
+
+		expect(find.text('1'), findsOneWidget);
+		expect(shoppingList.shoppingItems.first.quantity, 1);
+	});
 }
