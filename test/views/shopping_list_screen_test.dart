@@ -102,4 +102,26 @@ void main() {
 		expect(find.text('1'), findsOneWidget);
 		expect(shoppingList.shoppingItems.first.quantity, 1);
 	});
+
+	testWidgets('item is removed when quantity reaches zero', (tester) async {
+		shoppingList.shoppingItems.add(
+			ShoppingListItem(
+				ingredient: Ingredient(
+					name: 'Flour (Aldi)',
+					cost: 0.80,
+					distance: 3.0,
+					calories: 360,
+				),
+			),
+		);
+
+		await pumpScreen(tester);
+
+		await tester.tap(find.byIcon(Icons.remove));
+		await tester.pumpAndSettle();
+
+		expect(find.text('Flour (Aldi)'), findsNothing);
+		expect(find.text('Your shopping list is empty.'), findsOneWidget);
+		expect(shoppingList.shoppingItems, isEmpty);
+	});
 }
