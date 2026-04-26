@@ -179,4 +179,50 @@ void main() {
       expect(shoppingList.items.length, beforeLen);
     });
   });
+
+  group('DatabaseService - findBestIngredientOption', () {
+    test('findBestIngredientOption("Flour", cost) returns lowest cost',
+        () async {
+      final ingredient =
+          await DatabaseService.instance.getBestIngredientOption('Flour', 'cost');
+
+      expect(ingredient, isNotNull);
+      expect(ingredient!.name, 'Flour (Aldi)');
+    });
+
+    test('findBestIngredientOption("Milk", distance) returns lowest distance',
+        () async {
+      final ingredient = await DatabaseService.instance
+          .getBestIngredientOption('Milk', 'distance');
+
+      expect(ingredient, isNotNull);
+      expect(ingredient!.name, 'Milk (Waitrose)');
+    });
+
+    test('findBestIngredientOption("Flour", calories) returns fewest calories',
+        () async {
+      final ingredient = await DatabaseService.instance
+          .getBestIngredientOption('Flour', 'calories');
+
+      expect(ingredient, isNotNull);
+      expect(ingredient!.calories, 360);
+    });
+
+    test('findBestIngredientOption(invalid ingredient, cost) returns null',
+        () async {
+      final ingredient =
+          await DatabaseService.instance.getBestIngredientOption('50', 'cost');
+
+      expect(ingredient, isNull);
+    });
+
+    test('findBestIngredientOption("Flour", invalid sort) returns first option',
+        () async {
+      final ingredient =
+          await DatabaseService.instance.getBestIngredientOption('Flour', '50');
+
+      expect(ingredient, isNotNull);
+      expect(ingredient!.name, 'Flour (Aldi)');
+    });
+  });
 }
