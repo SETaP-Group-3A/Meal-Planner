@@ -34,4 +34,10 @@ void main() {
 		expect(find.text('Distance'), findsOneWidget);
 		expect(find.text('Health'), findsOneWidget);
 	});
+
+	testWidgets('shows empty message when list has no items', (tester) async {
+		await pumpScreen(tester);
+
+		expect(find.text('Your shopping list is empty.'), findsOneWidget);
+	});
 }
