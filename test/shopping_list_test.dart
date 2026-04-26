@@ -85,5 +85,55 @@ void main() {
       }
       return true;
     }
-  });
+
+    // Must use async tests to await the async functions being tested as they rely on database calls
+    test('addRecipe(r-1, cost) adds recipe ingredients', () async {
+      final shoppingList = ShoppingList();
+      final before = totalQuantity(shoppingList);
+
+      await shoppingList.addRecipe('r-1', 'cost');
+
+      expect(totalQuantity(shoppingList), before + 3);
+      expect(shoppingList.items, isNotEmpty);
+    });
+
+    test('addRecipe(r-2, distance) adds recipe ingredients', () async {
+      final shoppingList = ShoppingList();
+      final before = totalQuantity(shoppingList);
+
+      await shoppingList.addRecipe('r-2', 'distance');
+
+      expect(totalQuantity(shoppingList), before + 3);
+      expect(shoppingList.items, isNotEmpty);
+    });
+
+    test('addRecipe(r-1, calories) adds recipe ingredients', () async {
+      final shoppingList = ShoppingList();
+      final before = totalQuantity(shoppingList);
+
+      await shoppingList.addRecipe('r-1', 'calories');
+
+      expect(totalQuantity(shoppingList), before + 3);
+      expect(shoppingList.items, isNotEmpty);
+    });
+
+    test('addRecipe(invalid, cost) adds no items', () async {
+      final shoppingList = ShoppingList();
+      final before = totalQuantity(shoppingList);
+
+      await shoppingList.addRecipe('recipe_id', 'cost');
+
+      expect(totalQuantity(shoppingList), before);
+    });
+
+    test('addRecipe(r-1, invalid sort) still adds items (current behavior)',
+        () async {
+      final shoppingList = ShoppingList();
+      final before = totalQuantity(shoppingList);
+
+      await shoppingList.addRecipe('r-1', 'money');
+
+      expect(totalQuantity(shoppingList), before + 3);
+    });
+});
 }
