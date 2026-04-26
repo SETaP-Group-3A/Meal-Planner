@@ -25,4 +25,13 @@ void main() {
 	tearDown(() {
 		shoppingList.shoppingItems.clear();
 	});
+
+	testWidgets('renders app bar title and focus buttons', (tester) async {
+		await pumpScreen(tester);
+
+		expect(find.text('Shopping List'), findsOneWidget);
+		expect(find.text('Cost'), findsOneWidget);
+		expect(find.text('Distance'), findsOneWidget);
+		expect(find.text('Health'), findsOneWidget);
+	});
 }
