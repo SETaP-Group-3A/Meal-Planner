@@ -1,11 +1,20 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/ingredient.dart';
+import 'database_service.dart';
+ 
+const String kPrefAddress       = 'user.address';
+const String kPrefAddressOptOut = 'user.addressOptOut';
+const String kPrefLat           = 'user.lat';
+const String kPrefLon           = 'user.lon';
  
 // ---------------------------------------------------------------------------
 // Postcode -> Coordinates  (postcodes.io)
 // ---------------------------------------------------------------------------
  
+/// resolves uk postcode to coordiantes, returns lat lon on success, null on failure / network invalid / address not found
 Future<Map<String, double>?> resolvePostcode(String postcode) async {
   final cleaned = postcode.replaceAll(RegExp(r'\s+'), '').toUpperCase();
   final url = Uri.parse('https://api.postcodes.io/postcodes/$cleaned');
@@ -27,16 +36,10 @@ Future<Map<String, double>?> resolvePostcode(String postcode) async {
       }
     }
   } catch (_) {
-    
+    // network error or wrong json sent
   }
   return null;
 }
- 
-const kPrefAddress = 'user.address';
-const kPrefAddressOptOut = 'user.addressOptOut';
-const kPrefLat = 'user.lat';
-const kPrefLon = 'user.lon';
- 
 /// reads user's saved address from SharedPreferences, postcode -> coords it via postcodes.io, and writes the resulting coordinates back to SharedPreferences
 /// should save user's coordinates on a successful run, throws `null` and clear old coordinates if opted out, field is blank or call failed
 Future<Map<String, double>?> resolveAndCacheUserCoordinates() async {
@@ -57,7 +60,7 @@ Future<Map<String, double>?> resolveAndCacheUserCoordinates() async {
     await prefs.setDouble(kPrefLat, coords['lat']!);
     await prefs.setDouble(kPrefLon, coords['lon']!);
   } else {
-    
+    // Resolution failed — clear any previously cached (now stale) values.
     await prefs.remove(kPrefLat);
     await prefs.remove(kPrefLon);
   }
@@ -65,7 +68,8 @@ Future<Map<String, double>?> resolveAndCacheUserCoordinates() async {
   return coords;
 }
  
-/// returns the user's cached coordinates from SharedPreferences without making the postcode.io call
+/// Returns the user's cached coordinates from SharedPreferences without
+/// making any network call. Returns `null` if not yet resolved or cleared.
 Future<Map<String, double>?> getCachedUserCoordinates() async {
   final prefs = await SharedPreferences.getInstance();
   final lat = prefs.getDouble(kPrefLat);
@@ -73,37 +77,34 @@ Future<Map<String, double>?> getCachedUserCoordinates() async {
   if (lat == null || lon == null) return null;
   return {'lat': lat, 'lon': lon};
 }
-
-/// might remove the osrm function soon due to unreliability
  
-Future<double?> getDistance(
+// ---------------------------------------------------------------------------
+// distance calculation - using haversine formula between two coordinates
+// ---------------------------------------------------------------------------
+ 
+double haversineDistance(
   double lat1,
   double lon1,
   double lat2,
   double lon2,
-) async {
-  final url = Uri.parse(
-    'http://router.project-osrm.org/route/v1/driving/'
-    '$lon1,$lat1;$lon2,$lat2?overview=false',
-  );
+) {
+  const earthRadiusKm = 6371.0;
  
-  try {
-    final response = await http.get(url);
+  final dLat = _toRad(lat2 - lat1);
+  final dLon = _toRad(lon2 - lon1);
  
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final distanceMeters =
-          (data['routes'] as List).first['distance'] as num;
-      return distanceMeters / 1000;
-    }
-  } catch (_) {
-    
-  }
+  final a = math.pow(math.sin(dLat / 2), 2) +
+      math.cos(_toRad(lat1)) *
+          math.cos(_toRad(lat2)) *
+          math.pow(math.sin(dLon / 2), 2);
  
-  return null;
+  final c = 2 * math.asin(math.sqrt(a));
+  return earthRadiusKm * c;
 }
  
-/// marked for removal as well, rewrite into haversine formula
+double _toRad(double deg) => deg * math.pi / 180.0;
+ 
+/// test function
 Future<double?> getDistanceFromPostcodes(
   String postcode1,
   String postcode2,
@@ -113,7 +114,7 @@ Future<double?> getDistanceFromPostcodes(
  
   if (coord1 == null || coord2 == null) return null;
  
-  return getDistance(
+  return haversineDistance(
     coord1['lat']!,
     coord1['lon']!,
     coord2['lat']!,
@@ -121,7 +122,7 @@ Future<double?> getDistanceFromPostcodes(
   );
 }
  
-// looking for something more like this instead of the OSRM function, maybe using the haversine formula?
+/// returns distance from user's cached distance to the store's coordinates
 Future<double?> getDistanceFromUserToStore(
   double storeLat,
   double storeLon,
@@ -129,10 +130,25 @@ Future<double?> getDistanceFromUserToStore(
   final userCoords = await getCachedUserCoordinates();
   if (userCoords == null) return null;
  
-  return getDistance(
+  return haversineDistance(
     userCoords['lat']!,
     userCoords['lon']!,
     storeLat,
     storeLon,
   );
+}
+ 
+/// grabs ingredient's linked store, looks at store coordinates and returns distance from cached location to the store
+
+Future<double?> getDistanceFromUserToIngredient(Ingredient ingredient) async {
+  // ingredient must be linked to a store
+  final storeId = ingredient.storeId;
+  if (storeId == null) return null;
+ 
+  // look up the store to get its coordinates
+  final store = await DatabaseService.instance.getStoreById(storeId);
+  if (store == null) return null;
+ 
+  // measure from the user's cached location to the store
+  return getDistanceFromUserToStore(store.latitude, store.longitude);
 }
