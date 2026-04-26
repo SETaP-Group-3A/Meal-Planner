@@ -6,7 +6,8 @@ import '../models/recipe.dart';
 import '../models/ingredient.dart';
 import '../models/category.dart';
 import '../models/store.dart';
-import '../mock_data.dart'; // Import data for seeding the database
+import '../utils/haversine.dart';
+import '../mock_data.dart';
  
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
@@ -378,7 +379,6 @@ class DatabaseService {
 //------------------------------------------------------------------------------------------------------------------
 //Ingredients
  
-  /// Maps a raw SQLite row to an [Ingredient], including the nullable [storeId].
   Ingredient _ingredientFromMap(Map<String, dynamic> map) {
     return Ingredient(
       name: map['name'] as String,
@@ -469,6 +469,39 @@ class DatabaseService {
       where: 'name = ?',
       whereArgs: [ingredient.name],
     );
+  }
+ 
+  /// recalculates and updates the distance for all ingredients linked to stores based on the user's new coordinates
+  /// if the ingredient is linked to a valid store, updates its distance based on the user's new coordinates and the store's coordinates
+  Future<void> updateAllIngredientDistances({
+    required double userLat,
+    required double userLon,
+  }) async {
+    final ingredients = await getAllIngredients();
+    final stores = <String, Store>{};
+ 
+    // cache stores in memory to prevent repeated DB queries
+    for (final store in await getAllStores()) {
+      stores[store.id] = store;
+    }
+ 
+    for (final ingredient in ingredients) {
+      final storeId = ingredient.storeId;
+      if (storeId == null) continue; // No store — leave distance as-is.
+ 
+      final store = stores[storeId];
+      if (store == null) continue;   // Store missing — leave distance as-is.
+ 
+      final newDistance = haversineDistance(
+        userLat,
+        userLon,
+        store.latitude,
+        store.longitude,
+      );
+ 
+      // copyWith() produces new ingredient instance
+      await updateIngredient(ingredient.copyWith(distance: newDistance));
+    }
   }
  
   Future<void> deleteIngredient(String name) async {
