@@ -135,5 +135,48 @@ void main() {
 
       expect(totalQuantity(shoppingList), before + 3);
     });
-});
+
+    test('regenerateList(cost) returns list sorted by total cost asc', () async {
+      final shoppingList = ShoppingList();
+      await shoppingList.addRecipe('r-1', 'cost');
+      await shoppingList.addRecipe('r-2', 'cost');
+
+      await shoppingList.regenerateList('cost');
+
+      expect(isAscendingByCost(shoppingList.items), isTrue);
+    });
+
+    test('regenerateList(distance) returns list sorted by distance asc',
+        () async {
+      final shoppingList = ShoppingList();
+      await shoppingList.addRecipe('r-1', 'distance');
+      await shoppingList.addRecipe('r-2', 'distance');
+
+      await shoppingList.regenerateList('distance');
+
+      expect(isAscendingByDistance(shoppingList.items), isTrue);
+    });
+
+    test('regenerateList(calories) returns list sorted by calories desc',
+        () async {
+      final shoppingList = ShoppingList();
+      await shoppingList.addRecipe('r-1', 'calories');
+      await shoppingList.addRecipe('r-2', 'calories');
+
+      await shoppingList.regenerateList('calories');
+
+      expect(isDescendingByCalories(shoppingList.items), isTrue);
+    });
+
+    test('regenerateList(invalid) keeps same item set size', () async {
+      final shoppingList = ShoppingList();
+      await shoppingList.addRecipe('r-1', 'cost');
+      await shoppingList.addRecipe('r-2', 'distance');
+      final beforeLen = shoppingList.items.length;
+
+      await shoppingList.regenerateList('12');
+
+      expect(shoppingList.items.length, beforeLen);
+    });
+  });
 }
