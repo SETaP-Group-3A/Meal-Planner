@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/ingredient.dart';
+import '../utils/haversine.dart';
 import 'database_service.dart';
  
 const String kPrefAddress       = 'user.address';
@@ -59,8 +59,13 @@ Future<Map<String, double>?> resolveAndCacheUserCoordinates() async {
   if (coords != null) {
     await prefs.setDouble(kPrefLat, coords['lat']!);
     await prefs.setDouble(kPrefLon, coords['lon']!);
+    // recalculate every ingredient's distance due to new user location
+    await DatabaseService.instance.updateAllIngredientDistances(
+      userLat: coords['lat']!,
+      userLon: coords['lon']!,
+    );
   } else {
-    // Resolution failed — clear any previously cached (now stale) values.
+    // resolution failed, removed previous cached coordinates
     await prefs.remove(kPrefLat);
     await prefs.remove(kPrefLon);
   }
@@ -68,8 +73,7 @@ Future<Map<String, double>?> resolveAndCacheUserCoordinates() async {
   return coords;
 }
  
-/// Returns the user's cached coordinates from SharedPreferences without
-/// making any network call. Returns `null` if not yet resolved or cleared.
+/// returns user's cached preferences, null if not cached
 Future<Map<String, double>?> getCachedUserCoordinates() async {
   final prefs = await SharedPreferences.getInstance();
   final lat = prefs.getDouble(kPrefLat);
@@ -81,30 +85,6 @@ Future<Map<String, double>?> getCachedUserCoordinates() async {
 // ---------------------------------------------------------------------------
 // distance calculation - using haversine formula between two coordinates
 // ---------------------------------------------------------------------------
- 
-double haversineDistance(
-  double lat1,
-  double lon1,
-  double lat2,
-  double lon2,
-) {
-  const earthRadiusKm = 6371.0;
- 
-  final dLat = _toRad(lat2 - lat1);
-  final dLon = _toRad(lon2 - lon1);
- 
-  final a = math.pow(math.sin(dLat / 2), 2) +
-      math.cos(_toRad(lat1)) *
-          math.cos(_toRad(lat2)) *
-          math.pow(math.sin(dLon / 2), 2);
- 
-  final c = 2 * math.asin(math.sqrt(a));
-  return earthRadiusKm * c;
-}
- 
-double _toRad(double deg) => deg * math.pi / 180.0;
- 
-/// test function
 Future<double?> getDistanceFromPostcodes(
   String postcode1,
   String postcode2,
