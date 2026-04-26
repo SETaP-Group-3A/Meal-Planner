@@ -13,6 +13,23 @@ class Ingredient {
     this.storeId,
   });
  
+  /// since all values are marked as final, this returns a copy of this ingredient with fields replaced by provided values (distance)
+  Ingredient copyWith({
+    String? name,
+    double? cost,
+    double? distance,
+    int? calories,
+    String? storeId,
+  }) {
+    return Ingredient(
+      name: name?? this.name,
+      cost: cost?? this.cost,
+      distance: distance ?? this.distance,
+      calories: calories ?? this.calories,
+      storeId: storeId ?? this.storeId,
+    );
+  }
+ 
   @override
   String toString() {
     final storePart = storeId != null ? ', Store: $storeId' : '';
