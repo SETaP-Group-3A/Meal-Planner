@@ -7,6 +7,7 @@ import '../models/ingredient.dart';
 import '../models/category.dart';
 import '../mock_data.dart'; // Import data for seeding the database
 
+
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
   static Database? _database;
@@ -33,7 +34,9 @@ class DatabaseService {
         : join(await getDatabasesPath(), filePath);
 
     // Delete existing DB on start
-    //if (await databaseExists(dbPath)) await deleteDatabase(dbPath);
+    if (await databaseExists(dbPath)) {
+  await deleteDatabase(dbPath);
+}//if (await databaseExists(dbPath)) await deleteDatabase(dbPath);
 
     return await openDatabase(dbPath, version: 1, onCreate: _createDB);
   }
@@ -120,6 +123,14 @@ class DatabaseService {
           PRIMARY KEY (week_goal_id, account_id, goal_id)
         )
       ''',
+
+      'users': '''
+        CREATE TABLE users (
+          id TEXT PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL
+        )
+     ''',
     };
 
     // Execute creating tables
@@ -567,4 +578,35 @@ class DatabaseService {
       whereArgs: [goalId, dayId],
     );
   }
+}
+// ----------------------------------------------------------------------
+// USERS (AUTH SYSTEM)
+// ----------------------------------------------------------------------
+
+Future<void> createUser(String id, String email, String password) async {
+  final db = await DatabaseService.instance.database;
+
+  await db.insert(
+    'users',
+    {
+      'id': id,
+      'email': email,
+      'password': password,
+    },
+    conflictAlgorithm: ConflictAlgorithm.fail,
+  );
+}
+
+Future<Map<String, dynamic>?> getUserByEmailAndPassword(
+    String email, String password) async {
+  final db = await DatabaseService.instance.database;
+
+  final result = await db.query(
+    'users',
+    where: 'email = ? AND password = ?',
+    whereArgs: [email, password],
+  );
+
+  if (result.isEmpty) return null;
+  return result.first;
 }
