@@ -50,4 +50,40 @@ void main() {
       expect(shoppingList.items[0].quantity, 1);
     });
   });
+
+  group('Shopping List - addRecipe/regenerateList', () {
+    setUp(() {
+      final shoppingList = ShoppingList();
+      shoppingList.shoppingItems.clear();
+    });
+
+    // Functions to calculate optimized list so testing the functions have something to compare against
+    int totalQuantity(ShoppingList list) =>
+        list.items.fold(0, (sum, item) => sum + item.quantity);
+
+    bool isAscendingByCost(List<ShoppingListItem> items) {
+      for (int i = 1; i < items.length; i++) {
+        if (items[i - 1].totalCost > items[i].totalCost) return false;
+      }
+      return true;
+    }
+
+    bool isAscendingByDistance(List<ShoppingListItem> items) {
+      for (int i = 1; i < items.length; i++) {
+        if (items[i - 1].ingredient.distance > items[i].ingredient.distance) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    bool isDescendingByCalories(List<ShoppingListItem> items) {
+      for (int i = 1; i < items.length; i++) {
+        if (items[i - 1].ingredient.calories < items[i].ingredient.calories) {
+          return false;
+        }
+      }
+      return true;
+    }
+  });
 }
