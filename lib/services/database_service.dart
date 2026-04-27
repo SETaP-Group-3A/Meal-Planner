@@ -131,7 +131,7 @@ class DatabaseService {
           week_goal_id INTEGER NOT NULL,
           account_id TEXT NOT NULL,
           goal_id TEXT NOT NULL,
-          FOREIGN KEY (account_id) REFERENCES account (account_id) ON DELETE CASCADE,
+          FOREIGN KEY (account_id) REFERENCES users (id) ON DELETE CASCADE,
           PRIMARY KEY (week_goal_id, account_id, goal_id)
         )
       ''',
