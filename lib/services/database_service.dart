@@ -268,6 +268,11 @@ class DatabaseService {
         id: recipeMap['id'] as String,
         name: recipeMap['name'] as String,
         requiredIngredients: ingredients,
+        prepTimeMinutes: 0,
+        allergens: [],
+        calories: 0,
+        macros: Macros(proteinG: 0, carbsG: 0, fatG: 0),
+        nutrients: {},
       ));
     }
     return recipes;
