@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/location_service.dart';
+import 'store_locator_screen.dart';
 // temp controller
 class ThemeController {
   static const _kPrefThemeMode = 'theme.mode'; // 'system' | 'light' | 'dark'
@@ -42,6 +43,14 @@ class SettingsScreen extends StatelessWidget {
             title: Text('Accessibility'),
             onTap: () =>
                 Navigator.pushNamed(context, '/settings/accessibility'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.store),
+            title: const Text('Store Locator'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StoreLocatorScreen()),
+            ),
           ),
         ],
       ),

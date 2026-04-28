@@ -92,7 +92,11 @@ final List<Recipe> mockRecipes = [
     allergens: [],
     calories: 85,
     macros: Macros(proteinG: 3.0, carbsG: 14.0, fatG: 1.5),
-    nutrients: {'Vitamin C (mg)': 28.0, 'Potassium (mg)': 410.0, 'Fibre (g)': 3.1},
+    nutrients: {
+      'Vitamin C (mg)': 28.0,
+      'Potassium (mg)': 410.0,
+      'Fibre (g)': 3.1,
+    },
   ),
   Recipe(
     id: 'r-3',
@@ -102,12 +106,34 @@ final List<Recipe> mockRecipes = [
     allergens: ['Gluten', 'Dairy'],
     calories: 510,
     macros: Macros(proteinG: 16.0, carbsG: 72.0, fatG: 12.0),
-    nutrients: {'Iron (mg)': 2.1, 'Calcium (mg)': 120.0, 'Vitamin C (mg)': 14.0},
+    nutrients: {
+      'Iron (mg)': 2.1,
+      'Calcium (mg)': 120.0,
+      'Vitamin C (mg)': 14.0,
+    },
   ),
 ];
 
 final List<Store> mockStores = [
-  Store(id: 's-aldi-sw1', name: 'Aldi', postcode: 'SW1A 1AA', latitude: 51.4994, longitude: -0.1248),
-  Store(id: 's-lidl-e1',  name: 'Lidl', postcode: 'E1 6RF',   latitude: 51.5155, longitude: -0.0699),
-  Store(id: 's-tesco-n1', name: 'Tesco', postcode: 'N1 9GU',   latitude: 51.5362, longitude: -0.1033),
+  Store(
+    id: 's-aldi-sw1',
+    name: 'Aldi',
+    postcode: 'PO4 8SL',
+    latitude: 50.7972378,
+    longitude: -1.0687938,
+  ),
+  Store(
+    id: 's-lidl-e1',
+    name: 'Lidl',
+    postcode: 'PO4 0BS',
+    latitude: 50.7947335,
+    longitude: -1.0697082,
+  ),
+  Store(
+    id: 's-tesco-n1',
+    name: 'Tesco',
+    postcode: 'PO1 1RS',
+    latitude: 50.8008788,
+    longitude: -1.0874245,
+  ),
 ];
