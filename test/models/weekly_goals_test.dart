@@ -2,6 +2,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meal_planner/models/weekly_goals.dart';
 
 void main() {
+  group ("WeeklyGoals - Can parse goal value between display and actual value", () {
+    test("Money goal", () {
+      expect(GoalTypes.parseValue(GoalType.money, '£100'), 100.0);
+      expect(GoalTypes.parseValue(GoalType.money, '-£50'), -50.0);
+    });
+
+    test("Calories goal", () {
+      expect(GoalTypes.parseValue(GoalType.calories, '200 cal'), 200.0);
+    });
+
+    test("Distance goal", () {
+      expect(GoalTypes.parseValue(GoalType.distance, '5 km'), 5.0);
+    });
+  });
   group("WeeklyGoals - Correctly add and set new goals", () {
     test("Add and set goal", () {
       WeeklyGoals wg = WeeklyGoals();
