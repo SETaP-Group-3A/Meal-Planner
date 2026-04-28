@@ -58,6 +58,11 @@ class WeeklyGoals extends ChangeNotifier {
   }
 
   void setGoalValue(int weekID, int day, double value, {GoalType? id}) {
+
+    if (weekID < 0 || day < 0 || day > 6) {
+      throw ArgumentError('Value out of range: weekID must be non-negative and day must be between 0 and 6');
+    }
+
     if (!goals.containsKey(weekID)) goals[weekID] = [];
     final list = goals[weekID]!;
     final idx = list.indexWhere((g) => g.day == day);
