@@ -1,5 +1,6 @@
 import 'models/ingredient.dart';
 import 'models/recipe.dart';
+import 'models/store.dart';
 
 final Map<String, List<Ingredient>> marketInventory = {
   'Flour': [
@@ -103,4 +104,10 @@ final List<Recipe> mockRecipes = [
     macros: Macros(proteinG: 16.0, carbsG: 72.0, fatG: 12.0),
     nutrients: {'Iron (mg)': 2.1, 'Calcium (mg)': 120.0, 'Vitamin C (mg)': 14.0},
   ),
+];
+
+final List<Store> mockStores = [
+  Store(id: 's-aldi-sw1', name: 'Aldi', postcode: 'SW1A 1AA', latitude: 51.4994, longitude: -0.1248),
+  Store(id: 's-lidl-e1',  name: 'Lidl', postcode: 'E1 6RF',   latitude: 51.5155, longitude: -0.0699),
+  Store(id: 's-tesco-n1', name: 'Tesco', postcode: 'N1 9GU',   latitude: 51.5362, longitude: -0.1033),
 ];
