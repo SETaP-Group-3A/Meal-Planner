@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../services/location_service.dart';
 // temp controller
 class ThemeController {
   static const _kPrefThemeMode = 'theme.mode'; // 'system' | 'light' | 'dark'
@@ -67,10 +67,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   static const _kPrefUsername = 'user.username';
   static const _kPrefEmail = 'user.email';
-  static const _kPrefAddress = 'user.address';
-  static const _kPrefAddressOptOut = 'user.addressOptOut';
 
   bool _addressOptOut = false;
+  bool _isSaving = false;
+  bool? _geocodeSuccess;
 
   @override
   void initState() {
@@ -86,19 +86,20 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     if (!mounted) return;
 
     setState(() {
-      _addressOptOut = prefs.getBool(_kPrefAddressOptOut) ?? false;
+      _addressOptOut = prefs.getBool(kPrefAddressOptOut) ?? false;
 
       _usernameController.text = prefs.getString(_kPrefUsername) ?? 'JohnDoe';
       _emailController.text = prefs.getString(_kPrefEmail) ?? '';
       _addressController.text = _addressOptOut
           ? ''
-          : (prefs.getString(_kPrefAddress) ?? '');
+          : (prefs.getString(kPrefAddress) ?? '');
     });
   }
 
   Future<void> _setAddressOptOut(bool value) async {
     setState(() {
       _addressOptOut = value;
+      _geocodeSuccess = null; // clear any previous feedback
       if (_addressOptOut) {
         _addressController.clear();
       }
@@ -106,31 +107,53 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     });
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kPrefAddressOptOut, value);
+    await prefs.setBool(kPrefAddressOptOut, value);
 
     if (value) {
-      await prefs.remove(_kPrefAddress);
+      // upon opting out remove address and cached coordinates
+      await prefs.remove(kPrefAddress);
+      await prefs.remove(kPrefLat);
+      await prefs.remove(kPrefLon);
     }
   }
 
   Future<void> _saveUserDetails() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() {
+      _isSaving = true;
+      _geocodeSuccess = null;
+    });
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kPrefUsername, _usernameController.text.trim());
     await prefs.setString(_kPrefEmail, _emailController.text.trim());
 
-    await prefs.setBool(_kPrefAddressOptOut, _addressOptOut);
+    await prefs.setBool(kPrefAddressOptOut, _addressOptOut);
     if (_addressOptOut) {
-      await prefs.remove(_kPrefAddress);
+      // remove address and cached coordinates upon opting out
+      await prefs.remove(kPrefAddress);
+      await prefs.remove(kPrefLat);
+      await prefs.remove(kPrefLon);
     } else {
-      await prefs.setString(_kPrefAddress, _addressController.text.trim());
+      final address = _addressController.text.trim();
+      await prefs.setString(kPrefAddress, address);
+      // geocoding if a valid address is provided
+      if (address.isNotEmpty) {
+        final coords = await resolveAndCacheUserCoordinates();
+ 
+        if (mounted) {
+          setState(() => _geocodeSuccess = coords != null);
+        }
+      }
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('User details updated')));
+
+    setState(() => _isSaving = false);
+ 
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User details updated')),
+    );
   }
 
   @override
@@ -188,7 +211,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     helperText:
-                        'We’ll use this for account-related communication.',
+                        'We\'ll use this for account-related communication.',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
@@ -224,38 +247,77 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   contentPadding: EdgeInsets.zero,
                   title: const Text('I prefer not to provide an address'),
                   value: _addressOptOut,
-                  onChanged: _setAddressOptOut,
+                  onChanged: _addressOptOut == false && _isSaving
+                      ? null
+                      : _setAddressOptOut,
                 ),
                 const SizedBox(height: 8),
 
                 TextFormField(
                   controller: _addressController,
-                  enabled: !_addressOptOut,
+                  enabled: !_addressOptOut && !_isSaving,
                   decoration: InputDecoration(
-                    labelText: 'Address',
+                    labelText: 'Postcode',
                     helperText: _addressOptOut
-                        ? 'Address is disabled because you opted out.'
-                        : 'Used for shopping lists and distance calculation.',
+                        ? 'Postcode is disabled because you opted out.'
+                        : 'Used for shopping lists and distance calculations.',
                     border: const OutlineInputBorder(),
                   ),
                   textInputAction: TextInputAction.done,
-                  minLines: 2,
-                  maxLines: 3,
+                  minLines: 1,
+                  maxLines: 2,
                   validator: (v) {
                     if (_addressOptOut) return null;
                     final s = (v ?? '').trim();
                     if (s.isEmpty)
-                      return 'Address is required (or opt out above)';
+                      return 'Postcode is required (or opt out above)';
                     return null;
                   },
                 ),
+
+                // geocode result after a save attempt
+                if (_geocodeSuccess != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        _geocodeSuccess!
+                            ? Icons.check_circle_outline
+                            : Icons.warning_amber_rounded,
+                        size: 16,
+                        color: _geocodeSuccess!
+                            ? Colors.green
+                            : Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _geocodeSuccess!
+                              ? 'Location resolved — store distances will be calculated from your postcode.'
+                              : 'Could not resolve this postcode. Distance sorting will use stored values until a valid postcode is saved.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: _geocodeSuccess!
+                                    ? Colors.green
+                                    : Theme.of(context).colorScheme.error,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
 
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _saveUserDetails,
-                    child: const Text('Save'),
+                    onPressed: _isSaving ? null : _saveUserDetails,
+                    child: _isSaving
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Save'),
                   ),
                 ),
 
