@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'models/recipe.dart';
 import 'views/app_styles.dart';
+import 'services/database_service.dart';
 
 class RecipePage extends StatefulWidget {
   final Recipe recipe;
@@ -13,6 +14,15 @@ class RecipePage extends StatefulWidget {
 
 class _RecipePageState extends State<RecipePage> {
   bool _showAdvanced = false;
+  bool _isFavourite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    DatabaseService.instance.isFavourite(widget.recipe.id).then((fav) {
+      if (mounted) setState(() => _isFavourite = fav);
+    });
+  }
 
   Widget _buildToggle() {
     return Row(
@@ -98,7 +108,22 @@ class _RecipePageState extends State<RecipePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.recipe.name)),
+      appBar: AppBar(
+        title: Text(widget.recipe.name),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isFavourite ? Icons.favorite : Icons.favorite_border,
+              color: _isFavourite ? Colors.red : null,
+            ),
+            tooltip: _isFavourite ? 'Remove from favourites' : 'Add to favourites',
+            onPressed: () async {
+              final next = await DatabaseService.instance.toggleFavourite(widget.recipe.id);
+              if (mounted) setState(() => _isFavourite = next);
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

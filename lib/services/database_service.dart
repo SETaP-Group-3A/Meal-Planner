@@ -37,7 +37,7 @@ class DatabaseService {
     // Delete existing DB on start
     //if (await databaseExists(dbPath)) await deleteDatabase(dbPath);
  
-    return await openDatabase(dbPath, version: 1, onCreate: _createDB);
+    return await openDatabase(dbPath, version: 2, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
  
   Future _createDB(Database db, int version) async {
@@ -108,6 +108,12 @@ class DatabaseService {
         )
       ''',
  
+      'recipe_favourites': '''
+        CREATE TABLE recipe_favourites (
+          recipeId TEXT PRIMARY KEY
+        )
+      ''',
+
       'shopping_list': '''
         CREATE TABLE shopping_list (
           ingredientName TEXT PRIMARY KEY,
@@ -186,6 +192,12 @@ class DatabaseService {
     }
   }
  
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('CREATE TABLE IF NOT EXISTS recipe_favourites (recipeId TEXT PRIMARY KEY)');
+    }
+  }
+
 //------------------------------------------------------------------------------------------------------------------
 //Stores
  
@@ -393,7 +405,26 @@ class DatabaseService {
     final db = await instance.database;
     await db.delete('recipes', where: 'id = ?', whereArgs: [id]);
   }
- 
+
+  /// checks if a recipe is saved as a favourite
+  Future<bool> isFavourite(String recipeId) async {
+    final db = await instance.database;
+    final result = await db.query('recipe_favourites', where: 'recipeId = ?', whereArgs: [recipeId]);
+    return result.isNotEmpty;
+  }
+
+  /// toggles favourite status and returns the new state
+  Future<bool> toggleFavourite(String recipeId) async {
+    final fav = await isFavourite(recipeId);
+    final db = await instance.database;
+    if (fav) {
+      await db.delete('recipe_favourites', where: 'recipeId = ?', whereArgs: [recipeId]);
+    } else {
+      await db.insert('recipe_favourites', {'recipeId': recipeId});
+    }
+    return !fav;
+  }
+
 //------------------------------------------------------------------------------------------------------------------
 //Ingredients
  
