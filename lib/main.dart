@@ -26,7 +26,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   bool _isDarkMode =
       WidgetsBinding.instance.platformDispatcher.platformBrightness ==
       Brightness.dark;
@@ -40,7 +39,8 @@ class _MyAppState extends State<MyApp> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isDarkMode = prefs.getBool('isDarkMode') ??
+      _isDarkMode =
+          prefs.getBool('isDarkMode') ??
           WidgetsBinding.instance.platformDispatcher.platformBrightness ==
               Brightness.dark;
     });
@@ -53,16 +53,12 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
-        textTheme: TextTheme(
-          bodyMedium: AppStyles.normalText,
-        ),
+        textTheme: TextTheme(bodyMedium: AppStyles.normalText),
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.dark(),
         useMaterial3: true,
-        textTheme: TextTheme(
-          bodyMedium: AppStyles.normalText,
-        ),
+        textTheme: TextTheme(bodyMedium: AppStyles.normalText),
       ),
       //Also check settings
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
@@ -78,14 +74,23 @@ class _MyAppState extends State<MyApp> {
             categoryId: args is String ? args : null,
           );
         },
-        '/diary': (context) => GoalDiaryScreen(weeklyGoals: [
-          WeeklyGoals()
-            ..goals[0] = [Goal(id: 'money', day: 0, value: 100.0), Goal(id: 'money', day: 2, value: 50.0)]
-            ..goals[1] = [Goal(id: 'money', day: 0, value: 300.0), Goal(id: 'money', day: 1, value: 150.0)],
-        ]),
+        '/diary': (context) => GoalDiaryScreen(
+          weeklyGoals: [
+            WeeklyGoals()
+              ..goals[0] = [
+                Goal(id: 'money', day: 0, value: 100.0),
+                Goal(id: 'money', day: 2, value: 50.0),
+              ]
+              ..goals[1] = [
+                Goal(id: 'money', day: 0, value: 300.0),
+                Goal(id: 'money', day: 1, value: 150.0),
+              ],
+          ],
+        ),
         '/settings': (context) => const SettingsScreen(),
         '/settings/account': (context) => AccountSettingsScreen(),
-        '/settings/accessibility': (context) => const AccessibilitySettingsScreen(),
+        '/settings/accessibility': (context) =>
+            const AccessibilitySettingsScreen(),
       },
     );
   }
@@ -101,7 +106,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/settings');
               },
-            )
+            ),
           ],
         ),
       ),
@@ -175,7 +179,13 @@ class _MyHomePageState extends State<MyHomePage> {
             SizedBox(
               width: 300,
               height: 200,
-              child: ProgressGraphWidget(userData: [Goal(id: 'money', day: 0, value: 100.0), Goal(id: 'money', day: 1, value: 0.0), Goal(id: 'money', day: 2, value: 50.0)]),
+              child: ProgressGraphWidget(
+                userData: [
+                  Goal(id: 'money', day: 0, value: 100.0),
+                  Goal(id: 'money', day: 1, value: 0.0),
+                  Goal(id: 'money', day: 2, value: 50.0),
+                ],
+              ),
             ),
           ],
         ),
