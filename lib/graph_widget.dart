@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/repositories/graph_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:meal_planner/services/database_service.dart';
 
 class ProgressGraphWidget extends StatefulWidget {
   const ProgressGraphWidget({super.key});
