@@ -23,6 +23,12 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
   void initState() {
     super.initState();
     controller = GraphController(widget.userData);
+
+    if (widget.userData.isEmpty) {
+      goalData = List.filled(0, 7);
+      return;
+    }
+
     goalData = controller.updateGraph(widget.userData[0].id);
   }
 
