@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/services/database_service.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.successRouteName = '/'});
@@ -112,6 +114,20 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
+      // fetch the user's id and load weekly goals into the provider
+      // persist current account email for future app starts
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('accountEmail', email);
+
+      // ask the provider instance to load data for this account (by email)
+      try {
+        final weekly = Provider.of<WeeklyGoals>(context, listen: false);
+        await weekly.loadFromDatabase(accountEmail: email);
+      } catch (e) {
+        // non-fatal — loading will be attempted again when needed
+        print('Failed loading weekly goals after login: $e');
+      }
+
       Navigator.pushReplacementNamed(context, widget.successRouteName);
     } else {
       setState(() {
