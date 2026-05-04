@@ -124,11 +124,11 @@ class DatabaseService {
  
       'goal': '''
         CREATE TABLE goal (
-          goal_id TEXT NOT NULL,
+          goal_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          goal_type TEXT NOT NULL,
+          account_id TEXT,
           day_id INTEGER NOT NULL,
-          goal_value $realType,
-          date DATE,
-          PRIMARY KEY (goal_id, day_id)
+          goal_value $realType
         )
       ''',
  
@@ -136,7 +136,7 @@ class DatabaseService {
         CREATE TABLE week_goal (
           week_goal_id INTEGER NOT NULL,
           account_id TEXT NOT NULL,
-          goal_id TEXT NOT NULL,
+          goal_id INTEGER NOT NULL,
           FOREIGN KEY (account_id) REFERENCES users (id) ON DELETE CASCADE,
           PRIMARY KEY (week_goal_id, account_id, goal_id)
         )
@@ -638,15 +638,14 @@ class DatabaseService {
       final goalsForWeek = entry.value;
  
       for (var goal in goalsForWeek) {
-        //Need to actually set correct date
-        await createGoal(goal.id.toString(), goal.day, goal.value, DateTime.now());
- 
+        final createdGoalId = await createGoal(goal.id.toString(), accountId, goal.day, goal.value);
+
         await db.insert(
           'week_goal',
           {
             'week_goal_id': weekId,
             'account_id': accountId,
-            'goal_id': goal.id.toString(),
+            'goal_id': createdGoalId,
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -661,43 +660,42 @@ class DatabaseService {
       final weekId = entry.key;
       final goalsForWeek = entry.value;
  
+      // Remove existing mappings for this week/account then recreate
+      await db.delete('week_goal', where: 'week_goal_id = ? AND account_id = ?', whereArgs: [weekId, accountId]);
       for (var goal in goalsForWeek) {
-        //Need to actually set correct date
-        await updateGoal(goal.id.toString(), goal.day, goal.value, DateTime.now());
- 
-        await db.update(
+        final createdGoalId = await createGoal(goal.id.toString(), accountId, goal.day, goal.value);
+        await db.insert(
           'week_goal',
           {
-            'goal_id': goal.id.toString(),
+            'week_goal_id': weekId,
+            'account_id': accountId,
+            'goal_id': createdGoalId,
           },
-          where: 'week_goal_id = ? AND account_id = ?',
-          whereArgs: [weekId, accountId],
+          conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
     }
   }
- 
-  Future<void> createGoal(String goalId, int dayId, double goalValue, DateTime date) async {
+  Future<int> createGoal(String goalType, String? accountId, int dayId, double goalValue) async {
     final db = await instance.database;
-    await db.insert(
+    return await db.insert(
       'goal',
       {
-        'goal_id': goalId,
+        'goal_type': goalType,
+        'account_id': accountId,
         'day_id': dayId,
         'goal_value': goalValue,
-        'date': date.toIso8601String(),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
-  
-  Future<void> updateGoal(String goalId, int dayId, double goalValue, DateTime date) async {
+
+  Future<void> updateGoal(int goalId, int dayId, double goalValue) async {
     final db = await instance.database;
     await db.update(
       'goal',
       {
         'goal_value': goalValue,
-        'date': date.toIso8601String(),
       },
       where: 'goal_id = ? AND day_id = ?',
       whereArgs: [goalId, dayId],

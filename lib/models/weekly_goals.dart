@@ -111,27 +111,23 @@ class WeeklyGoals extends ChangeNotifier {
   Future<bool> loadFromDatabase({String? accountId}) async {
     try {
       final db = await DatabaseService.instance.database;
+      // Join goal with week_goal so we can associate goals with weeks/accounts
+      final rows = await db.rawQuery('''
+        SELECT g.goal_id, g.goal_type, g.day_id, g.goal_value, wg.week_goal_id
+        FROM goal g
+        LEFT JOIN week_goal wg ON wg.goal_id = g.goal_id
+        ${accountId != null ? 'WHERE wg.account_id = ?' : ''}
+      ''', accountId != null ? [accountId] : null);
 
-      final rows = await db.query('goal');
       if (rows.isEmpty) return false;
 
       for (final row in rows) {
-        final goalIdStr = row['goal_id']?.toString() ?? 'money';
+        final goalTypeStr = row['goal_type']?.toString() ?? 'money';
         final day = (row['day_id'] as int?) ?? 0;
         final goalValue = (row['goal_value'] as num?)?.toDouble() ?? 0.0;
-        final dateStr = row['date']?.toString();
+        final weekId = (row['week_goal_id'] as int?) ?? 0;
 
-        DateTime date;
-        if (dateStr != null) {
-          date = DateTime.tryParse(dateStr) ?? DateTime.now();
-        } else {
-          date = DateTime.now();
-        }
-
-        final weekId = date.toUtc().difference(DateTime.utc(1970)).inDays ~/ 7;
-
-        final type = GoalTypes.fromDbString(goalIdStr);
-
+        final type = GoalTypes.fromDbString(goalTypeStr);
         addGoal(Goal(id: type, day: day, value: goalValue), weekId);
       }
 
@@ -175,7 +171,8 @@ class WeeklyGoals extends ChangeNotifier {
         final goalsForWeek = entry.value;
 
         for (var goal in goalsForWeek) {
-          await dbSvc.createGoal(goal.id.toString(), goal.day, goal.value, DateTime.now());
+          // createGoal now returns the autoincremented goal row id
+          final createdGoalId = await dbSvc.createGoal(goal.id.toString(), accountId, goal.day, goal.value);
 
           if (accountId != null) {
             await db.insert(
@@ -183,7 +180,7 @@ class WeeklyGoals extends ChangeNotifier {
               {
                 'week_goal_id': weekId,
                 'account_id': accountId,
-                'goal_id': goal.id.toString(),
+                'goal_id': createdGoalId,
               },
               conflictAlgorithm: ConflictAlgorithm.replace,
             );
@@ -191,8 +188,16 @@ class WeeklyGoals extends ChangeNotifier {
         }
       }
     } catch (e) {
-      //handles errors
+      // Log errors so migrations/schema mismatches are visible during debugging
+      print('WeeklyGoals.saveToDatabase error: $e');
+      rethrow;
     }
+  }
+
+  static Future<void> registerNewGoals({required String accountId, GoalType? goalType}) async {
+    final weeklyGoals = WeeklyGoals();
+    weeklyGoals.goals[0] = List.generate(7, (index) => Goal(id: goalType ?? GoalType.money, day: index, value: 0.0));
+    await weeklyGoals.saveToDatabase(accountId: accountId);
   }
 
 }
