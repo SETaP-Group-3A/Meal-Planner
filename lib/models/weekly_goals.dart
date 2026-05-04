@@ -222,6 +222,54 @@ class WeeklyGoals extends ChangeNotifier {
     }
   }
 
+  /// Persist a single day's goal for a given week and account email.
+  /// Resolves `accountEmail` to internal id and updates or creates goal rows.
+  Future<void> persistSingleGoal({String? accountEmail, required int weekId, required int day, required double value, GoalType? id}) async {
+    // update in-memory first
+    setGoalValue(weekId, day, value, id: id);
+
+    try {
+      final dbSvc = DatabaseService.instance;
+      final db = await dbSvc.database;
+
+      String? accountId;
+      if (accountEmail != null) {
+        final users = await db.query('users', columns: ['id'], where: 'email = ?', whereArgs: [accountEmail], limit: 1);
+        accountId = users.isNotEmpty ? users.first['id'] as String? : null;
+      }
+
+      if (accountId == null) {
+        // nothing persisted for anonymous/no-account users
+        notifyListeners();
+        return;
+      }
+
+      final existingGoalId = await dbSvc.findGoalIdForWeekAccountDay(weekId, accountId, day);
+
+      if (existingGoalId != null) {
+        await dbSvc.updateGoal(existingGoalId, day, value);
+      } else {
+        final goalTypeStr = id?.toString() ?? (getGoalsForWeek(weekId).firstWhere((g) => g.day == day, orElse: () => Goal(id: GoalType.money, day: day, value: value))).id.toString();
+        final createdGoalId = await dbSvc.createGoal(goalTypeStr, accountId, day, value);
+        await db.insert(
+          'week_goal',
+          {
+            'week_goal_id': weekId,
+            'account_id': accountId,
+            'goal_id': createdGoalId,
+            'start_date': weekStartDates[weekId]?.toIso8601String() ?? DateTime.now().toIso8601String(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    } catch (e) {
+      // preserve in-memory change even if DB fails; surface error in debug
+      if (kDebugMode) print('persistSingleGoal error: $e');
+    }
+
+    notifyListeners();
+  }
+
   static Future<void> registerNewGoals({required String accountId, GoalType? goalType}) async {
     final weeklyGoals = WeeklyGoals();
     weeklyGoals.goals[0] = List.generate(7, (index) => Goal(id: goalType ?? GoalType.money, day: index, value: 0.0));
