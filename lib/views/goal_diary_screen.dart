@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:meal_planner/models/weekly_goals.dart';
+import 'package:provider/provider.dart';
 import 'package:meal_planner/repositories/goal_repository.dart';
 import 'package:meal_planner/views/app_styles.dart';
 
 class GoalDiaryScreen extends StatefulWidget {
 
-  final List<WeeklyGoals> weeklyGoals;
+  final int dayIndex;
 
-  const GoalDiaryScreen({super.key, required this.weeklyGoals});
+  const GoalDiaryScreen({super.key, this.dayIndex = -1});
 
   @override
   State<GoalDiaryScreen> createState() => _GoalDiaryScreenState();
@@ -17,26 +18,23 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
 
   final GoalRepository repository = GoalRepository();
 
+  GoalType selectedGoalType = GoalType.money;
+
   List<Goal> currentGoals = [];
 
-  void updateGoal(int day, String value) {
-    //Update the goal for the given day with the new value
-    setState(() {
-      final goal = currentGoals.firstWhere((g) => g.day == day, orElse: () => Goal(id: '', day: day, value: 0));
-      if (goal.id.isEmpty) {
-        // If no existing goal, add a new one
-        currentGoals.add(Goal(id: 'save money', day: day, value: double.tryParse(value) ?? 0));
-      } else {
-        // Update existing goal
-        goal.value = double.tryParse(value) ?? 0;
-      }
-    });
+  void updateGoal(int day, double value) {
+    final weekly = Provider.of<WeeklyGoals>(context, listen: false);
+    final weekId = weekly.currentWeek;
+    weekly.setGoalValue(weekId, day, value, id: GoalType.money);
+    setState(() { currentGoals = weekly.getGoalsForCurrentWeek(); });
   }
 
   @override
   Widget build(BuildContext context) {
-    final WeeklyGoals weekSource = widget.weeklyGoals.isNotEmpty ? widget.weeklyGoals[0] : WeeklyGoals();
+    final WeeklyGoals weekSource = Provider.of<WeeklyGoals>(context);
     currentGoals = weekSource.getGoalsForCurrentWeek();
+
+    selectedGoalType = currentGoals.isNotEmpty ? currentGoals[0].id : GoalType.money;
 
     final List<Goal> lastWeekGoals = () {
       if (weekSource.goals.keys.length < 2) return <Goal>[];
@@ -57,12 +55,14 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(child: Text('Diary', style: AppStyles.titleText)),
+              const SizedBox(height: 8),
+              Center(child: Text('Week ${weekSource.currentWeek}', style: AppStyles.subtitleText)),
               const SizedBox(height: 16),
               Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.max,
-                  children: [Text('Total: ${repository.totalAmount(currentGoals)}'), SizedBox(width: 16), Text('Savings: $savings', style: AppStyles.hightlightSwitch(savings))],
+                  children: [Text('Total: ${GoalTypes.displayGoal(selectedGoalType, repository.totalAmount(currentGoals).toString())}'), SizedBox(width: 16), Text('Savings: ${GoalTypes.displayGoal(selectedGoalType, savings.toString())}', style: AppStyles.hightlightSwitch(savings))],
                 ),
               ),
               Container(height: 16),
@@ -71,13 +71,12 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
                 DayGoalWidget(
                   day: 'Day ${i + 1}',
                   dayIndex: i,
+                  selectedDayIndex: widget.dayIndex,
                   goal: currentGoals
                       .firstWhere(
                         (g) => g.day == i,
-                        orElse: () => Goal(id: '', day: i, value: 0),
-                      )
-                      .value
-                      .toString(),
+                        orElse: () => Goal(id: GoalType.money, day: i, value: 0),
+                      ),
                   onGoalChanged: (day, value) => updateGoal(day, value),
                 ),
             ],
@@ -90,12 +89,13 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
 
 class DayGoalWidget extends StatefulWidget {
   final String day;
-  final String goal;
+  final Goal goal;
   final int dayIndex;
+  final int selectedDayIndex;
 
-  final Function(int, String)? onGoalChanged;
+  final Function(int, double)? onGoalChanged;
 
-  const DayGoalWidget({super.key, required this.day, required this.goal, required this.dayIndex, this.onGoalChanged});
+  const DayGoalWidget({super.key, required this.day, required this.goal, required this.dayIndex, required this.selectedDayIndex, this.onGoalChanged});
 
   @override
   State<DayGoalWidget> createState() => _DayGoalWidgetState();
@@ -107,7 +107,7 @@ class _DayGoalWidgetState extends State<DayGoalWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.goal);
+    _controller = TextEditingController(text: GoalTypes.displayGoal(widget.goal.id, widget.goal.value.toString()));
   }
 
   @override
@@ -121,6 +121,7 @@ class _DayGoalWidgetState extends State<DayGoalWidget> {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: widget.dayIndex == widget.selectedDayIndex ? Theme.of(context).colorScheme.primary : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
         child: Row(
@@ -134,7 +135,7 @@ class _DayGoalWidgetState extends State<DayGoalWidget> {
                 ),
                 controller: _controller,
                 onChanged: (value) {
-                  widget.onGoalChanged?.call(widget.dayIndex, value);
+                  widget.onGoalChanged?.call(widget.dayIndex, GoalTypes.parseValue(widget.goal.id, value));
                 },
               ),
             ),

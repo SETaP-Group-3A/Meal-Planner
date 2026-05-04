@@ -49,8 +49,12 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
       return;
     }
 
-    final recipes = await CategoryService.instance.getRecipesForCategory(id);
+    List<Recipe> recipes = await CategoryService.instance.getRecipesForCategory(id);
 
+    // service returns empty when DB is up but recipes aren't persisted yet — fall back to mock.
+    if (recipes.isEmpty && cat.recipeIds.isNotEmpty) {
+      recipes = mockRecipes.where((r) => cat.recipeIds.contains(r.id)).toList();
+    }
 
     final fav = await CategoryService.instance.getById('c-favourites');
     final favIds = fav?.recipeIds.toSet() ?? <String>{};

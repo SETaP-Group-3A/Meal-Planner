@@ -6,10 +6,12 @@ import 'package:meal_planner/views/categories_screen.dart';
 import 'package:meal_planner/views/goal_diary_screen.dart';
 import 'package:meal_planner/views/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:meal_planner/log_in.dart';
 import 'views/shopping_list_screen.dart';
 import 'graph_widget.dart';
 import 'views/category_content_screen.dart';
+import 'package:meal_planner/sign_up.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +32,16 @@ class _MyAppState extends State<MyApp> {
       WidgetsBinding.instance.platformDispatcher.platformBrightness ==
       Brightness.dark;
 
+  WeeklyGoals weekSource = WeeklyGoals()
+    ..goals[0] = [
+      Goal(id: GoalType.money, day: 0, value: 200.0),
+      Goal(id: GoalType.money, day: 2, value: 50.0),
+    ]
+    ..goals[1] = [
+      Goal(id: GoalType.money, day: 0, value: 500.0),
+      Goal(id: GoalType.money, day: 1, value: 150.0),
+    ];
+
   @override
   void initState() {
     super.initState();
@@ -48,50 +60,50 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Meal Planner',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-        textTheme: TextTheme(bodyMedium: AppStyles.normalText),
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.dark(),
-        useMaterial3: true,
-        textTheme: TextTheme(bodyMedium: AppStyles.normalText),
-      ),
-      //Also check settings
-      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      initialRoute: '/login',
-      routes: {
-        '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
-        '/login': (context) => const LoginScreen(successRouteName: '/'),
-        '/shopping-list': (context) => const ShoppingListScreen(),
-        '/categories': (context) => const CategoriesScreen(),
-        '/category': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments;
-          return CategoryContentScreen(
-            categoryId: args is String ? args : null,
-          );
-        },
-        '/diary': (context) => GoalDiaryScreen(
-          weeklyGoals: [
-            WeeklyGoals()
-              ..goals[0] = [
-                Goal(id: 'money', day: 0, value: 100.0),
-                Goal(id: 'money', day: 2, value: 50.0),
-              ]
-              ..goals[1] = [
-                Goal(id: 'money', day: 0, value: 300.0),
-                Goal(id: 'money', day: 1, value: 150.0),
-              ],
-          ],
+    return ChangeNotifierProvider<WeeklyGoals>.value(
+      value: weekSource,
+      child: MaterialApp(
+        title: 'Meal Planner',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+          textTheme: TextTheme(bodyMedium: AppStyles.normalText),
         ),
-        '/settings': (context) => const SettingsScreen(),
-        '/settings/account': (context) => AccountSettingsScreen(),
-        '/settings/accessibility': (context) =>
-            const AccessibilitySettingsScreen(),
-      },
+        darkTheme: ThemeData(
+          colorScheme: ColorScheme.dark(),
+          useMaterial3: true,
+          textTheme: TextTheme(bodyMedium: AppStyles.normalText),
+        ),
+        //Also check settings
+        themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+        initialRoute: '/login',
+        routes: {
+          '/': (context) => const MyHomePage(title: 'Meal Planner Home'),
+          '/login': (context) => const LoginScreen(successRouteName: '/'),
+          '/signup': (context) => const SignUpScreen(),
+          '/shopping-list': (context) => const ShoppingListScreen(),
+          '/categories': (context) => const CategoriesScreen(),
+          '/category': (context) {
+            final args = ModalRoute.of(context)!.settings.arguments;
+            return CategoryContentScreen(
+              categoryId: args is String ? args : null,
+            );
+          },
+          '/diary': (context) {
+            final args =
+                ModalRoute.of(context)?.settings.arguments
+                    as Map<String, dynamic>?;
+            final int dayIndex = args != null && args['dayIndex'] is int
+                ? args['dayIndex'] as int
+                : -1;
+            return GoalDiaryScreen(dayIndex: dayIndex);
+          },
+          '/settings': (context) => const SettingsScreen(),
+          '/settings/account': (context) => AccountSettingsScreen(),
+          '/settings/accessibility': (context) =>
+              const AccessibilitySettingsScreen(),
+        },
+      ),
     );
   }
 }
@@ -108,6 +120,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
+    final weekly = Provider.of<WeeklyGoals>(context);
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       drawer: Drawer(
@@ -180,11 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
               width: 300,
               height: 200,
               child: ProgressGraphWidget(
-                userData: [
-                  Goal(id: 'money', day: 0, value: 100.0),
-                  Goal(id: 'money', day: 1, value: 0.0),
-                  Goal(id: 'money', day: 2, value: 50.0),
-                ],
+                userData: weekly.getGoalsForCurrentWeek().toList(),
               ),
             ),
           ],

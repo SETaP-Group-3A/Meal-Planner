@@ -12,6 +12,8 @@ class ShoppingList {
   final List<ShoppingListItem> shoppingItems = [];
   final List<String> _addedRecipeHistory = [];
 
+  List<ShoppingListItem> get items => List.unmodifiable(shoppingItems);
+
 
   final List<String> _ingredientNames = [];
 
