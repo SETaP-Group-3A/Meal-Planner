@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:async';
 
 import 'package:meal_planner/services/database_service.dart';
+import 'package:sqflite/sqflite.dart';
 
 enum GoalType { money, calories, distance }
 
@@ -161,6 +162,37 @@ class WeeklyGoals extends ChangeNotifier {
     ];
 
     return instance;
+  }
+
+  //Not actually called yet
+  Future<void> saveToDatabase({String? accountId}) async {
+    try {
+      final dbSvc = DatabaseService.instance;
+      final db = await dbSvc.database;
+
+      for (var entry in goals.entries) {
+        final weekId = entry.key;
+        final goalsForWeek = entry.value;
+
+        for (var goal in goalsForWeek) {
+          await dbSvc.createGoal(goal.id.toString(), goal.day, goal.value, DateTime.now());
+
+          if (accountId != null) {
+            await db.insert(
+              'week_goal',
+              {
+                'week_goal_id': weekId,
+                'account_id': accountId,
+                'goal_id': goal.id.toString(),
+              },
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      //handles errors
+    }
   }
 
 }
