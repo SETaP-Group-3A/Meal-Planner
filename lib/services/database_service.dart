@@ -704,6 +704,25 @@ class DatabaseService {
       whereArgs: [goalId, dayId],
     );
   }
+
+  /// Finds the `goal.goal_id` for a given week/account/day, or null if none.
+  Future<int?> findGoalIdForWeekAccountDay(int weekId, String accountId, int dayId) async {
+    final db = await instance.database;
+    final rows = await db.rawQuery('''
+      SELECT g.goal_id
+      FROM goal g
+      JOIN week_goal wg ON wg.goal_id = g.goal_id
+      WHERE wg.account_id = ? AND wg.week_goal_id = ? AND g.day_id = ?
+      LIMIT 1
+    ''', [accountId, weekId, dayId]);
+
+    if (rows.isEmpty) return null;
+    final val = rows.first['goal_id'];
+    if (val is int) return val;
+    if (val is int?) return val;
+    if (val is num) return val.toInt();
+    return int.tryParse(val.toString());
+  }
 }
 // ----------------------------------------------------------------------
 // USERS (AUTH SYSTEM)
