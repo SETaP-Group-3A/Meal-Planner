@@ -4,6 +4,12 @@ import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/repositories/graph_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Test helper: when tests call `testPopulate`, the widget will render
+// using this data instead of querying the DB.
+List<Goal>? _graphTestData;
+void testPopulate(List<Goal> data) => _graphTestData = data;
+void testClear() => _graphTestData = null;
+
 class ProgressGraphWidget extends StatefulWidget {
   const ProgressGraphWidget({super.key});
 
@@ -47,9 +53,11 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<Goal>>(
-      stream: Stream.periodic(const Duration(seconds: 2)).asyncMap((_) => controller.fetchLatestWeekGoals()),
+      stream: _graphTestData != null
+          ? Stream.value(_graphTestData!)
+          : Stream.periodic(const Duration(seconds: 2)).asyncMap((_) => controller.fetchLatestWeekGoals()),
       builder: (context, snap) {
-        final goals = snap.data ?? [];
+        final goals = _graphTestData ?? (snap.data ?? []);
         if (goals.isEmpty) {
           controller = GraphController([]);
           goalData = List<int>.filled(7, 0);
