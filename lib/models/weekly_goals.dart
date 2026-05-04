@@ -60,6 +60,16 @@ class WeeklyGoals extends ChangeNotifier {
   // store start date for each week id
   Map<int, DateTime> weekStartDates = {};
 
+  // When a WeeklyGoals instance is created, start loading values from the DB
+  WeeklyGoals({String? accountEmail}) {
+    // fire-and-forget; loadFromDatabase will populate and notify listeners
+    try {
+      loadFromDatabase(accountEmail: accountEmail);
+    } catch (_) {
+      // ignore — loadFromDatabase handles its own errors
+    }
+  }
+
   void addGoal(Goal goal, int weekID) {
     if (weekID < 0) {
       throw ArgumentError('Week ID must be non-negative');
@@ -110,9 +120,17 @@ class WeeklyGoals extends ChangeNotifier {
 
   int get currentWeek => goals.keys.isNotEmpty ? goals.keys.last : 0;
 
-  Future<bool> loadFromDatabase({String? accountId}) async {
+  Future<bool> loadFromDatabase({String? accountEmail}) async {
     try {
       final db = await DatabaseService.instance.database;
+
+      // if caller supplied an email, resolve it to the internal account id
+      String? accountId;
+      if (accountEmail != null) {
+        final users = await db.query('users', columns: ['id'], where: 'email = ?', whereArgs: [accountEmail], limit: 1);
+        accountId = users.isNotEmpty ? users.first['id'] as String? : null;
+      }
+
       // Join goal with week_goal so we can associate goals with weeks/accounts
       final rows = await db.rawQuery('''
         SELECT g.goal_id, g.goal_type, g.day_id, g.goal_value, wg.week_goal_id, wg.start_date
@@ -146,9 +164,9 @@ class WeeklyGoals extends ChangeNotifier {
     }
   }
 
-  static Future<WeeklyGoals> loadOrFallback({String? accountId, WeeklyGoals? fallback}) async {
-    final instance = WeeklyGoals();
-    final ok = await instance.loadFromDatabase(accountId: accountId);
+  static Future<WeeklyGoals> loadOrFallback({String? accountEmail, WeeklyGoals? fallback}) async {
+    final instance = WeeklyGoals(accountEmail: accountEmail);
+    final ok = await instance.loadFromDatabase(accountEmail: accountEmail);
     if (ok) return instance;
 
     if (fallback != null && fallback.goals.isNotEmpty) {
