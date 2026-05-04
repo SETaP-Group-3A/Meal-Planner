@@ -126,10 +126,11 @@ class WeeklyGoals extends ChangeNotifier {
 
       // if caller supplied an email, resolve it to the internal account id
       String? accountId;
-      if (accountEmail != null) {
-        final users = await db.query('users', columns: ['id'], where: 'email = ?', whereArgs: [accountEmail], limit: 1);
+
+      if (accountEmail == null) return false;
+
+      final users = await db.query('users', columns: ['id'], where: 'email = ?', whereArgs: [accountEmail], limit: 1);
         accountId = users.isNotEmpty ? users.first['id'] as String? : null;
-      }
 
       // Join goal with week_goal so we can associate goals with weeks/accounts
       final rows = await db.rawQuery('''
