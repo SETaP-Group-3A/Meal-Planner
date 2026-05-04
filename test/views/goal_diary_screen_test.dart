@@ -21,4 +21,23 @@ void main() {
 
     expect(find.byType(DayGoalWidget), findsExactly(7));
 	});
+
+  testWidgets('correct diary day is highlighted', (tester) async {
+		await tester.pumpWidget(
+      ChangeNotifierProvider<WeeklyGoals>(
+        create: (_) => WeeklyGoals(),
+        child: const MaterialApp(home: GoalDiaryScreen(dayIndex: 2)),
+      ),
+    );
+
+    final dayFinder = find.byWidgetPredicate((widget) => widget is DayGoalWidget && widget.dayIndex == 2);
+    expect(dayFinder, findsOneWidget);
+
+    final cardFinder = find.descendant(of: dayFinder, matching: find.byType(Card));
+    expect(cardFinder, findsOneWidget);
+
+    final Card card = tester.widget<Card>(cardFinder);
+    final primary = Theme.of(tester.element(dayFinder)).colorScheme.primary;
+    expect(card.color, equals(primary));
+	});
 }
