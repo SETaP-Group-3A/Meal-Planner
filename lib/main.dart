@@ -129,8 +129,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    final weekly = Provider.of<WeeklyGoals>(context);
-
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       drawer: Drawer(
