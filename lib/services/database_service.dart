@@ -137,6 +137,7 @@ class DatabaseService {
           week_goal_id INTEGER NOT NULL,
           account_id TEXT NOT NULL,
           goal_id INTEGER NOT NULL,
+          start_date DATE NOT NULL,
           FOREIGN KEY (account_id) REFERENCES users (id) ON DELETE CASCADE,
           PRIMARY KEY (week_goal_id, account_id, goal_id)
         )
@@ -646,6 +647,7 @@ class DatabaseService {
             'week_goal_id': weekId,
             'account_id': accountId,
             'goal_id': createdGoalId,
+            'start_date': weeklyGoals.weekStartDates[weekId]?.toIso8601String() ?? DateTime.now().toIso8601String(),
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -670,6 +672,7 @@ class DatabaseService {
             'week_goal_id': weekId,
             'account_id': accountId,
             'goal_id': createdGoalId,
+            'start_date': weeklyGoals.weekStartDates[weekId]?.toIso8601String() ?? DateTime.now().toIso8601String(),
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );

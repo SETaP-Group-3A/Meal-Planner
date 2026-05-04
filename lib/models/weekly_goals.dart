@@ -57,6 +57,8 @@ class GoalTypes {
 
 class WeeklyGoals extends ChangeNotifier {
   Map<int, List<Goal>> goals = {};
+  // store start date for each week id
+  Map<int, DateTime> weekStartDates = {};
 
   void addGoal(Goal goal, int weekID) {
     if (weekID < 0) {
@@ -113,7 +115,7 @@ class WeeklyGoals extends ChangeNotifier {
       final db = await DatabaseService.instance.database;
       // Join goal with week_goal so we can associate goals with weeks/accounts
       final rows = await db.rawQuery('''
-        SELECT g.goal_id, g.goal_type, g.day_id, g.goal_value, wg.week_goal_id
+        SELECT g.goal_id, g.goal_type, g.day_id, g.goal_value, wg.week_goal_id, wg.start_date
         FROM goal g
         LEFT JOIN week_goal wg ON wg.goal_id = g.goal_id
         ${accountId != null ? 'WHERE wg.account_id = ?' : ''}
@@ -126,6 +128,13 @@ class WeeklyGoals extends ChangeNotifier {
         final day = (row['day_id'] as int?) ?? 0;
         final goalValue = (row['goal_value'] as num?)?.toDouble() ?? 0.0;
         final weekId = (row['week_goal_id'] as int?) ?? 0;
+        final startDateStr = row['start_date']?.toString();
+        if (startDateStr != null && startDateStr.isNotEmpty) {
+          try {
+            final parsed = DateTime.tryParse(startDateStr);
+            if (parsed != null) weekStartDates[weekId] = parsed;
+          } catch (_) {}
+        }
 
         final type = GoalTypes.fromDbString(goalTypeStr);
         addGoal(Goal(id: type, day: day, value: goalValue), weekId);
@@ -181,6 +190,7 @@ class WeeklyGoals extends ChangeNotifier {
                 'week_goal_id': weekId,
                 'account_id': accountId,
                 'goal_id': createdGoalId,
+                'start_date': weekStartDates[weekId]?.toIso8601String() ?? DateTime.now().toIso8601String(),
               },
               conflictAlgorithm: ConflictAlgorithm.replace,
             );
@@ -189,7 +199,7 @@ class WeeklyGoals extends ChangeNotifier {
       }
     } catch (e) {
       // Log errors so migrations/schema mismatches are visible during debugging
-      print('WeeklyGoals.saveToDatabase error: $e');
+      // print('WeeklyGoals.saveToDatabase error: $e');
       rethrow;
     }
   }
@@ -197,6 +207,7 @@ class WeeklyGoals extends ChangeNotifier {
   static Future<void> registerNewGoals({required String accountId, GoalType? goalType}) async {
     final weeklyGoals = WeeklyGoals();
     weeklyGoals.goals[0] = List.generate(7, (index) => Goal(id: goalType ?? GoalType.money, day: index, value: 0.0));
+    weeklyGoals.weekStartDates[0] = DateTime.now();
     await weeklyGoals.saveToDatabase(accountId: accountId);
   }
 
