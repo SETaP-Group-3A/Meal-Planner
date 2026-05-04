@@ -64,9 +64,97 @@ class WeeklyGoals extends ChangeNotifier {
   WeeklyGoals({String? accountEmail}) {
     // fire-and-forget; loadFromDatabase will populate and notify listeners
     try {
-      loadFromDatabase(accountEmail: accountEmail);
+      loadFromDatabase(accountEmail: accountEmail).then((_) {
+        // After loading, ensure weeks are up-to-date for this account.
+        _maybeAdvanceWeeks(accountEmail);
+      });
     } catch (_) {
       // ignore — loadFromDatabase handles its own errors
+    }
+  }
+
+  /// If the latest stored week's start date is >= 7 days old, create
+  /// subsequent empty weeks (persisting them) until the latest week's
+  /// start date is within the current 7-day window.
+  Future<void> _maybeAdvanceWeeks(String? accountEmail) async {
+    if (accountEmail == null) return;
+
+    try {
+      final dbSvc = DatabaseService.instance;
+      final db = await dbSvc.database;
+
+      // Resolve account id
+      final users = await db.query('users', columns: ['id'], where: 'email = ?', whereArgs: [accountEmail], limit: 1);
+      final accountId = users.isNotEmpty ? users.first['id'] as String? : null;
+      if (accountId == null) return;
+
+      // Determine latest week id and its start date from in-memory if available
+      int latestWeekId = goals.keys.isNotEmpty ? goals.keys.reduce((a, b) => a > b ? a : b) : 0;
+      DateTime? latestStart = weekStartDates[latestWeekId];
+
+      // If in-memory didn't have start date, try DB
+      if (latestStart == null) {
+        final maxRow = await db.rawQuery('SELECT MAX(week_goal_id) as wk, start_date FROM week_goal WHERE account_id = ? LIMIT 1', [accountId]);
+        if (maxRow.isNotEmpty) {
+          final wk = maxRow.first['wk'];
+          final sd = maxRow.first['start_date']?.toString();
+          if (wk != null) latestWeekId = wk is int ? wk : int.tryParse(wk.toString()) ?? latestWeekId;
+          if (sd != null) latestStart = DateTime.tryParse(sd);
+        }
+      }
+
+      if (latestStart == null) {
+        // nothing to advance from
+        return;
+      }
+
+      // If the latest stored week's start date is 7+ days ago, create
+      final start = latestStart;
+      if (DateTime.now().difference(start) >= const Duration(days: 7)) {
+        final newWeekId = latestWeekId + 1;
+
+        // Read a single goal_type for the previous week — the week has one
+        // goal type for all days, so use that for the new week's entries.
+        final typeRow = await db.rawQuery('''
+          SELECT g.goal_type
+          FROM goal g
+          JOIN week_goal wg ON wg.goal_id = g.goal_id
+          WHERE wg.account_id = ? AND wg.week_goal_id = ?
+          LIMIT 1
+        ''', [accountId, latestWeekId]);
+
+        var weekType = GoalType.money;
+        if (typeRow.isNotEmpty) {
+          final typeStr = typeRow.first['goal_type']?.toString() ?? 'money';
+          weekType = GoalTypes.fromDbString(typeStr);
+        }
+
+        final newGoals = List<Goal>.generate(7, (i) => Goal(id: weekType, day: i, value: 0.0));
+
+        // Persist new goals for this account/week
+        final newStart = start.add(const Duration(days: 7));
+        for (final goal in newGoals) {
+          final createdGoalId = await dbSvc.createGoal(goal.id.toString(), accountId, goal.day, goal.value);
+          await db.insert(
+            'week_goal',
+            {
+              'week_goal_id': newWeekId,
+              'account_id': accountId,
+              'goal_id': createdGoalId,
+              'start_date': newStart.toIso8601String(),
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+
+        // Update in-memory state
+        goals[newWeekId] = newGoals;
+        weekStartDates[newWeekId] = newStart;
+      }
+
+      if (goals.isNotEmpty) notifyListeners();
+    } catch (e) {
+      if (kDebugMode) print('Error advancing weeks: $e');
     }
   }
 
