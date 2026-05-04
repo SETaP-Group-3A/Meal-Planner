@@ -17,11 +17,18 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Initialize the database
   await DatabaseService.instance.database;
-  runApp(const MyApp());
+
+  // Load saved account email if present
+  final prefs = await SharedPreferences.getInstance();
+  final accountEmail = prefs.getString('accountEmail');
+
+  runApp(MyApp(accountEmail: accountEmail));
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.accountEmail});
+
+  final String? accountEmail;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -32,15 +39,17 @@ class _MyAppState extends State<MyApp> {
       WidgetsBinding.instance.platformDispatcher.platformBrightness ==
       Brightness.dark;
 
-  WeeklyGoals weekSource = WeeklyGoals()
-    ..goals[0] = [
-      Goal(id: GoalType.money, day: 0, value: 200.0),
-      Goal(id: GoalType.money, day: 2, value: 50.0),
-    ]
-    ..goals[1] = [
-      Goal(id: GoalType.money, day: 0, value: 500.0),
-      Goal(id: GoalType.money, day: 1, value: 150.0),
-    ];
+      late final WeeklyGoals weekSource = WeeklyGoals(accountEmail: widget.accountEmail);
+
+  // WeeklyGoals weekSource = WeeklyGoals()
+  //   ..goals[0] = [
+  //     Goal(id: GoalType.money, day: 0, value: 200.0),
+  //     Goal(id: GoalType.money, day: 2, value: 50.0),
+  //   ]
+  //   ..goals[1] = [
+  //     Goal(id: GoalType.money, day: 0, value: 500.0),
+  //     Goal(id: GoalType.money, day: 1, value: 150.0),
+  //   ];
 
   @override
   void initState() {
