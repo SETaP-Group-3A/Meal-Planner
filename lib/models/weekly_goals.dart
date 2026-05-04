@@ -1,4 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
+
+import 'package:meal_planner/services/database_service.dart';
 
 enum GoalType { money, calories, distance }
 
@@ -14,6 +17,15 @@ class GoalTypes {
       default:
         throw ArgumentError('Unknown goal type: $s');
     }
+  }
+
+  /// Parse values that may come from the DB. Some code stores the enum
+  /// via `goal.id.toString()` which produces `GoalType.money`.
+  static GoalType fromDbString(String s) {
+    if (s.startsWith('GoalType.')) {
+      return fromString(s.split('.').last);
+    }
+    return fromString(s);
   }
 
   static String displayGoal(GoalType type, String value) {
@@ -58,6 +70,11 @@ class WeeklyGoals extends ChangeNotifier {
   }
 
   void setGoalValue(int weekID, int day, double value, {GoalType? id}) {
+
+    if (weekID < 0 || day < 0 || day > 6) {
+      throw ArgumentError('Value out of range: weekID must be non-negative and day must be between 0 and 6');
+    }
+
     if (!goals.containsKey(weekID)) goals[weekID] = [];
     final list = goals[weekID]!;
     final idx = list.indexWhere((g) => g.day == day);
@@ -89,8 +106,64 @@ class WeeklyGoals extends ChangeNotifier {
   }
 
   int get currentWeek => goals.keys.isNotEmpty ? goals.keys.last : 0;
-}
 
+  Future<bool> loadFromDatabase({String? accountId}) async {
+    try {
+      final db = await DatabaseService.instance.database;
+
+      final rows = await db.query('goal');
+      if (rows.isEmpty) return false;
+
+      for (final row in rows) {
+        final goalIdStr = row['goal_id']?.toString() ?? 'money';
+        final day = (row['day_id'] as int?) ?? 0;
+        final goalValue = (row['goal_value'] as num?)?.toDouble() ?? 0.0;
+        final dateStr = row['date']?.toString();
+
+        DateTime date;
+        if (dateStr != null) {
+          date = DateTime.tryParse(dateStr) ?? DateTime.now();
+        } else {
+          date = DateTime.now();
+        }
+
+        final weekId = date.toUtc().difference(DateTime.utc(1970)).inDays ~/ 7;
+
+        final type = GoalTypes.fromDbString(goalIdStr);
+
+        addGoal(Goal(id: type, day: day, value: goalValue), weekId);
+      }
+
+      return goals.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<WeeklyGoals> loadOrFallback({String? accountId, WeeklyGoals? fallback}) async {
+    final instance = WeeklyGoals();
+    final ok = await instance.loadFromDatabase(accountId: accountId);
+    if (ok) return instance;
+
+    if (fallback != null && fallback.goals.isNotEmpty) {
+      instance.goals = Map<int, List<Goal>>.from(fallback.goals);
+      return instance;
+    }
+
+    //Temp fallback while account system is being implemented
+    instance.goals[0] = [
+      Goal(id: GoalType.money, day: 0, value: 200.0),
+      Goal(id: GoalType.money, day: 2, value: 50.0),
+    ];
+    instance.goals[1] = [
+      Goal(id: GoalType.money, day: 0, value: 500.0),
+      Goal(id: GoalType.money, day: 1, value: 150.0),
+    ];
+
+    return instance;
+  }
+
+}
 class Goal {
   final GoalType id;
   final int day;
