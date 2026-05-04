@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/services/database_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -29,14 +30,18 @@ class AuthService {
   try {
     final db = await _db.database;
 
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+
     await db.insert(
       'users',
       {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'id': id,
         'email': email,
         'password': password,
       },
     );
+
+    await WeeklyGoals.registerNewGoals(accountId: id);
 
     return true;
   } catch (e) {
