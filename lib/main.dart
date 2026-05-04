@@ -202,9 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SizedBox(
               width: 300,
               height: 200,
-              child: ProgressGraphWidget(
-                userData: weekly.getGoalsForCurrentWeek().toList(),
-              ),
+              child: ProgressGraphWidget(),
             ),
           ],
         ),
