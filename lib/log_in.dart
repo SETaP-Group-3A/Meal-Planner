@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/services/database_service.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.successRouteName = '/'});
@@ -29,18 +32,22 @@ class AuthService {
   try {
     final db = await _db.database;
 
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+
     await db.insert(
       'users',
       {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'id': id,
         'email': email,
         'password': password,
       },
     );
 
+    await WeeklyGoals.registerNewGoals(accountId: id);
+
     return true;
   } catch (e) {
-    print("SIGNUP ERROR: $e"); // 👈 important for debugging
+    print("SIGNUP ERROR: $e"); // debug log
     return false;
   }
 }
@@ -49,6 +56,21 @@ class AuthService {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _clearSavedAccountEmail();
+  }
+
+  Future<void> _clearSavedAccountEmail() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('accountEmail');
+    } catch (e) {
+      // non-fatal; ignore errors while clearing prefs
+    }
+  }
 
   String? _emailError;
   String? _passwordError;
@@ -78,24 +100,26 @@ class _LoginScreenState extends State<LoginScreen> {
     if (email.isEmpty) {
       _emailError = 'Email is required';
       hasError = true;
-    } else if (!email.contains('@')) {
-      _emailError = "Email must contain '@'";
-      hasError = true;
-    }
+      final emailValid =
+      RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email);
 
-    final letterCount =
-        password.replaceAll(RegExp(r'[^A-Za-z]'), '').length;
-    final numberCount =
-        password.replaceAll(RegExp(r'[^0-9]'), '').length;
+    if (!emailValid) {
+    _emailError = "Enter a valid email";
+    hasError = true;
+    }
+  }
+
+  final passwordValid =
+  RegExp(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$').hasMatch(password);
 
     if (password.isEmpty) {
-      _passwordError = 'Password is required';
-      hasError = true;
-    } else if (letterCount < 7 || numberCount < 1) {
+     _passwordError = 'Password is required';
+     hasError = true;
+    } else if (!passwordValid) {
       _passwordError =
-          'Password must have at least 7 letters and at least 1 number';
-      hasError = true;
-    }
+        'Password must be at least 8 characters and include at least 1 letter and 1 number';
+     hasError = true;
+   }
 
     if (hasError) {
       setState(() {});
@@ -107,6 +131,20 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
+      // fetch the user's id and load weekly goals into the provider
+      // persist current account email for future app starts
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('accountEmail', email);
+
+      // ask the provider instance to load data for this account (by email)
+      try {
+        final weekly = Provider.of<WeeklyGoals>(context, listen: false);
+        await weekly.loadFromDatabase(accountEmail: email);
+      } catch (e) {
+        // non-fatal — loading will be attempted again when needed
+        print('Failed loading weekly goals after login: $e');
+      }
+
       Navigator.pushReplacementNamed(context, widget.successRouteName);
     } else {
       setState(() {

@@ -1,61 +1,15 @@
 import 'models/ingredient.dart';
 import 'models/recipe.dart';
 import 'models/store.dart';
- 
-// ---------------------------------------------------------------------------
-// Mock stores
-// ---------------------------------------------------------------------------
- 
-final List<Store> mockStores = [
-  Store(
-    id: 's-aldi-sw1',
-    name: 'Aldi',
-    postcode: 'SW1A 1AA',
-    latitude: 51.5014,
-    longitude: -0.1419,
-  ),
-  Store(
-    id: 's-waitrose-wc2',
-    name: 'Waitrose',
-    postcode: 'WC2N 5DU',
-    latitude: 51.5074,
-    longitude: -0.1240,
-  ),
-  Store(
-    id: 's-tesco-se1',
-    name: 'Tesco',
-    postcode: 'SE1 7PB',
-    latitude: 51.5045,
-    longitude: -0.0865,
-  ),
-  Store(
-    id: 's-lidl-e1',
-    name: 'Lidl',
-    postcode: 'E1 6RF',
-    latitude: 51.5155,
-    longitude: -0.0726,
-  ),
-];
- 
-// ---------------------------------------------------------------------------
-// Mock Ingredients
-// ---------------------------------------------------------------------------
- 
+
 final Map<String, List<Ingredient>> marketInventory = {
   'Flour': [
-    Ingredient(
-      name: 'Flour (Aldi)',
-      cost: 0.80,
-      distance: 3.0,
-      calories: 360,
-      storeId: 's-aldi-sw1',
-    ),
+    Ingredient(name: 'Flour (Aldi)', cost: 0.80, distance: 3.0, calories: 360),
     Ingredient(
       name: 'Flour (Waitrose)',
       cost: 1.20,
       distance: 1.0,
       calories: 360,
-      storeId: 's-waitrose-wc2',
     ),
   ],
   'Milk': [
@@ -64,30 +18,16 @@ final Map<String, List<Ingredient>> marketInventory = {
       cost: 1.80,
       distance: 1.0,
       calories: 45,
-      storeId: 's-waitrose-wc2',
     ),
-    Ingredient(
-      name: 'Milk (Aldi)',
-      cost: 1.50,
-      distance: 3.0,
-      calories: 45,
-      storeId: 's-aldi-sw1',
-    ),
+    Ingredient(name: 'Milk (Aldi)', cost: 1.50, distance: 3.0, calories: 45),
   ],
   'Eggs': [
-    Ingredient(
-      name: 'Eggs (Value)',
-      cost: 1.50,
-      distance: 0.5,
-      calories: 155,
-      storeId: 's-lidl-e1',
-    ),
+    Ingredient(name: 'Eggs (Value)', cost: 1.50, distance: 0.5, calories: 155),
     Ingredient(
       name: 'Eggs (Free Range)',
       cost: 2.50,
       distance: 0.5,
       calories: 155,
-      storeId: 's-tesco-se1',
     ),
   ],
   'Lettuce': [
@@ -96,14 +36,12 @@ final Map<String, List<Ingredient>> marketInventory = {
       cost: 1.00,
       distance: 0.2,
       calories: 15,
-      storeId: 's-tesco-se1',
     ),
     Ingredient(
       name: 'Lettuce (Bagged)',
       cost: 1.50,
       distance: 0.2,
       calories: 15,
-      storeId: 's-waitrose-wc2',
     ),
   ],
   'Tomatoes': [
@@ -134,25 +72,68 @@ final Map<String, List<Ingredient>> marketInventory = {
     ),
   ],
 };
- 
-// ---------------------------------------------------------------------------
-// Mock recipes 
-// ---------------------------------------------------------------------------
- 
+
 final List<Recipe> mockRecipes = [
   Recipe(
     id: 'r-1',
     name: 'Scrambled Eggs on Toast',
     requiredIngredients: ['Eggs', 'Milk', 'Flour'],
+    prepTimeMinutes: 10,
+    allergens: ['Gluten', 'Dairy', 'Eggs'],
+    calories: 420,
+    macros: Macros(proteinG: 22.0, carbsG: 38.0, fatG: 18.0),
+    nutrients: {'Iron (mg)': 3.2, 'Calcium (mg)': 180.0, 'Vitamin D (µg)': 2.5},
   ),
   Recipe(
     id: 'r-2',
     name: 'Tomato & Cucumber Salad',
     requiredIngredients: ['Tomatoes', 'Cucumber', 'Lettuce'],
+    prepTimeMinutes: 5,
+    allergens: [],
+    calories: 85,
+    macros: Macros(proteinG: 3.0, carbsG: 14.0, fatG: 1.5),
+    nutrients: {
+      'Vitamin C (mg)': 28.0,
+      'Potassium (mg)': 410.0,
+      'Fibre (g)': 3.1,
+    },
   ),
   Recipe(
     id: 'r-3',
     name: 'Simple Pasta',
     requiredIngredients: ['Pasta', 'Tomatoes', 'Milk'],
+    prepTimeMinutes: 20,
+    allergens: ['Gluten', 'Dairy'],
+    calories: 510,
+    macros: Macros(proteinG: 16.0, carbsG: 72.0, fatG: 12.0),
+    nutrients: {
+      'Iron (mg)': 2.1,
+      'Calcium (mg)': 120.0,
+      'Vitamin C (mg)': 14.0,
+    },
+  ),
+];
+
+final List<Store> mockStores = [
+  Store(
+    id: 's-aldi-sw1',
+    name: 'Aldi',
+    postcode: 'PO4 8SL',
+    latitude: 50.7972378,
+    longitude: -1.0687938,
+  ),
+  Store(
+    id: 's-lidl-e1',
+    name: 'Lidl',
+    postcode: 'PO4 0BS',
+    latitude: 50.7947335,
+    longitude: -1.0697082,
+  ),
+  Store(
+    id: 's-tesco-n1',
+    name: 'Tesco',
+    postcode: 'PO1 1RS',
+    latitude: 50.8008788,
+    longitude: -1.0874245,
   ),
 ];
