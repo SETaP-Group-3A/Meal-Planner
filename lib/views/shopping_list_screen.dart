@@ -24,14 +24,18 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialRecipeId != null && widget.initialSortBy != null) {
-      _addInitialRecipe();
-    }
+    _initializeShoppingList();
   }
 
-  Future<void> _addInitialRecipe() async {
+  Future<void> _initializeShoppingList() async {
     setState(() => _isLoading = true);
-    await shoppingList.addRecipe(widget.initialRecipeId!, widget.initialSortBy!); // Assuming correct handling
+    await shoppingList.initialize();
+
+    if (widget.initialRecipeId != null && widget.initialSortBy != null) {
+      selectedSort = widget.initialSortBy!;
+      await shoppingList.addRecipe(widget.initialRecipeId!, widget.initialSortBy!);
+    }
+
     if (mounted) setState(() => _isLoading = false);
   }
 
