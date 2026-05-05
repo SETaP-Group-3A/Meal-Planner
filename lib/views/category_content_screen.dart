@@ -16,11 +16,45 @@ class CategoryContentScreen extends StatefulWidget {
   State<CategoryContentScreen> createState() => _CategoryContentScreenState();
 }
 
+class _SearchBar extends StatefulWidget {
+  final ValueChanged<String> onSearchChanged;
+
+  const _SearchBar({Key? key, required this.onSearchChanged}) : super(key: key);
+
+  @override
+  State<_SearchBar> createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<_SearchBar> {
+  final TextEditingController _controller = TextEditingController();
+
+  void _onChanged() {
+    widget.onSearchChanged(_controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        controller: _controller,
+        onChanged: (_) => _onChanged(),
+        decoration: InputDecoration(
+          hintText: 'Search recipes...',
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+        ),
+      ),
+    );
+  }
+}
+
 class _CategoryContentScreenState extends State<CategoryContentScreen> {
   Category? category;
   List<Recipe> assignedRecipes = [];
   Set<String> favouriteIds = {};
   bool loading = true;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -49,7 +83,9 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
       return;
     }
 
-    List<Recipe> recipes = await CategoryService.instance.getRecipesForCategory(id);
+    List<Recipe> recipes = await CategoryService.instance.getRecipesForCategory(
+      id,
+    );
 
     // service returns empty when DB is up but recipes aren't persisted yet — fall back to mock.
     if (recipes.isEmpty && cat.recipeIds.isNotEmpty) {
@@ -71,7 +107,8 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
     return FutureBuilder<List<Ingredient>>(
       future: () async {
         try {
-          final dbOptions = await DatabaseService.instance.getIngredientsByGenericName(ingredientName);
+          final dbOptions = await DatabaseService.instance
+              .getIngredientsByGenericName(ingredientName);
           if (dbOptions.isNotEmpty) return dbOptions;
         } catch (_) {
           // ignore DB errors and fall back to mock
@@ -79,7 +116,14 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
         final options = marketInventory[ingredientName] ?? [];
 
         return options
-            .map((o) => Ingredient(name: o.name, cost: o.cost, distance: o.distance, calories: o.calories))
+            .map(
+              (o) => Ingredient(
+                name: o.name,
+                cost: o.cost,
+                distance: o.distance,
+                calories: o.calories,
+              ),
+            )
             .toList();
       }(),
       builder: (context, snapshot) {
@@ -98,7 +142,6 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
           );
         }
 
-  
         options.sort((a, b) {
           final costCmp = a.cost.compareTo(b.cost);
           if (costCmp != 0) return costCmp;
@@ -109,7 +152,9 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
         return ListTile(
           dense: true,
           title: Text(chosen.name),
-          subtitle: Text('Cost: £${chosen.cost.toStringAsFixed(2)} · Dist: ${chosen.distance}km · ${chosen.calories} cal'),
+          subtitle: Text(
+            'Cost: £${chosen.cost.toStringAsFixed(2)} · Dist: ${chosen.distance}km · ${chosen.calories} cal',
+          ),
         );
       },
     );
@@ -120,7 +165,6 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
     for (final ing in r.requiredIngredients) {
       final options = marketInventory[ing];
       if (options != null && options.isNotEmpty) {
- 
         options.sort((a, b) {
           final costCmp = a.cost.compareTo(b.cost);
           if (costCmp != 0) return costCmp;
@@ -128,9 +172,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
         });
         final opt = options.first;
         sum += opt.calories;
-      } else {
-
-      }
+      } else {}
     }
     return sum;
   }
@@ -142,10 +184,17 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
   Future<void> _toggleFavourite(String recipeId) async {
     final fav = await CategoryService.instance.getById('c-favourites');
     if (fav == null) {
-      await CategoryService.instance.addCategory(name: 'Favourites', targetRoute: '/category', recipeIds: [recipeId]);
+      await CategoryService.instance.addCategory(
+        name: 'Favourites',
+        targetRoute: '/category',
+        recipeIds: [recipeId],
+      );
     } else {
       if (fav.recipeIds.contains(recipeId)) {
-        await CategoryService.instance.removeRecipeFromCategory(fav.id, recipeId);
+        await CategoryService.instance.removeRecipeFromCategory(
+          fav.id,
+          recipeId,
+        );
       } else {
         await CategoryService.instance.addRecipeToCategory(fav.id, recipeId);
       }
@@ -174,26 +223,36 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
       allRecipes = mockRecipes;
     }
 
-    final available = allRecipes.where((r) => !category!.recipeIds.contains(r.id)).toList();
+    final available = allRecipes
+        .where((r) => !category!.recipeIds.contains(r.id))
+        .toList();
     if (available.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No available recipes to add')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No available recipes to add')),
+      );
       return;
     }
 
-    final selected = await showDialog<Recipe?>(context: context, builder: (ctx) {
-      return SimpleDialog(
-        title: const Text('Add recipe to category'),
-        children: available.map((r) {
-          return SimpleDialogOption(
-            child: Text(r.name),
-            onPressed: () => Navigator.pop(ctx, r),
-          );
-        }).toList(),
-      );
-    });
+    final selected = await showDialog<Recipe?>(
+      context: context,
+      builder: (ctx) {
+        return SimpleDialog(
+          title: const Text('Add recipe to category'),
+          children: available.map((r) {
+            return SimpleDialogOption(
+              child: Text(r.name),
+              onPressed: () => Navigator.pop(ctx, r),
+            );
+          }).toList(),
+        );
+      },
+    );
 
     if (selected != null) {
-      await CategoryService.instance.addRecipeToCategory(category!.id, selected.id);
+      await CategoryService.instance.addRecipeToCategory(
+        category!.id,
+        selected.id,
+      );
       await _refresh();
     }
   }
@@ -214,6 +273,15 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
       );
     }
 
+    final filteredRecipes = _searchQuery.trim().isEmpty
+        ? assignedRecipes
+        : assignedRecipes
+              .where(
+                (r) =>
+                    r.name.toLowerCase().contains(_searchQuery.toLowerCase()),
+              )
+              .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(category!.name),
@@ -227,91 +295,134 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: assignedRecipes.isEmpty
-            ? const Center(child: Text('No recipes in this category yet.'))
-            : ListView.separated(
-                itemCount: assignedRecipes.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, i) {
-                  final r = assignedRecipes[i];
-                  final totalCal = _calcTotalCalories(r);
+        child: Column(
+          children: [
+            _SearchBar(
+              onSearchChanged: (q) => setState(() => _searchQuery = q),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: filteredRecipes.isEmpty
+                  ? Center(
+                      child: Text(
+                        assignedRecipes.isEmpty
+                            ? 'No recipes in this category yet.'
+                            : 'No recipes match your search.',
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: filteredRecipes.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, i) {
+                        final r = filteredRecipes[i];
+                        final totalCal = _calcTotalCalories(r);
 
-                  final titleWidget = Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        final titleWidget = Row(
                           children: [
-                            Text(r.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 2),
-                            Text('Ingredients (${r.requiredIngredients.length}) · $totalCal cal',
-                                style: Theme.of(context).textTheme.bodySmall),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          _isFavourite(r.id) ? Icons.favorite : Icons.favorite_border,
-                          color: _isFavourite(r.id) ? Colors.red : null,
-                        ),
-                        onPressed: () => _toggleFavourite(r.id),
-                        tooltip: _isFavourite(r.id) ? 'Remove from favourites' : 'Add to favourites',
-                      ),
-                    ],
-                  );
-
-                  return ExpansionTile(
-                    title: titleWidget,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: r.requiredIngredients.map((ing) {
-                            return _buildIngredientRow(ing);
-                          }).toList(),
-                        ),
-                      ),
-                      OverflowBar(
-                        spacing: 8,
-                        overflowSpacing: 8,
-                        alignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              ShoppingList().addRecipeById(r.id);
-                              final count = r.requiredIngredients.length;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Added $count ingredient(s) from "${r.name}" to shopping list')),
-                              );
-                            },
-                            child: const Text('Add ingredients to shopping list'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => RecipePage(recipe: r),
-                                ),
-                              );
-                            },
-                            child: const Text('Open recipe'),
-                          ),
-                          if (category!.id == 'c-favourites')
-                            TextButton(
-                              onPressed: () async {
-                                await CategoryService.instance.removeRecipeFromCategory(category!.id, r.id);
-                                await _refresh();
-                              },
-                              child: const Text('Remove from favourites'),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    r.name,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Ingredients (${r.requiredIngredients.length}) · $totalCal cal',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
                             ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
-              ),
+                            IconButton(
+                              icon: Icon(
+                                _isFavourite(r.id)
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: _isFavourite(r.id) ? Colors.red : null,
+                              ),
+                              onPressed: () => _toggleFavourite(r.id),
+                              tooltip: _isFavourite(r.id)
+                                  ? 'Remove from favourites'
+                                  : 'Add to favourites',
+                            ),
+                          ],
+                        );
+
+                        return ExpansionTile(
+                          title: titleWidget,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: r.requiredIngredients.map((ing) {
+                                  return _buildIngredientRow(ing);
+                                }).toList(),
+                              ),
+                            ),
+                            OverflowBar(
+                              spacing: 8,
+                              overflowSpacing: 8,
+                              alignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton(
+                                  onPressed: () {
+                                    ShoppingList().addRecipeById(r.id);
+                                    final count = r.requiredIngredients.length;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Added $count ingredient(s) from "${r.name}" to shopping list',
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text(
+                                    'Add ingredients to shopping list',
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            RecipePage(recipe: r),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Open recipe'),
+                                ),
+                                if (category!.id == 'c-favourites')
+                                  TextButton(
+                                    onPressed: () async {
+                                      await CategoryService.instance
+                                          .removeRecipeFromCategory(
+                                            category!.id,
+                                            r.id,
+                                          );
+                                      await _refresh();
+                                    },
+                                    child: const Text('Remove from favourites'),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
