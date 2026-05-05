@@ -89,19 +89,8 @@ class WeeklyGoals extends ChangeNotifier {
       if (accountId == null) return;
 
       // Determine latest week id and its start date from in-memory if available
-      int latestWeekId = goals.keys.isNotEmpty ? goals.keys.reduce((a, b) => a > b ? a : b) : 0;
+      int latestWeekId = goals.keys.isNotEmpty ? goals.keys.last : 0;
       DateTime? latestStart = weekStartDates[latestWeekId];
-
-      // If in-memory didn't have start date, try DB
-      if (latestStart == null) {
-        final maxRow = await db.rawQuery('SELECT MAX(week_goal_id) as wk, start_date FROM week_goal WHERE account_id = ? LIMIT 1', [accountId]);
-        if (maxRow.isNotEmpty) {
-          final wk = maxRow.first['wk'];
-          final sd = maxRow.first['start_date']?.toString();
-          if (wk != null) latestWeekId = wk is int ? wk : int.tryParse(wk.toString()) ?? latestWeekId;
-          if (sd != null) latestStart = DateTime.tryParse(sd);
-        }
-      }
 
       if (latestStart == null) {
         // nothing to advance from
@@ -263,16 +252,6 @@ class WeeklyGoals extends ChangeNotifier {
       return instance;
     }
 
-    //Temp fallback while account system is being implemented
-    instance.goals[0] = [
-      Goal(id: GoalType.money, day: 0, value: 200.0),
-      Goal(id: GoalType.money, day: 2, value: 50.0),
-    ];
-    instance.goals[1] = [
-      Goal(id: GoalType.money, day: 0, value: 500.0),
-      Goal(id: GoalType.money, day: 1, value: 150.0),
-    ];
-
     return instance;
   }
 
@@ -337,19 +316,6 @@ class WeeklyGoals extends ChangeNotifier {
 
       if (existingGoalId != null) {
         await dbSvc.updateGoal(existingGoalId, day, value);
-      } else {
-        final goalTypeStr = id?.toString() ?? (getGoalsForWeek(weekId).firstWhere((g) => g.day == day, orElse: () => Goal(id: GoalType.money, day: day, value: value))).id.toString();
-        final createdGoalId = await dbSvc.createGoal(goalTypeStr, accountId, day, value);
-        await db.insert(
-          'week_goal',
-          {
-            'week_goal_id': weekId,
-            'account_id': accountId,
-            'goal_id': createdGoalId,
-            'start_date': weekStartDates[weekId]?.toIso8601String() ?? DateTime.now().toIso8601String(),
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
       }
     } catch (e) {
       // preserve in-memory change even if DB fails; surface error in debug
