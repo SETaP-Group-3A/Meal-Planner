@@ -25,49 +25,42 @@ Ingredient _i(
 
 final Map<String, List<Ingredient>> marketInventory = {
   'Flour': [
-    _i('Flour', 0.80, 3.0, 360),
     _i('Flour (Aldi)', 0.70, 3.0, 5715, genericName: 'Flour', storeId: _storeAldi),
     _i('Flour (Waitrose)', 0.85, 1.0, 3640, genericName: 'Flour', storeId: _storeWaitrose),
     _i('Flour (Tesco)', 0.80, 2.5, 3640, genericName: 'Flour', storeId: _storeTesco),
     _i('Flour (Asda)', 0.78, 1.5, 3640, genericName: 'Flour', storeId: _storeAsda),
   ],
   'Milk': [
-    _i('Milk', 1.80, 1.0, 45),
     _i('Milk (Aldi)', 1.55, 3.0, 1000, genericName: 'Milk', storeId: _storeAldi),
     _i('Milk (Waitrose)', 2.20, 1.0, 1000, genericName: 'Milk', storeId: _storeWaitrose),
     _i('Milk (Tesco)', 1.80, 2.5, 1000, genericName: 'Milk', storeId: _storeTesco),
     _i('Milk (Asda)', 1.65, 1.5, 1000, genericName: 'Milk', storeId: _storeAsda),
   ],
   'Eggs': [
-    _i('Eggs', 1.50, 0.5, 155),
     _i('Eggs (Aldi)', 2.20, 3.0, 1115, genericName: 'Eggs', storeId: _storeAldi),
     _i('Eggs (Waitrose)', 3.50, 1.0, 1115, genericName: 'Eggs', storeId: _storeWaitrose),
     _i('Eggs (Tesco)', 2.80, 2.5, 1115, genericName: 'Eggs', storeId: _storeTesco),
     _i('Eggs (Asda)', 2.50, 1.5, 1115, genericName: 'Eggs', storeId: _storeAsda),
   ],
   'Lettuce': [
-    _i('Lettuce', 1.00, 0.2, 15),
     _i('Lettuce (Aldi)', 3.00, 3.0, 150, genericName: 'Lettuce', storeId: _storeAldi),
     _i('Lettuce (Waitrose)', 4.50, 1.0, 150, genericName: 'Lettuce', storeId: _storeWaitrose),
     _i('Lettuce (Tesco)', 3.80, 2.5, 150, genericName: 'Lettuce', storeId: _storeTesco),
     _i('Lettuce (Asda)', 3.20, 1.5, 150, genericName: 'Lettuce', storeId: _storeAsda),
   ],
   'Tomatoes': [
-    _i('Tomatoes', 1.50, 0.2, 18),
     _i('Tomatoes (Aldi)', 2.00, 3.0, 180, genericName: 'Tomatoes', storeId: _storeAldi),
     _i('Tomatoes (Waitrose)', 3.00, 1.0, 180, genericName: 'Tomatoes', storeId: _storeWaitrose),
     _i('Tomatoes (Tesco)', 2.50, 2.5, 180, genericName: 'Tomatoes', storeId: _storeTesco),
     _i('Tomatoes (Asda)', 2.20, 1.5, 180, genericName: 'Tomatoes', storeId: _storeAsda),
   ],
   'Cucumber': [
-    _i('Cucumber', 0.80, 0.2, 16),
     _i('Cucumber (Aldi)', 2.00, 3.0, 160, genericName: 'Cucumber', storeId: _storeAldi),
     _i('Cucumber (Waitrose)', 3.00, 1.0, 160, genericName: 'Cucumber', storeId: _storeWaitrose),
     _i('Cucumber (Tesco)', 2.50, 2.5, 160, genericName: 'Cucumber', storeId: _storeTesco),
     _i('Cucumber (Asda)', 2.20, 1.5, 160, genericName: 'Cucumber', storeId: _storeAsda),
   ],
   'Pasta': [
-    _i('Pasta', 0.50, 2.0, 131),
     _i('Pasta (Aldi)', 0.75, 3.0, 1580, genericName: 'Pasta', storeId: _storeAldi),
     _i('Pasta (Waitrose)', 1.50, 1.0, 1580, genericName: 'Pasta', storeId: _storeWaitrose),
     _i('Pasta (Tesco)', 1.19, 2.5, 1580, genericName: 'Pasta', storeId: _storeTesco),
