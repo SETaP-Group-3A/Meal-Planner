@@ -1,5 +1,6 @@
 import 'models/ingredient.dart';
 import 'models/recipe.dart';
+import 'models/store.dart';
 
 final Map<String, List<Ingredient>> marketInventory = {
   'Flour': [
@@ -44,13 +45,31 @@ final Map<String, List<Ingredient>> marketInventory = {
     ),
   ],
   'Tomatoes': [
-    Ingredient(name: 'Tomatoes', cost: 1.50, distance: 0.2, calories: 18),
+    Ingredient(
+      name: 'Tomatoes',
+      cost: 1.50,
+      distance: 0.2,
+      calories: 18,
+      storeId: 's-lidl-e1',
+    ),
   ],
   'Cucumber': [
-    Ingredient(name: 'Cucumber', cost: 0.80, distance: 0.2, calories: 16),
+    Ingredient(
+      name: 'Cucumber',
+      cost: 0.80,
+      distance: 0.2,
+      calories: 16,
+      storeId: 's-aldi-sw1',
+    ),
   ],
   'Pasta': [
-    Ingredient(name: 'Pasta (Basic)', cost: 0.50, distance: 2.0, calories: 131),
+    Ingredient(
+      name: 'Pasta (Basic)',
+      cost: 0.50,
+      distance: 2.0,
+      calories: 131,
+      storeId: 's-lidl-e1',
+    ),
   ],
 };
 
@@ -59,15 +78,62 @@ final List<Recipe> mockRecipes = [
     id: 'r-1',
     name: 'Scrambled Eggs on Toast',
     requiredIngredients: ['Eggs', 'Milk', 'Flour'],
+    prepTimeMinutes: 10,
+    allergens: ['Gluten', 'Dairy', 'Eggs'],
+    calories: 420,
+    macros: Macros(proteinG: 22.0, carbsG: 38.0, fatG: 18.0),
+    nutrients: {'Iron (mg)': 3.2, 'Calcium (mg)': 180.0, 'Vitamin D (µg)': 2.5},
   ),
   Recipe(
     id: 'r-2',
     name: 'Tomato & Cucumber Salad',
     requiredIngredients: ['Tomatoes', 'Cucumber', 'Lettuce'],
+    prepTimeMinutes: 5,
+    allergens: [],
+    calories: 85,
+    macros: Macros(proteinG: 3.0, carbsG: 14.0, fatG: 1.5),
+    nutrients: {
+      'Vitamin C (mg)': 28.0,
+      'Potassium (mg)': 410.0,
+      'Fibre (g)': 3.1,
+    },
   ),
   Recipe(
     id: 'r-3',
     name: 'Simple Pasta',
     requiredIngredients: ['Pasta', 'Tomatoes', 'Milk'],
+    prepTimeMinutes: 20,
+    allergens: ['Gluten', 'Dairy'],
+    calories: 510,
+    macros: Macros(proteinG: 16.0, carbsG: 72.0, fatG: 12.0),
+    nutrients: {
+      'Iron (mg)': 2.1,
+      'Calcium (mg)': 120.0,
+      'Vitamin C (mg)': 14.0,
+    },
+  ),
+];
+
+final List<Store> mockStores = [
+  Store(
+    id: 's-aldi-sw1',
+    name: 'Aldi',
+    postcode: 'PO4 8SL',
+    latitude: 50.7972378,
+    longitude: -1.0687938,
+  ),
+  Store(
+    id: 's-lidl-e1',
+    name: 'Lidl',
+    postcode: 'PO4 0BS',
+    latitude: 50.7947335,
+    longitude: -1.0697082,
+  ),
+  Store(
+    id: 's-tesco-n1',
+    name: 'Tesco',
+    postcode: 'PO1 1RS',
+    latitude: 50.8008788,
+    longitude: -1.0874245,
   ),
 ];
