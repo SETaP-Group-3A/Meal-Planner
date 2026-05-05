@@ -124,7 +124,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                         ),
                         title: Text(ingredient.name),
                         subtitle: Text(
-                          'Total Cost: \$${listItem.totalCost.toStringAsFixed(2)} | Dist: ${ingredient.distance}km | Cal: ${listItem.totalCalories}',
+                          'Total Cost: £${listItem.totalCost.toStringAsFixed(2)} | Dist: ${ingredient.distance}km | Cal: ${listItem.totalCalories}',
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
