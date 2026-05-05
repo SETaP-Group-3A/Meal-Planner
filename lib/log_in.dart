@@ -47,7 +47,7 @@ class AuthService {
 
     return true;
   } catch (e) {
-    print("SIGNUP ERROR: $e"); // 👈 important for debugging
+    print("SIGNUP ERROR: $e"); // debug log
     return false;
   }
 }
@@ -85,24 +85,26 @@ class _LoginScreenState extends State<LoginScreen> {
     if (email.isEmpty) {
       _emailError = 'Email is required';
       hasError = true;
-    } else if (!email.contains('@')) {
-      _emailError = "Email must contain '@'";
-      hasError = true;
-    }
+      final emailValid =
+      RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email);
 
-    final letterCount =
-        password.replaceAll(RegExp(r'[^A-Za-z]'), '').length;
-    final numberCount =
-        password.replaceAll(RegExp(r'[^0-9]'), '').length;
+    if (!emailValid) {
+    _emailError = "Enter a valid email";
+    hasError = true;
+    }
+  }
+
+  final passwordValid =
+  RegExp(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$').hasMatch(password);
 
     if (password.isEmpty) {
-      _passwordError = 'Password is required';
-      hasError = true;
-    } else if (letterCount < 7 || numberCount < 1) {
+     _passwordError = 'Password is required';
+     hasError = true;
+    } else if (!passwordValid) {
       _passwordError =
-          'Password must have at least 7 letters and at least 1 number';
-      hasError = true;
-    }
+        'Password must be at least 8 characters and include at least 1 letter and 1 number';
+     hasError = true;
+   }
 
     if (hasError) {
       setState(() {});
