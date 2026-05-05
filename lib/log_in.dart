@@ -57,6 +57,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    _clearSavedAccountEmail();
+  }
+
+  Future<void> _clearSavedAccountEmail() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('accountEmail');
+    } catch (e) {
+      // non-fatal; ignore errors while clearing prefs
+    }
+  }
+
   String? _emailError;
   String? _passwordError;
   String? _loginError;
