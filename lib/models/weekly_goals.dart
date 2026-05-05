@@ -92,20 +92,6 @@ class WeeklyGoals extends ChangeNotifier {
       int latestWeekId = goals.keys.isNotEmpty ? goals.keys.last : 0;
       DateTime? latestStart = weekStartDates[latestWeekId];
 
-      // If in-memory didn't have start date, try DB
-      if (latestStart == null) {
-        final maxRow = await db.rawQuery(
-          'SELECT week_goal_id as wk, start_date FROM week_goal WHERE account_id = ? ORDER BY week_goal_id DESC LIMIT 1',
-          [accountId],
-        );
-        if (maxRow.isNotEmpty) {
-          final wk = maxRow.first['wk'];
-          final sd = maxRow.first['start_date']?.toString();
-          if (wk != null) latestWeekId = wk is int ? wk : int.tryParse(wk.toString()) ?? latestWeekId;
-          if (sd != null) latestStart = DateTime.tryParse(sd);
-        }
-      }
-
       if (latestStart == null) {
         // nothing to advance from
         return;
