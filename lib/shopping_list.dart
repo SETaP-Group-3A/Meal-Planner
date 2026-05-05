@@ -11,6 +11,7 @@ class ShoppingList {
 
   final List<ShoppingListItem> shoppingItems = [];
   final List<String> _addedRecipeHistory = [];
+  final Map<String, int> _quantityOverrides = {};
 
   List<ShoppingListItem> get items => List.unmodifiable(shoppingItems);
 
@@ -38,9 +39,21 @@ class ShoppingList {
   }
 
   Future<void> regenerateList(String sortBy) async {
+    final savedQuantities = Map<String, int>.from(_quantityOverrides);
     shoppingItems.clear();
     for (var recipeId in _addedRecipeHistory) {
       await _processRecipeAddition(recipeId, sortBy);
+    }
+    _quantityOverrides.clear();
+    _reapplyQuantityOverrides(savedQuantities);
+  }
+
+  void _reapplyQuantityOverrides(Map<String, int> overrides) {
+    for (var item in shoppingItems) {
+      if (overrides.containsKey(item.ingredient.name)) {
+        item.quantity = overrides[item.ingredient.name]!;
+        _quantityOverrides[item.ingredient.name] = item.quantity;
+      }
     }
   }
 
@@ -70,8 +83,13 @@ class ShoppingList {
   void updateQuantity(int index, int change) {
     if (index >= 0 && index < shoppingItems.length) {
       shoppingItems[index].quantity += change;
+      final ingredientName = shoppingItems[index].ingredient.name;
+      
       if (shoppingItems[index].quantity <= 0) {
         shoppingItems.removeAt(index);
+        _quantityOverrides.remove(ingredientName);
+      } else {
+        _quantityOverrides[ingredientName] = shoppingItems[index].quantity;
       }
     }
   }
