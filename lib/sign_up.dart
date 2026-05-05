@@ -11,48 +11,61 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
   final AuthService _auth = AuthService();
 
   String? error;
 
-  bool _validateEmail(String email) {
-    return email.contains('@');
-  }
-
-  bool _validatePassword(String password) {
-    final hasNumber = password.contains(RegExp(r'[0-9]'));
-    final hasMinLength = password.length >= 7;
-    return hasNumber && hasMinLength;
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
   }
 
   Future<void> register() async {
     final email = emailController.text.trim();
     final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
 
     setState(() {
       error = null;
     });
 
     // ---------------- VALIDATION ----------------
-    if (email.isEmpty || password.isEmpty) {
+    final emailValid =
+        RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email);
+
+    final passwordValid =
+        RegExp(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$').hasMatch(password);
+
+    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       setState(() {
         error = "Please fill in all fields";
       });
       return;
     }
 
-    if (!_validateEmail(email)) {
+    if (!emailValid) {
       setState(() {
-        error = "Email must contain '@'";
+        error = "Enter a valid email";
       });
       return;
     }
 
-    if (!_validatePassword(password)) {
+    if (!passwordValid) {
       setState(() {
         error =
-            "Password must be at least 7 characters and include at least 1 number";
+            "Password must be at least 8 characters and include at least 1 letter and 1 number";
+      });
+      return;
+    }
+
+    if (password != confirmPassword) {
+      setState(() {
+        error = "Passwords do not match";
       });
       return;
     }
@@ -60,12 +73,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     // ---------------- REGISTER ----------------
     final success = await _auth.register(email, password);
 
+    if (!mounted) return;
+
     if (success) {
-      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/login');
     } else {
       setState(() {
-        error = "Account creation failed (email may already exist)";
+        error = "Account creation failed (email already exists)";
       });
     }
   }
@@ -81,16 +95,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: "Email"),
+              keyboardType: TextInputType.emailAddress,
             ),
             TextField(
               controller: passwordController,
               decoration: const InputDecoration(labelText: "Password"),
               obscureText: true,
             ),
+            TextField(
+              controller: confirmPasswordController,
+              decoration: const InputDecoration(labelText: "Confirm Password"),
+              obscureText: true,
+            ),
             const SizedBox(height: 20),
 
             if (error != null)
-              Text(error!, style: const TextStyle(color: Colors.red)),
+              Text(
+                error!,
+                style: const TextStyle(color: Colors.red),
+              ),
 
             const SizedBox(height: 10),
 
@@ -104,3 +127,4 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 }
+
