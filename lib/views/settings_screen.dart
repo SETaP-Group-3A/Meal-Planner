@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/location_service.dart';
 import 'store_locator_screen.dart';
+
 // temp controller
 class ThemeController {
   static const _kPrefThemeMode = 'theme.mode'; // 'system' | 'light' | 'dark'
@@ -149,7 +150,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       // geocoding if a valid address is provided
       if (address.isNotEmpty) {
         final coords = await resolveAndCacheUserCoordinates();
- 
+
         if (mounted) {
           setState(() => _geocodeSuccess = coords != null);
         }
@@ -159,10 +160,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     if (!mounted) return;
 
     setState(() => _isSaving = false);
- 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User details updated')),
-    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('User details updated')));
   }
 
   @override
@@ -304,7 +305,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           _geocodeSuccess!
                               ? 'Location resolved — store distances will be calculated from your postcode.'
                               : 'Could not resolve this postcode. Distance sorting will use stored values until a valid postcode is saved.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 color: _geocodeSuccess!
                                     ? Colors.green
                                     : Theme.of(context).colorScheme.error,
