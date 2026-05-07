@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meal_planner/log_in.dart';
+import 'package:meal_planner/models/weekly_goals.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -71,7 +72,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     // ---------------- REGISTER ----------------
-    final success = await _auth.register(email, password);
+    //Hardcode type of money
+    final success = await _auth.register(email, password, GoalType.money);
 
     if (!mounted) return;
 
