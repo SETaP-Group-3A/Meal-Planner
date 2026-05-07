@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/services/database_service.dart';
@@ -28,7 +29,7 @@ class AuthService {
     return result.isNotEmpty;
   }
 
-  Future<bool> register(String email, String password) async {
+  Future<bool> register(String email, String password, GoalType type) async {
   try {
     final db = await _db.database;
 
@@ -42,8 +43,10 @@ class AuthService {
         'password': password,
       },
     );
-
-    await WeeklyGoals.registerNewGoals(accountId: id);
+    
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('goal', type.toString());
+    await WeeklyGoals.registerNewGoals(accountId: id, goalType: type);
 
     return true;
   } catch (e) {
@@ -135,14 +138,20 @@ class _LoginScreenState extends State<LoginScreen> {
       // persist current account email for future app starts
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('accountEmail', email);
+      final goal = prefs.getString('goal');
 
       // ask the provider instance to load data for this account (by email)
       try {
+        if (!mounted) return;
+
         final weekly = Provider.of<WeeklyGoals>(context, listen: false);
-        await weekly.loadFromDatabase(accountEmail: email);
+        //Hard coded assignment of goal type for now
+        await weekly.loadFromDatabase(accountEmail: email, expectedType: GoalTypes.fromDbString(goal ?? "money"));
       } catch (e) {
         // non-fatal — loading will be attempted again when needed
-        print('Failed loading weekly goals after login: $e');
+        if (kDebugMode) {
+          print('Failed loading weekly goals after login: $e');
+        }       
       }
 
       Navigator.pushReplacementNamed(context, widget.successRouteName);
