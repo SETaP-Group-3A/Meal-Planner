@@ -61,10 +61,10 @@ class WeeklyGoals extends ChangeNotifier {
   Map<int, DateTime> weekStartDates = {};
 
   // When a WeeklyGoals instance is created, start loading values from the DB
-  WeeklyGoals({String? accountEmail}) {
+  WeeklyGoals({String? accountEmail, required GoalType type}) {
     // fire-and-forget; loadFromDatabase will populate and notify listeners
     try {
-      loadFromDatabase(accountEmail: accountEmail).then((_) {
+      loadFromDatabase(accountEmail: accountEmail, expectedType: type).then((_) {
         // After loading, ensure weeks are up-to-date for this account.
         _maybeAdvanceWeeks(accountEmail);
       });
@@ -211,7 +211,7 @@ class WeeklyGoals extends ChangeNotifier {
 
   int get currentWeek => goals.keys.isNotEmpty ? goals.keys.last : 0;
 
-  Future<bool> loadFromDatabase({String? accountEmail}) async {
+  Future<bool> loadFromDatabase({String? accountEmail, required GoalType expectedType}) async {
     try {
       final db = await DatabaseService.instance.database;
 
@@ -241,6 +241,10 @@ class WeeklyGoals extends ChangeNotifier {
 
       for (final row in rows) {
         final goalTypeStr = row['goal_type']?.toString() ?? 'money';
+
+        final type = GoalTypes.fromDbString(goalTypeStr);
+        if (type != expectedType) continue;
+
         final day = (row['day_id'] as int?) ?? 0;
         final goalValue = (row['goal_value'] as num?)?.toDouble() ?? 0.0;
         final weekId = (row['week_goal_id'] as int?) ?? 0;
@@ -250,9 +254,8 @@ class WeeklyGoals extends ChangeNotifier {
             final parsed = DateTime.tryParse(startDateStr);
             if (parsed != null) weekStartDates[weekId] = parsed;
           } catch (_) {}
-        }
+        }        
 
-        final type = GoalTypes.fromDbString(goalTypeStr);
         addGoal(Goal(id: type, day: day, value: goalValue), weekId);
       }
 
@@ -264,16 +267,11 @@ class WeeklyGoals extends ChangeNotifier {
 
   static Future<WeeklyGoals> loadOrFallback({
     String? accountEmail,
-    WeeklyGoals? fallback,
+    required GoalType requestGoalType
   }) async {
-    final instance = WeeklyGoals(accountEmail: accountEmail);
-    final ok = await instance.loadFromDatabase(accountEmail: accountEmail);
+    final instance = WeeklyGoals(accountEmail: accountEmail, type: requestGoalType);
+    final ok = await instance.loadFromDatabase(accountEmail: accountEmail, expectedType: requestGoalType);
     if (ok) return instance;
-
-    if (fallback != null && fallback.goals.isNotEmpty) {
-      instance.goals = Map<int, List<Goal>>.from(fallback.goals);
-      return instance;
-    }
 
     return instance;
   }
@@ -369,12 +367,12 @@ class WeeklyGoals extends ChangeNotifier {
 
   static Future<void> registerNewGoals({
     required String accountId,
-    GoalType? goalType,
+    required GoalType goalType,
   }) async {
-    final weeklyGoals = WeeklyGoals();
+    final weeklyGoals = WeeklyGoals(type: goalType);
     weeklyGoals.goals[0] = List.generate(
       7,
-      (index) => Goal(id: goalType ?? GoalType.money, day: index, value: 0.0),
+      (index) => Goal(id: goalType, day: index, value: 0.0),
     );
     weeklyGoals.weekStartDates[0] = DateTime.now();
     await weeklyGoals.saveToDatabase(accountId: accountId);
