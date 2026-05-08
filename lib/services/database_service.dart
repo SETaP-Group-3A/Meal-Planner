@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import '../models/recipe.dart';
 import '../models/ingredient.dart';
+import '../models/shopping_list_item.dart';
 import '../models/category.dart';
 import '../models/store.dart';
 import '../utils/haversine.dart';
@@ -37,7 +38,7 @@ class DatabaseService {
     // Delete existing DB on start
     //if (await databaseExists(dbPath)) await deleteDatabase(dbPath);
  
-    return await openDatabase(dbPath, version: 2, onCreate: _createDB, onUpgrade: _upgradeDB);
+    return await openDatabase(dbPath, version: 3, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
  
   Future _createDB(Database db, int version) async {
@@ -114,14 +115,21 @@ class DatabaseService {
         )
       ''',
 
-      'shopping_list': '''
-        CREATE TABLE shopping_list (
-          ingredientName TEXT PRIMARY KEY,
+      'shopping_list_items': '''
+        CREATE TABLE shopping_list_items (
+          account_id TEXT NOT NULL,
+          ingredient_key TEXT NOT NULL,
+          ingredient_name TEXT NOT NULL,
+          cost $realType,
+          distance $realType,
+          calories $intType,
+          storeId TEXT,
           quantity $intType,
-          FOREIGN KEY (ingredientName) REFERENCES ingredients (name) ON DELETE CASCADE
+          PRIMARY KEY (account_id, ingredient_key),
+          FOREIGN KEY (account_id) REFERENCES users (id) ON DELETE CASCADE
         )
       ''',
- 
+
       'goal': '''
         CREATE TABLE goal (
           goal_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -196,6 +204,23 @@ class DatabaseService {
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('CREATE TABLE IF NOT EXISTS recipe_favourites (recipeId TEXT PRIMARY KEY)');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS shopping_list_items (
+          account_id TEXT NOT NULL,
+          ingredient_key TEXT NOT NULL,
+          ingredient_name TEXT NOT NULL,
+          cost REAL NOT NULL,
+          distance REAL NOT NULL,
+          calories INTEGER NOT NULL,
+          storeId TEXT,
+          quantity INTEGER NOT NULL,
+          PRIMARY KEY (account_id, ingredient_key),
+          FOREIGN KEY (account_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+      ''');
+
     }
   }
 
@@ -432,6 +457,7 @@ class DatabaseService {
   Ingredient _ingredientFromMap(Map<String, dynamic> map) {
     return Ingredient(
       name: map['name'] as String,
+      genericName: map['genericName'] as String?,
       cost: map['cost'] as double,
       distance: map['distance'] as double,
       calories: map['calories'] as int,
@@ -558,70 +584,86 @@ class DatabaseService {
     final db = await instance.database;
     await db.delete('ingredients', where: 'name = ?', whereArgs: [name]);
   }
- 
+
+  Future<String?> resolveAccountIdFromEmail(String? accountEmail) async {
+    if (accountEmail == null) return null;
+
+    final db = await instance.database;
+    final users = await db.query(
+      'users',
+      columns: ['id'],
+      where: 'email = ?',
+      whereArgs: [accountEmail],
+      limit: 1,
+    );
+
+    if (users.isEmpty) return null;
+    return users.first['id'] as String?;
+  }
+
+  Future<List<ShoppingListItem>> loadShoppingListItemsForAccount(String accountId) async {
+    final db = await instance.database;
+    final rows = await db.rawQuery('''
+      SELECT
+        sli.account_id,
+        COALESCE(i.genericName, sli.ingredient_key, sli.ingredient_name) AS ingredient_key,
+        sli.ingredient_name,
+        sli.cost,
+        sli.distance,
+        sli.calories,
+        sli.storeId,
+        sli.quantity
+      FROM shopping_list_items sli
+      LEFT JOIN ingredients i ON i.name = sli.ingredient_name
+      WHERE sli.account_id = ?
+      ORDER BY sli.ingredient_name ASC
+    ''', [accountId]);
+
+    return rows.map((row) {
+      final ingredient = Ingredient(
+        name: row['ingredient_name'] as String,
+        genericName: row['ingredient_key'] as String,
+        cost: (row['cost'] as num).toDouble(),
+        distance: (row['distance'] as num).toDouble(),
+        calories: row['calories'] as int,
+        storeId: row['storeId'] as String?,
+      );
+
+      return ShoppingListItem(
+        ingredient: ingredient,
+        quantity: row['quantity'] as int,
+      );
+    }).toList();
+  }
+
+  Future<void> replaceShoppingListItemsForAccount({
+    required String accountId,
+    required List<ShoppingListItem> items,
+  }) async {
+    final db = await instance.database;
+
+    await db.transaction((txn) async {
+      await txn.delete('shopping_list_items', where: 'account_id = ?', whereArgs: [accountId]);
+
+      for (final item in items) {
+        await txn.insert('shopping_list_items', {
+          'account_id': accountId,
+          'ingredient_key': item.ingredient.genericName,
+          'ingredient_name': item.ingredient.name,
+          'cost': item.ingredient.cost,
+          'distance': item.ingredient.distance,
+          'calories': item.ingredient.calories,
+          'storeId': item.ingredient.storeId,
+          'quantity': item.quantity,
+        });
+      }
+    });
+  }
+
 //------------------------------------------------------------------------------------------------------------------
 //Shopping List
  
   // Shopping List operations
-  Future<void> addToShoppingList(String ingredientName, int quantity) async {
-    final db = await instance.database;
-    final existing = await db.query(
-      'shopping_list',
-      where: 'ingredientName = ?',
-      whereArgs: [ingredientName],
-    );
- 
-    if (existing.isNotEmpty) {
-      final currentQuantity = existing.first['quantity'] as int;
-      await db.update(
-        'shopping_list',
-        {'quantity': currentQuantity + quantity},
-        where: 'ingredientName = ?',
-        whereArgs: [ingredientName],
-      );
-    } else {
-      await db.insert('shopping_list', {
-        'ingredientName': ingredientName,
-        'quantity': quantity,
-      });
-    }
-  }
- 
-  Future<Map<String, int>> getShoppingList() async {
-    final db = await instance.database;
-    final result = await db.query('shopping_list');
- 
-    Map<String, int> shoppingList = {};
-    for (var item in result) {
-      shoppingList[item['ingredientName'] as String] = item['quantity'] as int;
-    }
-    return shoppingList;
-  }
- 
-  Future<void> updateShoppingListQuantity(String ingredientName, int quantity) async {
-    final db = await instance.database;
-    if (quantity <= 0) {
-      await db.delete('shopping_list', where: 'ingredientName = ?', whereArgs: [ingredientName]);
-    } else {
-      await db.update(
-        'shopping_list',
-        {'quantity': quantity},
-        where: 'ingredientName = ?',
-        whereArgs: [ingredientName],
-      );
-    }
-  }
- 
-  Future<void> removeFromShoppingList(String ingredientName) async {
-    final db = await instance.database;
-    await db.delete('shopping_list', where: 'ingredientName = ?', whereArgs: [ingredientName]);
-  }
- 
-  Future<void> clearShoppingList() async {
-    final db = await instance.database;
-    await db.delete('shopping_list');
-  }
- 
   // Close database
   Future close() async {
     final db = await instance.database;
@@ -724,6 +766,7 @@ class DatabaseService {
     return int.tryParse(val.toString());
   }
 }
+
 // ----------------------------------------------------------------------
 // USERS (AUTH SYSTEM)
 // ----------------------------------------------------------------------

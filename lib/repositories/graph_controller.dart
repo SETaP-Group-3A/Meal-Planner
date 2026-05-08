@@ -18,6 +18,9 @@ class GraphController {
     final accountEmail = prefs.getString('accountEmail');
     if (accountEmail == null) return [];
 
+    final goal = prefs.getString('goal') ?? 'money';
+    final GoalType type = GoalTypes.fromDbString(goal);
+
     final db = await DatabaseService.instance.database;
     final users = await db.query('users', columns: ['id'], where: 'email = ?', whereArgs: [accountEmail], limit: 1);
     final accountId = users.isNotEmpty ? users.first['id'] as String? : null;
@@ -34,9 +37,9 @@ class GraphController {
       SELECT g.goal_type, g.day_id, g.goal_value
       FROM goal g
       JOIN week_goal wg ON wg.goal_id = g.goal_id
-      WHERE wg.account_id = ? AND wg.week_goal_id = ?
+      WHERE wg.account_id = ? AND wg.week_goal_id = ? AND g.goal_type = ?
       ORDER BY g.day_id ASC
-    ''', [accountId, latestWeekId]);
+    ''', [accountId, latestWeekId, type.toString()]);
 
     final result = <Goal>[];
     for (final row in rows) {
