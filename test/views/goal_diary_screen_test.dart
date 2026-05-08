@@ -9,7 +9,7 @@ void main() {
 	Future<void> pumpScreen(WidgetTester tester) async {
     await tester.pumpWidget(
       ChangeNotifierProvider<WeeklyGoals>(
-        create: (_) => WeeklyGoals(),
+        create: (_) => WeeklyGoals(type: GoalType.money),
         child: const MaterialApp(home: GoalDiaryScreen()),
       ),
     );
@@ -25,7 +25,7 @@ void main() {
   testWidgets('correct diary day is highlighted', (tester) async {
 		await tester.pumpWidget(
       ChangeNotifierProvider<WeeklyGoals>(
-        create: (_) => WeeklyGoals(),
+        create: (_) => WeeklyGoals(type: GoalType.money),
         child: const MaterialApp(home: GoalDiaryScreen(dayIndex: 2)),
       ),
     );
