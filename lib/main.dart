@@ -21,14 +21,16 @@ void main() async {
   // Load saved account email if present
   final prefs = await SharedPreferences.getInstance();
   final accountEmail = prefs.getString('accountEmail');
+  final goal = prefs.getString('goal');
 
-  runApp(MyApp(accountEmail: accountEmail));
+  runApp(MyApp(accountEmail: accountEmail, goal: goal));
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key, this.accountEmail});
+  const MyApp({super.key, this.accountEmail, this.goal});
 
   final String? accountEmail;
+  final String? goal;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -39,7 +41,7 @@ class _MyAppState extends State<MyApp> {
       WidgetsBinding.instance.platformDispatcher.platformBrightness ==
       Brightness.dark;
 
-      late final WeeklyGoals weekSource = WeeklyGoals(accountEmail: widget.accountEmail);
+      late final WeeklyGoals weekSource = WeeklyGoals(accountEmail: widget.accountEmail, type: GoalTypes.fromDbString(widget.goal ?? "money"));
 
   // WeeklyGoals weekSource = WeeklyGoals()
   //   ..goals[0] = [

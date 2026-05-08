@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:bcrypt/bcrypt.dart';
 import 'package:meal_planner/log_in.dart';
+import 'package:meal_planner/models/weekly_goals.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -35,13 +37,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     // ---------------- VALIDATION ----------------
+
     final emailValid =
         RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email);
 
     final passwordValid =
         RegExp(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$').hasMatch(password);
 
-    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    if (email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       setState(() {
         error = "Please fill in all fields";
       });
@@ -70,8 +75,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
+    // ---------------- HASH PASSWORD ----------------
+
+    final hashedPassword = BCrypt.hashpw(
+      password,
+      BCrypt.gensalt(),
+    );
+
     // ---------------- REGISTER ----------------
-    final success = await _auth.register(email, password);
+
+    final success = await _auth.register(
+      email,
+      hashedPassword,
+      GoalType.money,
+    );
 
     if (!mounted) return;
 
@@ -87,32 +104,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Create Account")),
+      appBar: AppBar(
+        title: const Text("Create Account"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: "Email"),
+              decoration: const InputDecoration(
+                labelText: "Email",
+              ),
               keyboardType: TextInputType.emailAddress,
             ),
+
             TextField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: "Password"),
+              decoration: const InputDecoration(
+                labelText: "Password",
+              ),
               obscureText: true,
             ),
+
             TextField(
               controller: confirmPasswordController,
-              decoration: const InputDecoration(labelText: "Confirm Password"),
+              decoration: const InputDecoration(
+                labelText: "Confirm Password",
+              ),
               obscureText: true,
             ),
+
             const SizedBox(height: 20),
 
             if (error != null)
               Text(
                 error!,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(
+                  color: Colors.red,
+                ),
               ),
 
             const SizedBox(height: 10),

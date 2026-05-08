@@ -6,7 +6,7 @@ import 'package:sqflite/sqflite.dart';
 
 enum GoalType { money, calories, distance }
 
-class GoalTypes { 
+class GoalTypes {
   static GoalType fromString(String s) {
     switch (s) {
       case 'money':
@@ -61,10 +61,10 @@ class WeeklyGoals extends ChangeNotifier {
   Map<int, DateTime> weekStartDates = {};
 
   // When a WeeklyGoals instance is created, start loading values from the DB
-  WeeklyGoals({String? accountEmail}) {
+  WeeklyGoals({String? accountEmail, required GoalType type}) {
     // fire-and-forget; loadFromDatabase will populate and notify listeners
     try {
-      loadFromDatabase(accountEmail: accountEmail).then((_) {
+      loadFromDatabase(accountEmail: accountEmail, expectedType: type).then((_) {
         // After loading, ensure weeks are up-to-date for this account.
         _maybeAdvanceWeeks(accountEmail);
       });
@@ -84,7 +84,13 @@ class WeeklyGoals extends ChangeNotifier {
       final db = await dbSvc.database;
 
       // Resolve account id
-      final users = await db.query('users', columns: ['id'], where: 'email = ?', whereArgs: [accountEmail], limit: 1);
+      final users = await db.query(
+        'users',
+        columns: ['id'],
+        where: 'email = ?',
+        whereArgs: [accountEmail],
+        limit: 1,
+      );
       final accountId = users.isNotEmpty ? users.first['id'] as String? : null;
       if (accountId == null) return;
 
@@ -104,13 +110,16 @@ class WeeklyGoals extends ChangeNotifier {
 
         // Read a single goal_type for the previous week — the week has one
         // goal type for all days, so use that for the new week's entries.
-        final typeRow = await db.rawQuery('''
+        final typeRow = await db.rawQuery(
+          '''
           SELECT g.goal_type
           FROM goal g
           JOIN week_goal wg ON wg.goal_id = g.goal_id
           WHERE wg.account_id = ? AND wg.week_goal_id = ?
           LIMIT 1
-        ''', [accountId, latestWeekId]);
+        ''',
+          [accountId, latestWeekId],
+        );
 
         var weekType = GoalType.money;
         if (typeRow.isNotEmpty) {
@@ -118,22 +127,26 @@ class WeeklyGoals extends ChangeNotifier {
           weekType = GoalTypes.fromDbString(typeStr);
         }
 
-        final newGoals = List<Goal>.generate(7, (i) => Goal(id: weekType, day: i, value: 0.0));
+        final newGoals = List<Goal>.generate(
+          7,
+          (i) => Goal(id: weekType, day: i, value: 0.0),
+        );
 
         // Persist new goals for this account/week
         final newStart = start.add(const Duration(days: 7));
         for (final goal in newGoals) {
-          final createdGoalId = await dbSvc.createGoal(goal.id.toString(), accountId, goal.day, goal.value);
-          await db.insert(
-            'week_goal',
-            {
-              'week_goal_id': newWeekId,
-              'account_id': accountId,
-              'goal_id': createdGoalId,
-              'start_date': newStart.toIso8601String(),
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace,
+          final createdGoalId = await dbSvc.createGoal(
+            goal.id.toString(),
+            accountId,
+            goal.day,
+            goal.value,
           );
+          await db.insert('week_goal', {
+            'week_goal_id': newWeekId,
+            'account_id': accountId,
+            'goal_id': createdGoalId,
+            'start_date': newStart.toIso8601String(),
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
         }
 
         // Update in-memory state
@@ -160,9 +173,10 @@ class WeeklyGoals extends ChangeNotifier {
   }
 
   void setGoalValue(int weekID, int day, double value, {GoalType? id}) {
-
     if (weekID < 0 || day < 0 || day > 6) {
-      throw ArgumentError('Value out of range: weekID must be non-negative and day must be between 0 and 6');
+      throw ArgumentError(
+        'Value out of range: weekID must be non-negative and day must be between 0 and 6',
+      );
     }
 
     if (!goals.containsKey(weekID)) goals[weekID] = [];
@@ -197,7 +211,7 @@ class WeeklyGoals extends ChangeNotifier {
 
   int get currentWeek => goals.keys.isNotEmpty ? goals.keys.last : 0;
 
-  Future<bool> loadFromDatabase({String? accountEmail}) async {
+  Future<bool> loadFromDatabase({String? accountEmail, required GoalType expectedType}) async {
     try {
       final db = await DatabaseService.instance.database;
 
@@ -206,8 +220,14 @@ class WeeklyGoals extends ChangeNotifier {
 
       if (accountEmail == null) return false;
 
-      final users = await db.query('users', columns: ['id'], where: 'email = ?', whereArgs: [accountEmail], limit: 1);
-        accountId = users.isNotEmpty ? users.first['id'] as String? : null;
+      final users = await db.query(
+        'users',
+        columns: ['id'],
+        where: 'email = ?',
+        whereArgs: [accountEmail],
+        limit: 1,
+      );
+      accountId = users.isNotEmpty ? users.first['id'] as String? : null;
 
       // Join goal with week_goal so we can associate goals with weeks/accounts
       final rows = await db.rawQuery('''
@@ -221,6 +241,10 @@ class WeeklyGoals extends ChangeNotifier {
 
       for (final row in rows) {
         final goalTypeStr = row['goal_type']?.toString() ?? 'money';
+
+        final type = GoalTypes.fromDbString(goalTypeStr);
+        if (type != expectedType) continue;
+
         final day = (row['day_id'] as int?) ?? 0;
         final goalValue = (row['goal_value'] as num?)?.toDouble() ?? 0.0;
         final weekId = (row['week_goal_id'] as int?) ?? 0;
@@ -230,9 +254,8 @@ class WeeklyGoals extends ChangeNotifier {
             final parsed = DateTime.tryParse(startDateStr);
             if (parsed != null) weekStartDates[weekId] = parsed;
           } catch (_) {}
-        }
+        }        
 
-        final type = GoalTypes.fromDbString(goalTypeStr);
         addGoal(Goal(id: type, day: day, value: goalValue), weekId);
       }
 
@@ -242,15 +265,13 @@ class WeeklyGoals extends ChangeNotifier {
     }
   }
 
-  static Future<WeeklyGoals> loadOrFallback({String? accountEmail, WeeklyGoals? fallback}) async {
-    final instance = WeeklyGoals(accountEmail: accountEmail);
-    final ok = await instance.loadFromDatabase(accountEmail: accountEmail);
+  static Future<WeeklyGoals> loadOrFallback({
+    String? accountEmail,
+    required GoalType requestGoalType
+  }) async {
+    final instance = WeeklyGoals(accountEmail: accountEmail, type: requestGoalType);
+    final ok = await instance.loadFromDatabase(accountEmail: accountEmail, expectedType: requestGoalType);
     if (ok) return instance;
-
-    if (fallback != null && fallback.goals.isNotEmpty) {
-      instance.goals = Map<int, List<Goal>>.from(fallback.goals);
-      return instance;
-    }
 
     return instance;
   }
@@ -267,19 +288,22 @@ class WeeklyGoals extends ChangeNotifier {
 
         for (var goal in goalsForWeek) {
           // createGoal now returns the autoincremented goal row id
-          final createdGoalId = await dbSvc.createGoal(goal.id.toString(), accountId, goal.day, goal.value);
+          final createdGoalId = await dbSvc.createGoal(
+            goal.id.toString(),
+            accountId,
+            goal.day,
+            goal.value,
+          );
 
           if (accountId != null) {
-            await db.insert(
-              'week_goal',
-              {
-                'week_goal_id': weekId,
-                'account_id': accountId,
-                'goal_id': createdGoalId,
-                'start_date': weekStartDates[weekId]?.toIso8601String() ?? DateTime.now().toIso8601String(),
-              },
-              conflictAlgorithm: ConflictAlgorithm.replace,
-            );
+            await db.insert('week_goal', {
+              'week_goal_id': weekId,
+              'account_id': accountId,
+              'goal_id': createdGoalId,
+              'start_date':
+                  weekStartDates[weekId]?.toIso8601String() ??
+                  DateTime.now().toIso8601String(),
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
           }
         }
       }
@@ -292,7 +316,13 @@ class WeeklyGoals extends ChangeNotifier {
 
   /// Persist a single day's goal for a given week and account email.
   /// Resolves `accountEmail` to internal id and updates or creates goal rows.
-  Future<void> persistSingleGoal({String? accountEmail, required int weekId, required int day, required double value, GoalType? id}) async {
+  Future<void> persistSingleGoal({
+    String? accountEmail,
+    required int weekId,
+    required int day,
+    required double value,
+    GoalType? id,
+  }) async {
     // update in-memory first
     setGoalValue(weekId, day, value, id: id);
 
@@ -302,7 +332,13 @@ class WeeklyGoals extends ChangeNotifier {
 
       String? accountId;
       if (accountEmail != null) {
-        final users = await db.query('users', columns: ['id'], where: 'email = ?', whereArgs: [accountEmail], limit: 1);
+        final users = await db.query(
+          'users',
+          columns: ['id'],
+          where: 'email = ?',
+          whereArgs: [accountEmail],
+          limit: 1,
+        );
         accountId = users.isNotEmpty ? users.first['id'] as String? : null;
       }
 
@@ -312,7 +348,11 @@ class WeeklyGoals extends ChangeNotifier {
         return;
       }
 
-      final existingGoalId = await dbSvc.findGoalIdForWeekAccountDay(weekId, accountId, day);
+      final existingGoalId = await dbSvc.findGoalIdForWeekAccountDay(
+        weekId,
+        accountId,
+        day,
+      );
 
       if (existingGoalId != null) {
         await dbSvc.updateGoal(existingGoalId, day, value);
@@ -325,18 +365,109 @@ class WeeklyGoals extends ChangeNotifier {
     notifyListeners();
   }
 
-  static Future<void> registerNewGoals({required String accountId, GoalType? goalType}) async {
-    final weeklyGoals = WeeklyGoals();
-    weeklyGoals.goals[0] = List.generate(7, (index) => Goal(id: goalType ?? GoalType.money, day: index, value: 0.0));
+  static Future<void> registerNewGoals({
+    required String accountId,
+    required GoalType goalType,
+  }) async {
+    final weeklyGoals = WeeklyGoals(type: goalType);
+    weeklyGoals.goals[0] = List.generate(
+      7,
+      (index) => Goal(id: goalType, day: index, value: 0.0),
+    );
     weeklyGoals.weekStartDates[0] = DateTime.now();
     await weeklyGoals.saveToDatabase(accountId: accountId);
   }
 
+  Future<WeeklyGoals> updateGoalType({
+    required GoalType newType,
+    String? accountEmail,
+  }) async {
+    final dbSvc = DatabaseService.instance;
+    final db = await dbSvc.database;
+
+    String? accountId;
+    if (accountEmail != null) {
+      accountId = await dbSvc.resolveAccountIdFromEmail(accountEmail);
+    }
+
+    if (accountId != null) {
+      final found = await db.rawQuery(
+        '''
+      SELECT wg.week_goal_id, wg.start_date
+      FROM week_goal wg
+      JOIN goal g ON g.goal_id = wg.goal_id
+      WHERE wg.account_id = ? AND g.goal_type = ?
+      ORDER BY wg.week_goal_id DESC
+      LIMIT 1
+    ''',
+        [accountId, newType.toString()],
+      );
+
+      if (found.isNotEmpty) {
+        final wk = (found.first['week_goal_id'] as num).toInt();
+        final startStr = found.first['start_date']?.toString();
+        if (startStr != null && startStr.isNotEmpty) {
+          final parsed = DateTime.tryParse(startStr);
+          if (parsed != null) weekStartDates[wk] = parsed;
+        }
+
+        final rows = await db.rawQuery(
+          '''
+        SELECT g.day_id, g.goal_value
+        FROM goal g
+        JOIN week_goal wg ON wg.goal_id = g.goal_id
+        WHERE wg.account_id = ? AND wg.week_goal_id = ?
+        ORDER BY g.day_id ASC
+      ''',
+          [accountId, wk],
+        );
+
+        goals[wk] = rows.map((r) {
+          final day = (r['day_id'] as num).toInt();
+          final val = (r['goal_value'] as num).toDouble();
+          return Goal(id: newType, day: day, value: val);
+        }).toList();
+
+        notifyListeners();
+        return this;
+      }
+    }
+
+    final newWeekId = (goals.keys.isNotEmpty ? goals.keys.last + 1 : 0);
+    final newStart = DateTime.now();
+    final newGoals = List<Goal>.generate(
+      7,
+      (i) => Goal(id: newType, day: i, value: 0.0),
+    );
+
+    if (accountId != null) {
+      for (final goal in newGoals) {
+        final createdGoalId = await dbSvc.createGoal(
+          goal.id.toString(),
+          accountId,
+          goal.day,
+          goal.value,
+        );
+        await db.insert('week_goal', {
+          'week_goal_id': newWeekId,
+          'account_id': accountId,
+          'goal_id': createdGoalId,
+          'start_date': newStart.toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    }
+
+    goals[newWeekId] = newGoals;
+    weekStartDates[newWeekId] = newStart;
+    notifyListeners();
+    return this;
+  }
 }
+
 class Goal {
   final GoalType id;
   final int day;
   double value;
 
-  Goal({required this.id, required this.day, required this.value}); 
+  Goal({required this.id, required this.day, required this.value});
 }
