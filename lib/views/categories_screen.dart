@@ -73,7 +73,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       if (route != null &&
                           route.trim().isNotEmpty &&
                           route.trim().startsWith('/')) {
-                        Navigator.pushNamed(context, route.trim(), arguments: c.id);
+                        Navigator.pushNamed(
+                          context,
+                          route.trim(),
+                          arguments: c.id,
+                        );
                       }
                     },
                     child: ClipRRect(
@@ -96,7 +100,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                 return Container(); // explicit empty -> no image / no placeholder
                               }
                               if (img.startsWith('asset:')) {
-                                final assetPath = img.replaceFirst('asset:', '');
+                                final assetPath = img.replaceFirst(
+                                  'asset:',
+                                  '',
+                                );
                                 return Image.asset(
                                   assetPath,
                                   fit: BoxFit.cover,
@@ -117,7 +124,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
                           Center(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
                               child: Text(
                                 c.name,
                                 textAlign: TextAlign.center,

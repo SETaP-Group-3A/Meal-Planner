@@ -164,4 +164,77 @@ void main() {
       expect(find.byType(Image), findsNothing);
     },
   );
+
+  testWidgets('Search bar filters categories by name', (tester) async {
+    final categories = [
+      Category(
+        id: 'c-1',
+        name: 'Snacks',
+        recipeIds: [],
+        targetRoute: '/category',
+        imageUrl: '',
+      ),
+      Category(
+        id: 'c-2',
+        name: 'Desserts',
+        recipeIds: [],
+        targetRoute: '/category',
+        imageUrl: '',
+      ),
+    ];
+
+    await pumpScreen(tester, categories);
+
+    expect(find.text('Snacks'), findsOneWidget);
+    expect(find.text('Desserts'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'sn');
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Snacks'), findsOneWidget);
+    expect(find.text('Desserts'), findsNothing);
+  });
+
+  testWidgets('Search is case insensitive', (tester) async {
+    final categories = [
+      Category(
+        id: 'c-1',
+        name: 'Snacks',
+        recipeIds: [],
+        targetRoute: '/category',
+        imageUrl: '',
+      ),
+    ];
+
+    await pumpScreen(tester, categories);
+
+    await tester.enterText(find.byType(TextField), 'SNACK');
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Snacks'), findsOneWidget);
+  });
+
+  testWidgets('Search with no matching categories shows no tiles', (
+    tester,
+  ) async {
+    final categories = [
+      Category(
+        id: 'c-1',
+        name: 'Snacks',
+        recipeIds: [],
+        targetRoute: '/category',
+        imageUrl: '',
+      ),
+    ];
+
+    await pumpScreen(tester, categories);
+
+    await tester.enterText(find.byType(TextField), 'pizza');
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Snacks'), findsNothing);
+  });
 }
