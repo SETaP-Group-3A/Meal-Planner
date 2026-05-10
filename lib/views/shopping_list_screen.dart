@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../shopping_list.dart';
-import '../mock_data.dart';
 
 class ShoppingListScreen extends StatefulWidget {
   final String? initialRecipeId;
@@ -50,12 +49,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         foregroundColor: isSelected ? Colors.white : null,
       ),
     );
-  }
-
-  Future<void> _addRecipeToShoppingList(String recipeId) async {
-    setState(() => _isLoading = true);
-    await shoppingList.addRecipe(recipeId, selectedSort);
-    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _regenerateList(String newSort) async {
