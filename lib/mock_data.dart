@@ -25,7 +25,7 @@ Ingredient _i(
 
 final Map<String, List<Ingredient>> marketInventory = {
   'Flour': [
-    _i('Flour (Aldi)', 0.70, 3.0, 5715, genericName: 'Flour', storeId: _storeAldi),
+    _i('Flour (Aldi)', 0.70, 3.0, 360, genericName: 'Flour', storeId: _storeAldi),
     _i('Flour (Waitrose)', 0.85, 1.0, 3640, genericName: 'Flour', storeId: _storeWaitrose),
     _i('Flour (Tesco)', 0.80, 2.5, 3640, genericName: 'Flour', storeId: _storeTesco),
     _i('Flour (Asda)', 0.78, 1.5, 3640, genericName: 'Flour', storeId: _storeAsda),
