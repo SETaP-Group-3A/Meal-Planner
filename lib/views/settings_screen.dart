@@ -98,7 +98,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     setState(() {
       _addressOptOut = prefs.getBool(kPrefAddressOptOut) ?? false;
 
-      _usernameController.text = prefs.getString(_kPrefUsername) ?? 'JohnDoe';
+      _usernameController.text = prefs.getString(_kPrefUsername) ?? '';
       _emailController.text = prefs.getString(_kPrefEmail) ?? '';
       _addressController.text = _addressOptOut
           ? ''
