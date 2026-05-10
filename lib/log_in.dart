@@ -106,7 +106,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _clearSavedAccountEmail();
+
+    if (kDebugMode) return;
+
+     _clearSavedAccountEmail();
   }
 
   Future<void> _clearSavedAccountEmail() async {

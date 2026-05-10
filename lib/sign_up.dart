@@ -118,7 +118,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               keyboardType: TextInputType.emailAddress,
             ),
-
             TextField(
               controller: passwordController,
               decoration: const InputDecoration(
@@ -126,7 +125,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               obscureText: true,
             ),
-
             TextField(
               controller: confirmPasswordController,
               decoration: const InputDecoration(
@@ -134,19 +132,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               obscureText: true,
             ),
-
             const SizedBox(height: 20),
-
             if (error != null)
               Text(
                 error!,
-                style: const TextStyle(
-                  color: Colors.red,
-                ),
+                style: const TextStyle(color: Colors.red),
               ),
-
             const SizedBox(height: 10),
-
             ElevatedButton(
               onPressed: register,
               child: const Text("Create Account"),
