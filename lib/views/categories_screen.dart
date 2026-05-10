@@ -3,7 +3,8 @@ import '../category_service.dart';
 import '../models/category.dart';
 
 class CategoriesScreen extends StatefulWidget {
-  const CategoriesScreen({super.key});
+  final List<Category>? categories;
+  const CategoriesScreen({super.key, this.categories});
 
   @override
   _CategoriesScreenState createState() => _CategoriesScreenState();
@@ -16,7 +17,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredCategories = CategoryService.instance.categories;
+    final src = widget.categories ?? CategoryService.instance.categories;
+    _filteredCategories = src.where((c) => c.id.startsWith('c-')).toList();
     _searchController.addListener(_filterCategories);
   }
 
@@ -29,9 +31,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   void _filterCategories() {
     final query = _searchController.text.toLowerCase();
     setState(() {
-      _filteredCategories = CategoryService.instance.categories.where((
-        category,
-      ) {
+      final src = widget.categories ?? CategoryService.instance.categories;
+      _filteredCategories = src.where((category) {
+        if (!category.id.startsWith('c-')) return false;
         return category.name.toLowerCase().contains(query);
       }).toList();
     });
@@ -66,11 +68,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 childAspectRatio: 1,
                 children: _filteredCategories.map((c) {
                   return GestureDetector(
-                    onTap: () => Navigator.pushNamed(
-                      context,
-                      '/category',
-                      arguments: c.id,
-                    ),
+                    onTap: () {
+                      final route = c.targetRoute;
+                      if (route != null &&
+                          route.trim().isNotEmpty &&
+                          route.trim().startsWith('/')) {
+                        Navigator.pushNamed(context, route.trim(), arguments: c.id);
+                      }
+                    },
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Stack(
@@ -79,7 +84,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           Builder(
                             builder: (_) {
                               final img = c.imageUrl;
-                              if (img == null || img.isEmpty) {
+                              if (img == null) {
                                 return Image.network(
                                   'https://picsum.photos/seed/${Uri.encodeComponent(c.id)}/600/600',
                                   fit: BoxFit.cover,
@@ -87,11 +92,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                       Container(color: Colors.grey.shade300),
                                 );
                               }
+                              if (img.trim().isEmpty) {
+                                return Container(); // explicit empty -> no image / no placeholder
+                              }
                               if (img.startsWith('asset:')) {
-                                final assetPath = img.replaceFirst(
-                                  'asset:',
-                                  '',
-                                );
+                                final assetPath = img.replaceFirst('asset:', '');
                                 return Image.asset(
                                   assetPath,
                                   fit: BoxFit.cover,
@@ -112,9 +117,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
                           Center(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
                               child: Text(
                                 c.name,
                                 textAlign: TextAlign.center,
