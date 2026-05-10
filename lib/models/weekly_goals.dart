@@ -60,9 +60,11 @@ class WeeklyGoals extends ChangeNotifier {
   // store start date for each week id
   Map<int, DateTime> weekStartDates = {};
 
+  GoalType currentGoalType = GoalType.money;
+
   // When a WeeklyGoals instance is created, start loading values from the DB
   WeeklyGoals({String? accountEmail, required GoalType type}) {
-    // fire-and-forget; loadFromDatabase will populate and notify listeners
+    currentGoalType = type;
     try {
       loadFromDatabase(accountEmail: accountEmail, expectedType: type).then((_) {
         // After loading, ensure weeks are up-to-date for this account.
@@ -215,6 +217,9 @@ class WeeklyGoals extends ChangeNotifier {
     try {
       final db = await DatabaseService.instance.database;
 
+      if (expectedType != currentGoalType) {
+        await updateGoalType(newType: expectedType, accountEmail: accountEmail);
+      }
       // if caller supplied an email, resolve it to the internal account id
       String? accountId;
 
@@ -269,6 +274,7 @@ class WeeklyGoals extends ChangeNotifier {
     String? accountEmail,
     required GoalType requestGoalType
   }) async {
+
     final instance = WeeklyGoals(accountEmail: accountEmail, type: requestGoalType);
     final ok = await instance.loadFromDatabase(accountEmail: accountEmail, expectedType: requestGoalType);
     if (ok) return instance;
@@ -457,6 +463,7 @@ class WeeklyGoals extends ChangeNotifier {
       }
     }
 
+    currentGoalType = newType;
     goals[newWeekId] = newGoals;
     weekStartDates[newWeekId] = newStart;
     notifyListeners();
