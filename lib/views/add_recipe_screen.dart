@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/recipe.dart';
+import '../mock_data.dart';
 import '../services/database_service.dart';
 
 /// form screen for adding a custom recipe
@@ -12,21 +13,29 @@ class AddRecipeScreen extends StatefulWidget {
 
 class _AddRecipeScreenState extends State<AddRecipeScreen> {
   final _nameCtrl = TextEditingController();
-  final _ingredientsCtrl = TextEditingController();
   final _prepTimeCtrl = TextEditingController();
   bool _saving = false;
+  String _selectedIngredient = marketInventory.keys.first;
+  final List<String> _pickedIngredients = [];
+
+  /// sums calories from the first market option for each picked ingredient
+  int get _totalCalories {
+    var total = 0;
+    for (final name in _pickedIngredients) {
+      final options = marketInventory[name];
+      if (options != null && options.isNotEmpty) {
+        total += options.first.calories;
+      }
+    }
+    return total;
+  }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _ingredientsCtrl.dispose();
     _prepTimeCtrl.dispose();
     super.dispose();
   }
-
-  /// splits "Flour, Eggs, Milk" into ['Flour', 'Eggs', 'Milk']
-  List<String> _parseList(String raw) =>
-      raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
 
   Future<void> _saveRecipe() async {
     final name = _nameCtrl.text.trim();
@@ -42,10 +51,10 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
     final recipe = Recipe(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
-      requiredIngredients: _parseList(_ingredientsCtrl.text),
+      requiredIngredients: List.from(_pickedIngredients),
       prepTimeMinutes: int.tryParse(_prepTimeCtrl.text.trim()) ?? 0,
       allergens: [],
-      calories: 0,
+      calories: _totalCalories,
       macros: Macros(proteinG: 0, carbsG: 0, fatG: 0),
       nutrients: {},
     );
@@ -61,6 +70,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: _nameCtrl,
@@ -68,19 +78,49 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: _ingredientsCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Ingredients (comma-separated)',
-                hintText: 'e.g. Flour, Eggs, Milk',
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-            TextField(
               controller: _prepTimeCtrl,
               decoration: const InputDecoration(labelText: 'Prep Time (minutes)'),
               keyboardType: TextInputType.number,
             ),
+            const SizedBox(height: 16),
+            const Text('Ingredients'),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedIngredient,
+                    items: marketInventory.keys.map((name) {
+                      return DropdownMenuItem(value: name, child: Text(name));
+                    }).toList(),
+                    onChanged: (val) => setState(() => _selectedIngredient = val!),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    if (!_pickedIngredients.contains(_selectedIngredient)) {
+                      setState(() => _pickedIngredients.add(_selectedIngredient));
+                    }
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: _pickedIngredients.map((ing) {
+                return Chip(
+                  label: Text(ing),
+                  onDeleted: () => setState(() => _pickedIngredients.remove(ing)),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            Text('Total Recipe Calories: $_totalCalories kcal'),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,

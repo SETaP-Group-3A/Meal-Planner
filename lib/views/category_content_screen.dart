@@ -301,7 +301,7 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
             context,
             MaterialPageRoute(builder: (_) => const AddRecipeScreen()),
           );
-          if (added == true) await _refresh();
+          await _refresh();
         },
         child: const Icon(Icons.edit_note),
       ),
