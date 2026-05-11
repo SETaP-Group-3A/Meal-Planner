@@ -1,5 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:bcrypt/bcrypt.dart';
+import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/services/database_service.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.successRouteName = '/'});
@@ -13,42 +18,84 @@ class LoginScreen extends StatefulWidget {
 class AuthService {
   final DatabaseService _db = DatabaseService.instance;
 
+  // ---------------- LOGIN ----------------
+
   Future<bool> login(String email, String password) async {
     final db = await _db.database;
 
+    // Find user by email only
     final result = await db.query(
       'users',
-      where: 'email = ? AND password = ?',
-      whereArgs: [email, password],
+      where: 'email = ?',
+      whereArgs: [email],
     );
 
-    return result.isNotEmpty;
-  }
+    // User not found
+    if (result.isEmpty) {
+      return false;
+    }
 
-  Future<bool> register(String email, String password) async {
-  try {
-    final db = await _db.database;
+    // Get stored hashed password
+    final storedHash = result.first['password'] as String;
 
-    await db.insert(
-      'users',
-      {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'email': email,
-        'password': password,
-      },
+    // Compare entered password with stored hash
+    final passwordMatches = BCrypt.checkpw(
+      password,
+      storedHash,
     );
 
-    return true;
-  } catch (e) {
-    print("SIGNUP ERROR: $e"); // 👈 important for debugging
-    return false;
+    return passwordMatches;
   }
-}
+
+  // ---------------- REGISTER ----------------
+
+  Future<bool> register(
+    String email,
+    String password,
+    GoalType type,
+  ) async {
+    try {
+      final db = await _db.database;
+
+      final id = DateTime.now()
+          .millisecondsSinceEpoch
+          .toString();
+
+      await db.insert(
+        'users',
+        {
+          'id': id,
+          'email': email,
+          'password': password,
+        },
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+
+      prefs.setString(
+        'goal',
+        type.toString(),
+      );
+
+      await WeeklyGoals.registerNewGoals(
+        accountId: id,
+        goalType: type,
+      );
+
+      return true;
+    } catch (e) {
+      print("SIGNUP ERROR: $e"); // For debugging purposes
+      return false;
+    }
+  }
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController =
+      TextEditingController();
+
+  final TextEditingController _passwordController =
+      TextEditingController();
 
   String? _emailError;
   String? _passwordError;
@@ -57,9 +104,30 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
 
   @override
+  void initState() {
+    super.initState();
+
+    if (kDebugMode) return;
+
+     _clearSavedAccountEmail();
+  }
+
+  Future<void> _clearSavedAccountEmail() async {
+    try {
+      final prefs =
+          await SharedPreferences.getInstance();
+
+      await prefs.remove('accountEmail');
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+
     super.dispose();
   }
 
@@ -75,25 +143,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
     bool hasError = false;
 
+    // ---------------- EMAIL VALIDATION ----------------
+
+    final emailValid =
+        RegExp(r'^[^@]+@[^@]+\.[^@]+')
+            .hasMatch(email);
+
     if (email.isEmpty) {
       _emailError = 'Email is required';
       hasError = true;
-    } else if (!email.contains('@')) {
-      _emailError = "Email must contain '@'";
+    } else if (!emailValid) {
+      _emailError = 'Enter a valid email';
       hasError = true;
     }
 
-    final letterCount =
-        password.replaceAll(RegExp(r'[^A-Za-z]'), '').length;
-    final numberCount =
-        password.replaceAll(RegExp(r'[^0-9]'), '').length;
+    // ---------------- PASSWORD VALIDATION ----------------
+
+    final passwordValid =
+        RegExp(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$')
+            .hasMatch(password);
 
     if (password.isEmpty) {
       _passwordError = 'Password is required';
       hasError = true;
-    } else if (letterCount < 7 || numberCount < 1) {
+    } else if (!passwordValid) {
       _passwordError =
-          'Password must have at least 7 letters and at least 1 number';
+          'Password must be at least 8 characters and include at least 1 letter and 1 number';
+
       hasError = true;
     }
 
@@ -102,15 +178,54 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    final success = await _authService.login(email, password);
+    // ---------------- LOGIN ----------------
+
+    final success =
+        await _authService.login(email, password);
 
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushReplacementNamed(context, widget.successRouteName);
+      final prefs =
+          await SharedPreferences.getInstance();
+
+      await prefs.setString(
+        'accountEmail',
+        email,
+      );
+
+      final goal = prefs.getString('goal');
+
+      try {
+        if (!mounted) return;
+
+        final weekly = Provider.of<WeeklyGoals>(
+          context,
+          listen: false,
+        );
+
+        await weekly.loadFromDatabase(
+          accountEmail: email,
+          expectedType: GoalTypes.fromDbString(
+            goal ?? "money",
+          ),
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          print(
+            'Failed loading weekly goals after login: $e',
+          );
+        }
+      }
+
+      Navigator.pushReplacementNamed(
+        context,
+        widget.successRouteName,
+      );
     } else {
       setState(() {
-        _loginError = 'Invalid email or password';
+        _loginError =
+            'Invalid email or password';
       });
     }
   }
@@ -127,12 +242,16 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment:
+              MainAxisAlignment.center,
           children: [
             const SizedBox(height: 24),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              padding:
+                  const EdgeInsets.symmetric(
+                horizontal: 24.0,
+              ),
               child: TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -145,7 +264,10 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 16),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              padding:
+                  const EdgeInsets.symmetric(
+                horizontal: 24.0,
+              ),
               child: TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
@@ -161,7 +283,9 @@ class _LoginScreenState extends State<LoginScreen> {
             if (_loginError != null)
               Text(
                 _loginError!,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(
+                  color: Colors.red,
+                ),
               ),
 
             const SizedBox(height: 24),
@@ -175,7 +299,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
             TextButton(
               onPressed: _goToSignUp,
-              child: const Text("Create account"),
+              child:
+                  const Text("Create account"),
             ),
           ],
         ),

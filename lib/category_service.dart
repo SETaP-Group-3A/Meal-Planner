@@ -2,6 +2,7 @@ import 'models/category.dart';
 import 'dart:math';
 import 'package:meal_planner/services/database_service.dart';
 import 'models/recipe.dart';
+import 'mock_data.dart';
 
 class CategoryService {
   static final CategoryService instance = CategoryService._internal();
@@ -110,6 +111,7 @@ class CategoryService {
   }
 
 
+  /// Returns recipes for a category, falls back to mock data if DB is unavailable.
   Future<List<Recipe>> getRecipesForCategory(String categoryId) async {
     final ids = await getRecipeIdsForCategory(categoryId);
     List<Recipe> recipes = [];
@@ -119,7 +121,8 @@ class CategoryService {
         if (recipe != null) recipes.add(recipe);
       }
     } catch (_) {
-
+      // DB unavailable — filter mock data instead
+      recipes = mockRecipes.where((r) => ids.contains(r.id)).toList();
     }
     return recipes;
   }

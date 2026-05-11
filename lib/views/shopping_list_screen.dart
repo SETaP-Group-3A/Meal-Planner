@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../shopping_list.dart';
-import '../mock_data.dart';
 
 class ShoppingListScreen extends StatefulWidget {
   final String? initialRecipeId;
@@ -24,14 +23,18 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialRecipeId != null && widget.initialSortBy != null) {
-      _addInitialRecipe();
-    }
+    _initializeShoppingList();
   }
 
-  Future<void> _addInitialRecipe() async {
+  Future<void> _initializeShoppingList() async {
     setState(() => _isLoading = true);
-    await shoppingList.addRecipe(widget.initialRecipeId!, widget.initialSortBy!); // Assuming correct handling
+    await shoppingList.initialize();
+
+    if (widget.initialRecipeId != null && widget.initialSortBy != null) {
+      selectedSort = widget.initialSortBy!;
+      await shoppingList.addRecipe(widget.initialRecipeId!, widget.initialSortBy!);
+    }
+
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -46,12 +49,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         foregroundColor: isSelected ? Colors.white : null,
       ),
     );
-  }
-
-  Future<void> _addRecipeToShoppingList(String recipeId) async {
-    setState(() => _isLoading = true);
-    await shoppingList.addRecipe(recipeId, selectedSort);
-    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _regenerateList(String newSort) async {
@@ -85,26 +82,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               ],
             ),
           ),
-          
-          // Test Controls
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: mockRecipes.map((recipe) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: ElevatedButton(
-                      onPressed: () => _addRecipeToShoppingList(recipe.id),
-                      child: Text('Add ${recipe.name}'),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          const Divider(),
           Expanded(
             child: _isLoading 
               ? const Center(child: CircularProgressIndicator())
@@ -124,7 +101,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                         ),
                         title: Text(ingredient.name),
                         subtitle: Text(
-                          'Total Cost: \$${listItem.totalCost.toStringAsFixed(2)} | Dist: ${ingredient.distance}km | Cal: ${listItem.totalCalories}',
+                          'Total Cost: £${listItem.totalCost.toStringAsFixed(2)} | Dist: ${ingredient.distance}km | Cal: ${listItem.totalCalories}',
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,

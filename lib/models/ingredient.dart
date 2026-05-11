@@ -1,5 +1,6 @@
 class Ingredient {
   final String name;
+  final String genericName;
   final double cost;
   final double distance;
   final int calories;
@@ -7,15 +8,17 @@ class Ingredient {
  
   const Ingredient({
     required this.name,
+    String? genericName,
     required this.cost,
     required this.distance,
     required this.calories,
     this.storeId,
-  });
+  }) : genericName = genericName ?? name;
  
   /// since all values are marked as final, this returns a copy of this ingredient with fields replaced by provided values (distance)
   Ingredient copyWith({
     String? name,
+    String? genericName,
     double? cost,
     double? distance,
     int? calories,
@@ -23,6 +26,7 @@ class Ingredient {
   }) {
     return Ingredient(
       name: name?? this.name,
+      genericName: genericName ?? this.genericName,
       cost: cost?? this.cost,
       distance: distance ?? this.distance,
       calories: calories ?? this.calories,
@@ -33,6 +37,7 @@ class Ingredient {
   @override
   String toString() {
     final storePart = storeId != null ? ', Store: $storeId' : '';
-    return '$name (Cost: $cost, Dist: $distance, Cal: $calories$storePart)';
+    final genericPart = genericName != name ? ', Generic: $genericName' : '';
+    return '$name (Cost: $cost, Dist: $distance, Cal: $calories$genericPart$storePart)';
   }
 }

@@ -2,12 +2,16 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:meal_planner/repositories/graph_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// Test helper: when tests call `testPopulate`, the widget will render
+// using this data instead of querying the DB.
+List<Goal>? _graphTestData;
+void testPopulate(List<Goal> data) => _graphTestData = data;
+void testClear() => _graphTestData = null;
 
 class ProgressGraphWidget extends StatefulWidget {
-
-  final List<Goal> userData;
-
-  const ProgressGraphWidget({super.key, required this.userData});
+  const ProgressGraphWidget({super.key});
 
   @override
   State<ProgressGraphWidget> createState() => _ProgressGraphWidgetState();
@@ -16,26 +20,27 @@ class ProgressGraphWidget extends StatefulWidget {
 class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
   late GraphController controller;
   late List<int> goalData;
+  String? accountEmail;
 
   final List<String> xTitles = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
   @override
   void initState() {
     super.initState();
-    controller = GraphController(widget.userData);
-    goalData = controller.updateGraph(widget.userData[0].id);
+    controller = GraphController([]);
+    goalData = List<int>.filled(7, 0);
+    // load saved account email for DB queries
+    SharedPreferences.getInstance().then((prefs) {
+      setState(() => accountEmail = prefs.getString('accountEmail'));
+    });
   }
 
   @override
   void didUpdateWidget(covariant ProgressGraphWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.userData != oldWidget.userData) {
-      controller = GraphController(widget.userData);
-      setState(() {
-        goalData = controller.updateGraph(widget.userData[0].id);
-      });
-    }
   }
+
+  // Use controller to fetch DB-backed goals
 
   List<FlSpot> formatData() {
     final temp = <FlSpot>[];
@@ -47,7 +52,21 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return LineChart(
+    return StreamBuilder<List<Goal>>(
+      stream: _graphTestData != null
+          ? Stream.value(_graphTestData!)
+          : Stream.periodic(const Duration(seconds: 2)).asyncMap((_) => controller.fetchLatestWeekGoals()),
+      builder: (context, snap) {
+        final goals = _graphTestData ?? (snap.data ?? []);
+        if (goals.isEmpty) {
+          controller = GraphController([]);
+          goalData = List<int>.filled(7, 0);
+        } else {
+          controller = GraphController(goals);
+          goalData = controller.updateGraph(goals[0].id);
+        }
+
+        return LineChart(
       LineChartData(
         lineTouchData: LineTouchData(
           touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
@@ -60,7 +79,7 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
           },
         ),
         lineBarsData: [
-          LineChartBarData(
+            LineChartBarData(
             spots: formatData(),
             color: Colors.green,
             isCurved: false,
@@ -89,6 +108,8 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
           topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
       ),
+    );
+      },
     );
   }
 

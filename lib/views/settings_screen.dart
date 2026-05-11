@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/location_service.dart';
+import 'store_locator_screen.dart';
+
 // temp controller
 class ThemeController {
   static const _kPrefThemeMode = 'theme.mode'; // 'system' | 'light' | 'dark'
@@ -42,6 +44,14 @@ class SettingsScreen extends StatelessWidget {
             title: Text('Accessibility'),
             onTap: () =>
                 Navigator.pushNamed(context, '/settings/accessibility'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.store),
+            title: const Text('Store Locator'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StoreLocatorScreen()),
+            ),
           ),
         ],
       ),
@@ -88,7 +98,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     setState(() {
       _addressOptOut = prefs.getBool(kPrefAddressOptOut) ?? false;
 
-      _usernameController.text = prefs.getString(_kPrefUsername) ?? 'JohnDoe';
+      _usernameController.text = prefs.getString(_kPrefUsername) ?? '';
       _emailController.text = prefs.getString(_kPrefEmail) ?? '';
       _addressController.text = _addressOptOut
           ? ''
@@ -140,7 +150,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       // geocoding if a valid address is provided
       if (address.isNotEmpty) {
         final coords = await resolveAndCacheUserCoordinates();
- 
+
         if (mounted) {
           setState(() => _geocodeSuccess = coords != null);
         }
@@ -150,10 +160,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     if (!mounted) return;
 
     setState(() => _isSaving = false);
- 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User details updated')),
-    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('User details updated')));
   }
 
   @override
@@ -295,7 +305,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           _geocodeSuccess!
                               ? 'Location resolved — store distances will be calculated from your postcode.'
                               : 'Could not resolve this postcode. Distance sorting will use stored values until a valid postcode is saved.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 color: _geocodeSuccess!
                                     ? Colors.green
                                     : Theme.of(context).colorScheme.error,
