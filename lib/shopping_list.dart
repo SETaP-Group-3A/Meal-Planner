@@ -32,8 +32,10 @@ class ShoppingList {
     final accountId = await _currentAccountId();
 
     if (accountId == null) {
-      _loadedAccountId = null;
-      shoppingItems.clear();
+      if (_loadedAccountId != null) {
+        _loadedAccountId = null;
+        shoppingItems.clear();
+      }
       return;
     }
 

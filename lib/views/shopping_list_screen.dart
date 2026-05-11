@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../shopping_list.dart';
-import '../mock_data.dart';
 
 class ShoppingListScreen extends StatefulWidget {
   final String? initialRecipeId;
@@ -52,12 +51,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     );
   }
 
-  Future<void> _addRecipeToShoppingList(String recipeId) async {
-    setState(() => _isLoading = true);
-    await shoppingList.addRecipe(recipeId, selectedSort);
-    if (mounted) setState(() => _isLoading = false);
-  }
-
   Future<void> _regenerateList(String newSort) async {
     setState(() => _isLoading = true);
     await shoppingList.regenerateList(newSort);
@@ -89,26 +82,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               ],
             ),
           ),
-          
-          // Test Controls
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: mockRecipes.map((recipe) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: ElevatedButton(
-                      onPressed: () => _addRecipeToShoppingList(recipe.id),
-                      child: Text('Add ${recipe.name}'),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          const Divider(),
           Expanded(
             child: _isLoading 
               ? const Center(child: CircularProgressIndicator())
