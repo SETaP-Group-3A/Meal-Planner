@@ -151,6 +151,11 @@ class _RecipePageState extends State<RecipePage> {
         title: Text(widget.recipe.name),
         actions: [
           IconButton(
+            icon: const Icon(Icons.create_new_folder_outlined),
+            tooltip: 'Save to folder',
+            onPressed: _showSaveToFolderDialog,
+          ),
+          IconButton(
             icon: Icon(
               _isFavourite ? Icons.favorite : Icons.favorite_border,
               color: _isFavourite ? Colors.red : null,
