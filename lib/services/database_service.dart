@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
@@ -26,18 +27,23 @@ class DatabaseService {
   }
  
   Future<Database> _initDB(String filePath) async {
-    if (Platform.isWindows || Platform.isLinux) {
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
- 
-    final dbPath = (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
-        ? join(Directory.current.path, filePath)
-        : join(await getDatabasesPath(), filePath);
- 
+
+    final String dbPath;
+    if (kIsWeb) {
+      dbPath = filePath;
+    } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      dbPath = join(Directory.current.path, filePath);
+    } else {
+      dbPath = join(await getDatabasesPath(), filePath);
+    }
+
     // Delete existing DB on start
     //if (await databaseExists(dbPath)) await deleteDatabase(dbPath);
- 
+
     return await openDatabase(dbPath, version: 4, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
  

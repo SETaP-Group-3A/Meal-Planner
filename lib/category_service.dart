@@ -33,7 +33,7 @@ class CategoryService {
 
   Future<List<Category>> getAllCategories() async {
     try {
-      return await DatabaseService.instance.getAllCategories();
+      return (await DatabaseService.instance.getAllCategories()).cast<Category>();
     } catch (_) {
       return List.unmodifiable(_categories);
     }
