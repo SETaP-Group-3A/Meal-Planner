@@ -12,6 +12,7 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _newCategoryController = TextEditingController();
   List<Category> _filteredCategories = [];
 
   @override
@@ -25,6 +26,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _newCategoryController.dispose();
     super.dispose();
   }
 
@@ -39,10 +41,51 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     });
   }
 
+  /// shows a dialog to create a new category
+  Future<void> _showCreateCategoryDialog() async {
+    _newCategoryController.clear();
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('New Category'),
+        content: TextField(
+          controller: _newCategoryController,
+          decoration: const InputDecoration(labelText: 'Category Name'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final name = _newCategoryController.text.trim();
+              if (name.isNotEmpty) {
+                await CategoryService.instance.addCategory(
+                  name: name,
+                  targetRoute: '/category',
+                );
+                _filterCategories();
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Categories')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showCreateCategoryDialog,
+        tooltip: 'New category',
+        child: const Icon(Icons.create_new_folder),
+      ),
       body: Column(
         children: [
           Padding(
