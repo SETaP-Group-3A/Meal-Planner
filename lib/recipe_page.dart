@@ -15,6 +15,7 @@ class RecipePage extends StatefulWidget {
 class _RecipePageState extends State<RecipePage> {
   bool _showAdvanced = false;
   bool _isFavourite = false;
+  final _folderController = TextEditingController(text: 'Favourites');
 
   @override
   void initState() {
@@ -22,6 +23,44 @@ class _RecipePageState extends State<RecipePage> {
     DatabaseService.instance.isFavourite(widget.recipe.id).then((fav) {
       if (mounted) setState(() => _isFavourite = fav);
     });
+  }
+
+  @override
+  void dispose() {
+    _folderController.dispose();
+    super.dispose();
+  }
+
+  /// shows a dialog to save this recipe into a folder
+  Future<void> _showSaveToFolderDialog() async {
+    _folderController.text = 'Favourites';
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save to Folder'),
+        content: TextField(
+          controller: _folderController,
+          decoration: const InputDecoration(labelText: 'Folder Name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final folderName = _folderController.text.trim();
+              if (folderName.isNotEmpty) {
+                await DatabaseService.instance
+                    .addRecipeToFolder(widget.recipe.id, folderName);
+              }
+              if (mounted) Navigator.pop(context);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildToggle() {
