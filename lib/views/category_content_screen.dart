@@ -294,6 +294,17 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Create new recipe',
+        onPressed: () async {
+          final added = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(builder: (_) => const AddRecipeScreen()),
+          );
+          if (added == true) await _refresh();
+        },
+        child: const Icon(Icons.edit_note),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
