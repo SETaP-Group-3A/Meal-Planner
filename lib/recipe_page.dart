@@ -147,7 +147,10 @@ class _RecipePageState extends State<RecipePage> {
         const Divider(height: 32),
         Text('Calories', style: AppStyles.subtitleText),
         const SizedBox(height: 4),
-        Text('${widget.recipe.calories} kcal', style: AppStyles.normalText),
+        Text(
+          '${(widget.recipe.calories * _currentServings / _defaultServings).round()} kcal',
+          style: AppStyles.normalText,
+        ),
         const SizedBox(height: 12),
         Text('Macros', style: AppStyles.subtitleText),
         const SizedBox(height: 4),
