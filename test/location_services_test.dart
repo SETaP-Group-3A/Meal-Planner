@@ -5,8 +5,15 @@ import 'package:meal_planner/services/location_service.dart';
 import 'package:meal_planner/services/database_service.dart';
  
 void main() {
+  setUpAll(() async {
+    await DatabaseService.initForTesting();
+  });
+ 
+  tearDownAll(() async {
+    await DatabaseService.closeForTesting();
+  });
   group('resolveAndCacheUserCoordinates - ingredient distance updates', () {
-    Future<List<double>> _getIngredientDistances() async {
+    Future<List<double>> getIngredientDistances() async {
       final ingredients = await DatabaseService.instance.getAllIngredients();
       return ingredients.map((i) => i.distance).toList();
     }
@@ -15,20 +22,20 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
  
-    test(
-        'Valid UK postcode updates all ingredient distances in the database',
+    test('Valid UK postcode updates all ingredient distances in the database',
         () async {
       SharedPreferences.setMockInitialValues({
         kPrefAddress: 'SW1A 1AA',
         kPrefAddressOptOut: false,
       });
  
-      final distancesBefore = await _getIngredientDistances();
+      final distancesBefore = await getIngredientDistances();
  
       await resolveAndCacheUserCoordinates();
  
-      final distancesAfter = await _getIngredientDistances();
+      final distancesAfter = await getIngredientDistances();
  
+
       expect(
         distancesAfter,
         isNot(equals(distancesBefore)),
@@ -49,25 +56,23 @@ void main() {
       }
     });
  
-    test(
-        'Invalid UK postcode leaves all ingredient distances unchanged',
+    test('Invalid UK postcode leaves all ingredient distances unchanged',
         () async {
       SharedPreferences.setMockInitialValues({
         kPrefAddress: 'ZZ99 9ZZ',
         kPrefAddressOptOut: false,
       });
  
-      final distancesBefore = await _getIngredientDistances();
+      final distancesBefore = await getIngredientDistances();
  
       final result = await resolveAndCacheUserCoordinates();
  
-      final distancesAfter = await _getIngredientDistances();
+      final distancesAfter = await getIngredientDistances();
  
       expect(
         result,
         isNull,
-        reason: 'An invalid postcode should return null from '
-            'resolveAndCacheUserCoordinates',
+        reason: 'An invalid postcode should return null',
       );
       expect(
         distancesAfter,
@@ -77,19 +82,18 @@ void main() {
       );
     });
  
-    test(
-        'Null (empty) user address leaves all ingredient distances unchanged',
+    test('Empty user address leaves all ingredient distances unchanged',
         () async {
       SharedPreferences.setMockInitialValues({
         kPrefAddress: '',
         kPrefAddressOptOut: false,
       });
  
-      final distancesBefore = await _getIngredientDistances();
+      final distancesBefore = await getIngredientDistances();
  
       final result = await resolveAndCacheUserCoordinates();
  
-      final distancesAfter = await _getIngredientDistances();
+      final distancesAfter = await getIngredientDistances();
  
       expect(
         result,
@@ -106,8 +110,7 @@ void main() {
  
   group('getDistanceFromPostcodes - live postcodes.io API', () {
  
-    test(
-        'Two valid UK postcodes return a positive distance in kilometres',
+    test('Two valid UK postcodes return a positive distance in kilometres',
         () async {
 
       final distance = await getDistanceFromPostcodes('SW1A 1AA', 'M1 1AE');
@@ -125,7 +128,7 @@ void main() {
       expect(
         distance,
         inInclusiveRange(200, 350),
-        reason: 'London to Manchester should be roughly 260 km straight-line',
+        reason: 'London to Manchester straight-line should be ~260 km',
       );
     });
   });
