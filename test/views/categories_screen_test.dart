@@ -38,6 +38,10 @@ Future<void> pumpScreen(WidgetTester tester, List<Category> categories) async {
 }
 
 void main() {
+  setUp(() {
+    CategoryService.instance.resetForTesting();
+  });
+
   testWidgets(
     'Snacks category (two recipes) is shown and navigates to show 2 recipes',
     (tester) async {
@@ -258,28 +262,28 @@ void main() {
     expect(find.text('Recipes: 0'), findsOneWidget);
   });
 
-  testWidgets('addRecipeToCategory(c-favourites, r-1) should add recipe 1 to favourites', (tester) async {
+  test('addRecipeToCategory(c-favourites, r-1) should add recipe 1 to favourites', () async {
     await CategoryService.instance.setRecipesForCategory('c-favourites', []);
     await CategoryService.instance.addRecipeToCategory('c-favourites', 'r-1');
     final ids = await CategoryService.instance.getRecipeIdsForCategory('c-favourites');
     expect(ids, contains('r-1'));
   });
 
-  testWidgets('addRecipeToCategory(c-favourites, 1) should add nothing due to invalid recipe id', (tester) async {
+  test('addRecipeToCategory(c-favourites, 1) should add nothing due to invalid recipe id', () async {
     await CategoryService.instance.setRecipesForCategory('c-favourites', []);
     await CategoryService.instance.addRecipeToCategory('c-favourites', '1'); 
     final ids = await CategoryService.instance.getRecipeIdsForCategory('c-favourites');
     expect(ids, isNot(contains('1')));
   });
 
-  testWidgets('addRecipeToCategory(c-favourites) (no recipe id) should add nothing - simulated with empty string', (tester) async {
+  test('addRecipeToCategory(c-favourites) (no recipe id) should add nothing - simulated with empty string', () async {
     await CategoryService.instance.setRecipesForCategory('c-favourites', []);
     await CategoryService.instance.addRecipeToCategory('c-favourites', ''); 
     final ids = await CategoryService.instance.getRecipeIdsForCategory('c-favourites');
     expect(ids, isNot(contains('')));
   });
 
-  testWidgets('addRecipeToCategory(1, r-1) invalid category should add nothing', (tester) async {
+  test('addRecipeToCategory(1, r-1) invalid category should add nothing', () async {
     await CategoryService.instance.setRecipesForCategory('c-favourites', []);
     await CategoryService.instance.addRecipeToCategory('1', 'r-1'); 
     final favIds = await CategoryService.instance.getRecipeIdsForCategory('c-favourites');
@@ -288,28 +292,28 @@ void main() {
     expect(other, isEmpty);
   });
 
-  testWidgets('removeRecipeFromCategory(c-favourites, r-1) should remove recipe 1 if present', (tester) async {
+  test('removeRecipeFromCategory(c-favourites, r-1) should remove recipe 1 if present', () async {
     await CategoryService.instance.setRecipesForCategory('c-favourites', ['r-1']);
     await CategoryService.instance.removeRecipeFromCategory('c-favourites', 'r-1');
     final ids = await CategoryService.instance.getRecipeIdsForCategory('c-favourites');
     expect(ids, isNot(contains('r-1')));
   });
 
-  testWidgets('removeRecipeFromCategory(c-favourites, 1) invalid recipe id should remove nothing', (tester) async {
+  test('removeRecipeFromCategory(c-favourites, 1) invalid recipe id should remove nothing', () async {
     await CategoryService.instance.setRecipesForCategory('c-favourites', ['r-1']);
     await CategoryService.instance.removeRecipeFromCategory('c-favourites', '1'); 
     final ids = await CategoryService.instance.getRecipeIdsForCategory('c-favourites');
     expect(ids, contains('r-1'));
   });
 
-  testWidgets('removeRecipeFromCategory(c-favourites) (no recipe id) should remove nothing - simulated with empty string', (tester) async {
+  test('removeRecipeFromCategory(c-favourites) (no recipe id) should remove nothing - simulated with empty string', () async {
     await CategoryService.instance.setRecipesForCategory('c-favourites', ['r-1']);
     await CategoryService.instance.removeRecipeFromCategory('c-favourites', ''); 
     final ids = await CategoryService.instance.getRecipeIdsForCategory('c-favourites');
     expect(ids, contains('r-1'));
   });
 
-  testWidgets('removeRecipeFromCategory(1, r-1) invalid category should remove nothing from favourites', (tester) async {
+  test('removeRecipeFromCategory(1, r-1) invalid category should remove nothing from favourites', () async {
     await CategoryService.instance.setRecipesForCategory('c-favourites', ['r-1']);
     await CategoryService.instance.removeRecipeFromCategory('1', 'r-1'); 
     final favIds = await CategoryService.instance.getRecipeIdsForCategory('c-favourites');
