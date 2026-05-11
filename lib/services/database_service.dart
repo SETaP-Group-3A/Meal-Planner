@@ -40,6 +40,23 @@ class DatabaseService {
     return await openDatabase(dbPath, version: 1, onCreate: _createDB);
   }
  
+  static Future<void> initForTesting() async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+ 
+    final db = await databaseFactory.openDatabase(
+      inMemoryDatabasePath,
+      options: OpenDatabaseOptions(version: 1, onCreate: instance._createDB),
+    );
+ 
+    _database = db;
+  }
+ 
+  static Future<void> closeForTesting() async {
+    await _database?.close();
+    _database = null;
+  }
+ 
   Future _createDB(Database db, int version) async {
     const idType = 'TEXT PRIMARY KEY';
     const textType = 'TEXT NOT NULL';
@@ -387,6 +404,7 @@ class DatabaseService {
 //------------------------------------------------------------------------------------------------------------------
 //Ingredients
  
+
   Ingredient _ingredientFromMap(Map<String, dynamic> map) {
     return Ingredient(
       name: map['name'] as String,
@@ -479,8 +497,7 @@ class DatabaseService {
     );
   }
  
-  /// recalculates and updates the distance for all ingredients linked to stores based on the user's new coordinates
-  /// if the ingredient is linked to a valid store, updates its distance based on the user's new coordinates and the store's coordinates
+
   Future<void> updateAllIngredientDistances({
     required double userLat,
     required double userLon,
@@ -488,17 +505,17 @@ class DatabaseService {
     final ingredients = await getAllIngredients();
     final stores = <String, Store>{};
  
-    // cache stores in memory to prevent repeated DB queries
+
     for (final store in await getAllStores()) {
       stores[store.id] = store;
     }
  
     for (final ingredient in ingredients) {
       final storeId = ingredient.storeId;
-      if (storeId == null) continue; // No store — leave distance as-is.
+      if (storeId == null) continue; 
  
       final store = stores[storeId];
-      if (store == null) continue;   // Store missing — leave distance as-is.
+      if (store == null) continue;   
  
       final newDistance = haversineDistance(
         userLat,
@@ -507,7 +524,7 @@ class DatabaseService {
         store.longitude,
       );
  
-      // copyWith() produces new ingredient instance
+
       await updateIngredient(ingredient.copyWith(distance: newDistance));
     }
   }
@@ -649,7 +666,7 @@ class DatabaseService {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
-  
+ 
   Future<void> updateGoal(String goalId, int dayId, double goalValue, DateTime date) async {
     final db = await instance.database;
     await db.update(
