@@ -18,6 +18,8 @@ class _RecipePageState extends State<RecipePage> {
   final _folderController = TextEditingController(text: 'Favourites');
   static const int _defaultServings = 2;
   int _currentServings = 2;
+  /// indexes of ingredients the user has tapped to exclude
+  final Set<int> _excludedIngredients = {};
 
   @override
   void initState() {
@@ -113,15 +115,32 @@ class _RecipePageState extends State<RecipePage> {
         const SizedBox(height: 8),
         Text('Ingredients', style: AppStyles.subtitleText),
         const SizedBox(height: 4),
-        ...widget.recipe.requiredIngredients.map(
-          (ingredient) => Padding(
-            padding: const EdgeInsets.only(left: 8.0, bottom: 2.0),
-            child: Text(
-              '• ${scale.toStringAsFixed(1)}x $ingredient',
-              style: AppStyles.normalText,
+        ...widget.recipe.requiredIngredients.asMap().entries.map((entry) {
+          final i = entry.key;
+          final ingredient = entry.value;
+          final excluded = _excludedIngredients.contains(i);
+          return GestureDetector(
+            onTap: () => setState(() {
+              if (excluded) {
+                _excludedIngredients.remove(i);
+              } else {
+                _excludedIngredients.add(i);
+              }
+            }),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8.0, bottom: 2.0),
+              child: Text(
+                '• ${scale.toStringAsFixed(1)}x $ingredient',
+                style: excluded
+                    ? const TextStyle(
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
+                      )
+                    : AppStyles.normalText,
+              ),
             ),
-          ),
-        ),
+          );
+        }),
         const SizedBox(height: 12),
         Text(
           'Prep Time: ${widget.recipe.prepTimeMinutes} min',
