@@ -16,6 +16,8 @@ class _RecipePageState extends State<RecipePage> {
   bool _showAdvanced = false;
   bool _isFavourite = false;
   final _folderController = TextEditingController(text: 'Favourites');
+  static const int _defaultServings = 2;
+  int _currentServings = 2;
 
   @override
   void initState() {
@@ -77,20 +79,47 @@ class _RecipePageState extends State<RecipePage> {
     );
   }
 
+  /// stepper row for adjusting serving size
+  Widget _buildServingsRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.remove),
+          onPressed: _currentServings > 1
+              ? () => setState(() => _currentServings--)
+              : null,
+        ),
+        Text('Servings: $_currentServings', style: AppStyles.normalText),
+        IconButton(
+          icon: const Icon(Icons.add),
+          onPressed: () => setState(() => _currentServings++),
+        ),
+      ],
+    );
+  }
+
   Widget _buildBasicSection() {
     final allergenText = widget.recipe.allergens.isEmpty
         ? 'None'
         : widget.recipe.allergens.join(', ');
 
+    final scale = _currentServings / _defaultServings;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildServingsRow(),
+        const SizedBox(height: 8),
         Text('Ingredients', style: AppStyles.subtitleText),
         const SizedBox(height: 4),
         ...widget.recipe.requiredIngredients.map(
           (ingredient) => Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 2.0),
-            child: Text('• $ingredient', style: AppStyles.normalText),
+            child: Text(
+              '• ${scale.toStringAsFixed(1)}x $ingredient',
+              style: AppStyles.normalText,
+            ),
           ),
         ),
         const SizedBox(height: 12),
