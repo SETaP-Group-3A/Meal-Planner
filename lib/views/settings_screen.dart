@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meal_planner/models/weekly_goals.dart';
+import 'package:provider/provider.dart';
 import '../services/location_service.dart';
 import 'store_locator_screen.dart';
 
@@ -78,7 +79,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   static const _kPrefUsername = 'user.username';
   static const _kPrefEmail = 'user.email';
-  static const _kPrefGoalType = 'user.goalType';
+  static const _kPrefGoalType = 'goal';
 
   bool _addressOptOut = false;
   bool _isSaving = false;
@@ -126,7 +127,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     await prefs.setString(_kPrefUsername, _usernameController.text.trim());
     await prefs.setString(_kPrefEmail, _emailController.text.trim());
 
-    await prefs.setString(_kPrefGoalType, _selectedGoalType.name);
+    await prefs.setString(_kPrefGoalType, _selectedGoalType.toString());
 
     await prefs.setBool(kPrefAddressOptOut, _addressOptOut);
 
@@ -147,6 +148,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
 
     if (!mounted) return;
+
+    // Ensure the WeeklyGoals provider is updated when the user changes goal type.
+    try {
+      final accountEmailPref = prefs.getString('accountEmail');
+      if (mounted) {
+        final weekly = Provider.of<WeeklyGoals>(context, listen: false);
+        await weekly.updateGoalType(newType: _selectedGoalType, accountEmail: accountEmailPref);
+      }
+    } catch (_) {
+      // Best-effort: if provider isn't available or update fails, continue silently.
+    }
 
     setState(() => _isSaving = false);
 
