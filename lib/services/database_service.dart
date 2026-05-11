@@ -9,7 +9,7 @@ import '../models/category.dart';
 import '../models/store.dart';
 import '../utils/haversine.dart';
 import '../mock_data.dart';
- 
+
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
   static Database? _database;
@@ -39,6 +39,23 @@ class DatabaseService {
     //if (await databaseExists(dbPath)) await deleteDatabase(dbPath);
  
     return await openDatabase(dbPath, version: 3, onCreate: _createDB, onUpgrade: _upgradeDB);
+  }
+ 
+  static Future<void> initForTesting() async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+ 
+    final db = await databaseFactory.openDatabase(
+      inMemoryDatabasePath,
+      options: OpenDatabaseOptions(version: 1, onCreate: instance._createDB),
+    );
+ 
+    _database = db;
+  }
+ 
+  static Future<void> closeForTesting() async {
+    await _database?.close();
+    _database = null;
   }
  
   Future _createDB(Database db, int version) async {
@@ -454,6 +471,7 @@ class DatabaseService {
 //------------------------------------------------------------------------------------------------------------------
 //Ingredients
  
+
   Ingredient _ingredientFromMap(Map<String, dynamic> map) {
     return Ingredient(
       name: map['name'] as String,
@@ -547,8 +565,7 @@ class DatabaseService {
     );
   }
  
-  /// recalculates and updates the distance for all ingredients linked to stores based on the user's new coordinates
-  /// if the ingredient is linked to a valid store, updates its distance based on the user's new coordinates and the store's coordinates
+
   Future<void> updateAllIngredientDistances({
     required double userLat,
     required double userLon,
@@ -556,17 +573,17 @@ class DatabaseService {
     final ingredients = await getAllIngredients();
     final stores = <String, Store>{};
  
-    // cache stores in memory to prevent repeated DB queries
+
     for (final store in await getAllStores()) {
       stores[store.id] = store;
     }
  
     for (final ingredient in ingredients) {
       final storeId = ingredient.storeId;
-      if (storeId == null) continue; // No store — leave distance as-is.
+      if (storeId == null) continue; 
  
       final store = stores[storeId];
-      if (store == null) continue;   // Store missing — leave distance as-is.
+      if (store == null) continue;   
  
       final newDistance = haversineDistance(
         userLat,
@@ -575,7 +592,7 @@ class DatabaseService {
         store.longitude,
       );
  
-      // copyWith() produces new ingredient instance
+
       await updateIngredient(ingredient.copyWith(distance: newDistance));
     }
   }
@@ -748,15 +765,24 @@ class DatabaseService {
   }
 
   /// Finds the `goal.goal_id` for a given week/account/day, or null if none.
-  Future<int?> findGoalIdForWeekAccountDay(int weekId, String accountId, int dayId) async {
+  /// Finds the `goal.goal_id` for a given week/account/day, optionally
+  /// filtering by `goal_type` if `goalType` is provided.
+  Future<int?> findGoalIdForWeekAccountDay(int weekId, String accountId, int dayId, {String? goalType}) async {
     final db = await instance.database;
-    final rows = await db.rawQuery('''
+    String query = '''
       SELECT g.goal_id
       FROM goal g
       JOIN week_goal wg ON wg.goal_id = g.goal_id
       WHERE wg.account_id = ? AND wg.week_goal_id = ? AND g.day_id = ?
-      LIMIT 1
-    ''', [accountId, weekId, dayId]);
+    ''';
+    final args = [accountId, weekId, dayId];
+    if (goalType != null) {
+      query += ' AND g.goal_type = ?';
+      args.add(goalType);
+    }
+    query += ' LIMIT 1';
+
+    final rows = await db.rawQuery(query, args);
 
     if (rows.isEmpty) return null;
     final val = rows.first['goal_id'];

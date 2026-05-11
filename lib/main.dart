@@ -41,7 +41,10 @@ class _MyAppState extends State<MyApp> {
       WidgetsBinding.instance.platformDispatcher.platformBrightness ==
       Brightness.dark;
 
-      late final WeeklyGoals weekSource = WeeklyGoals(accountEmail: widget.accountEmail, type: GoalTypes.fromDbString(widget.goal ?? "money"));
+  late final WeeklyGoals weekSource = WeeklyGoals(
+    accountEmail: widget.accountEmail,
+    type: GoalTypes.fromDbString(widget.goal ?? "money"),
+  );
 
   // WeeklyGoals weekSource = WeeklyGoals()
   //   ..goals[0] = [
@@ -199,11 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
               icon: const Icon(Icons.shopping_cart),
               label: const Text("Go to Shopping List"),
             ),
-            SizedBox(
-              width: 300,
-              height: 200,
-              child: ProgressGraphWidget(),
-            ),
+            SizedBox(width: 300, height: 200, child: ProgressGraphWidget()),
           ],
         ),
       ),

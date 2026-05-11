@@ -186,7 +186,7 @@ class WeeklyGoals extends ChangeNotifier {
     final idx = list.indexWhere((g) => g.day == day);
     if (idx == -1) {
       // insert at correct position to keep list ordered by day
-      final newGoal = Goal(id: id ?? GoalType.money, day: day, value: value);
+      final newGoal = Goal(id: id ?? currentGoalType, day: day, value: value);
       final insertAt = list.indexWhere((g) => g.day > day);
       if (insertAt == -1) {
         list.add(newGoal);
@@ -358,6 +358,7 @@ class WeeklyGoals extends ChangeNotifier {
         weekId,
         accountId,
         day,
+        goalType: id?.toString() ?? currentGoalType.toString(),
       );
 
       if (existingGoalId != null) {
@@ -433,6 +434,9 @@ class WeeklyGoals extends ChangeNotifier {
           final val = (r['goal_value'] as num).toDouble();
           return Goal(id: newType, day: day, value: val);
         }).toList();
+
+        // Ensure the in-memory current goal type reflects the requested type
+        currentGoalType = newType;
 
         notifyListeners();
         return this;
