@@ -5,7 +5,8 @@ import '../services/database_service.dart';
 
 /// form screen for adding a custom recipe
 class AddRecipeScreen extends StatefulWidget {
-  const AddRecipeScreen({super.key});
+  final String? categoryId;
+  const AddRecipeScreen({super.key, this.categoryId});
 
   @override
   State<AddRecipeScreen> createState() => _AddRecipeScreenState();
@@ -109,7 +110,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
       nutrients: {},
     );
 
-    await DatabaseService.instance.createRecipe(recipe);
+    await DatabaseService.instance.createRecipe(recipe, categoryId: widget.categoryId);
     if (mounted) Navigator.pop(context, true);
   }
 

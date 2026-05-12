@@ -394,8 +394,15 @@ class DatabaseService {
       'name': recipe.name,
       'categoryId': categoryId,
     });
- 
-    // Insert recipe ingredients
+
+    if (categoryId != null) {
+      await db.insert(
+        'category_recipes',
+        {'categoryId': categoryId, 'recipeId': recipe.id},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+
     for (var ingredientName in recipe.requiredIngredients) {
       await db.insert('recipe_ingredients', {
         'recipeId': recipe.id,

@@ -297,9 +297,9 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
       floatingActionButton: FloatingActionButton(
         tooltip: 'Create new recipe',
         onPressed: () async {
-          final added = await Navigator.push<bool>(
+          await Navigator.push<bool>(
             context,
-            MaterialPageRoute(builder: (_) => const AddRecipeScreen()),
+            MaterialPageRoute(builder: (_) => AddRecipeScreen(categoryId: category?.id)),
           );
           await _refresh();
         },
