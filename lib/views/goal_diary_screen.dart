@@ -1,12 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:provider/provider.dart';
 import 'package:meal_planner/repositories/goal_repository.dart';
 import 'package:meal_planner/views/app_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:meal_planner/services/database_service.dart';
-import 'package:sqflite/sql.dart';
 
 class GoalDiaryScreen extends StatefulWidget {
 
@@ -29,70 +26,20 @@ class _GoalDiaryScreenState extends State<GoalDiaryScreen> {
   Future<void> updateGoal(int day, double value) async {
     final weekly = Provider.of<WeeklyGoals>(context, listen: false);
     final weekId = weekly.currentWeek;
-    // Use the current goal type for this weekly instance rather than hardcoding.
-    final GoalType currentType = weekly.currentGoalType;
-    weekly.setGoalValue(weekId, day, value, id: currentType);
+    final currentType = weekly.currentGoalType;
 
-    // persist change for this single day
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final accountEmail = prefs.getString('accountEmail');
-      if (accountEmail == null) {
-        setState(() { currentGoals = weekly.getGoalsForCurrentWeek(); });
-        return;
-      }
+    // Persist (this updates in-memory and the DB as appropriate)
+    final prefs = await SharedPreferences.getInstance();
+    final accountEmail = prefs.getString('accountEmail');
+    await weekly.persistSingleGoal(
+      accountEmail: accountEmail,
+      weekId: weekId,
+      day: day,
+      value: value,
+      id: currentType,
+    );
 
-      final db = await DatabaseService.instance.database;
-      final users = await db.query('users', columns: ['id'], where: 'email = ?', whereArgs: [accountEmail], limit: 1);
-      final accountId = users.isNotEmpty ? users.first['id'] as String? : null;
-      if (accountId == null) {
-        setState(() { currentGoals = weekly.getGoalsForCurrentWeek(); });
-        return;
-      }
-
-      final dbSvc = DatabaseService.instance;
-      final existingGoalId = await dbSvc.findGoalIdForWeekAccountDay(
-        weekId,
-        accountId,
-        day,
-        goalType: currentType.toString(),
-      );
-
-      if (existingGoalId != null) {
-        await dbSvc.updateGoal(existingGoalId, day, value);
-      } else {
-        // create goal row and mapping using the current goal type
-        final goalType = (weekly.getGoalsForWeek(weekId).firstWhere((g) => g.day == day, orElse: () => Goal(id: currentType, day: day, value: value))).id.toString();
-        final createdGoalId = await dbSvc.createGoal(goalType, accountId, day, value);
-        await db.insert(
-          'week_goal',
-          {
-            'week_goal_id': weekId,
-            'account_id': accountId,
-            'goal_id': createdGoalId,
-            'start_date': weekly.weekStartDates[weekId]?.toIso8601String() ?? DateTime.now().toIso8601String(),
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error saving goal update: $e');
-      }     
-    }
-
-      // persist change for this single day via the model
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final accountEmail = prefs.getString('accountEmail');
-        await weekly.persistSingleGoal(accountEmail: accountEmail, weekId: weekId, day: day, value: value, id: currentType);
-      } catch (e) {
-        if (kDebugMode) {
-        print('Error saving goal update: $e');
-      }   
-      }
-
-      setState(() { currentGoals = weekly.getGoalsForCurrentWeek(); });
+    setState(() { currentGoals = weekly.getGoalsForCurrentWeek(); });
   }
 
   @override
