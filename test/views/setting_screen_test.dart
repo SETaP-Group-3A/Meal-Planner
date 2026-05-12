@@ -71,7 +71,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Save'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.text('Username is required'), findsOneWidget);
       expect(find.text('Email is required'), findsOneWidget);
