@@ -132,12 +132,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                             builder: (_) {
                               final img = c.imageUrl;
                               if (img == null) {
-                                return Image.network(
-                                  'https://picsum.photos/seed/${Uri.encodeComponent(c.id)}/600/600',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (ctx, err, st) =>
-                                      Container(color: Colors.grey.shade300),
-                                );
+                                return Container(color: Colors.grey.shade300);
                               }
                               if (img.trim().isEmpty) {
                                 return Container(); // explicit empty -> no image / no placeholder

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'models/recipe.dart';
 import 'views/app_styles.dart';
 import 'services/database_service.dart';
+import 'mock_data.dart';
 
 class RecipePage extends StatefulWidget {
   final Recipe recipe;
@@ -81,6 +82,20 @@ class _RecipePageState extends State<RecipePage> {
     );
   }
 
+  /// calories scaled to current servings; falls back to marketInventory sum if recipe stores 0
+  int get _scaledCalories {
+    int base = widget.recipe.calories;
+    if (base == 0) {
+      for (final name in widget.recipe.requiredIngredients) {
+        final options = marketInventory[name];
+        if (options != null && options.isNotEmpty) {
+          base += options.first.calories;
+        }
+      }
+    }
+    return (base * _currentServings / _defaultServings).round();
+  }
+
   /// stepper row for adjusting serving size
   Widget _buildServingsRow() {
     return Row(
@@ -130,7 +145,7 @@ class _RecipePageState extends State<RecipePage> {
             child: Padding(
               padding: const EdgeInsets.only(left: 8.0, bottom: 2.0),
               child: Text(
-                '• ${scale.toStringAsFixed(1)}x $ingredient',
+                '• $ingredient${scale != 1.0 ? ' (×${scale.toStringAsFixed(1)})' : ''}',
                 style: excluded
                     ? const TextStyle(
                         color: Colors.grey,
@@ -167,7 +182,7 @@ class _RecipePageState extends State<RecipePage> {
         Text('Calories', style: AppStyles.subtitleText),
         const SizedBox(height: 4),
         Text(
-          '${(widget.recipe.calories * _currentServings / _defaultServings).round()} kcal',
+          '$_scaledCalories kcal',
           style: AppStyles.normalText,
         ),
         const SizedBox(height: 12),

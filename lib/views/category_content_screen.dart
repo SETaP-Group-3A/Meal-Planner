@@ -299,7 +299,9 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
         onPressed: () async {
           await Navigator.push<bool>(
             context,
-            MaterialPageRoute(builder: (_) => AddRecipeScreen(categoryId: category?.id)),
+            MaterialPageRoute(
+              builder: (_) => AddRecipeScreen(categoryId: category?.id),
+            ),
           );
           await _refresh();
         },
