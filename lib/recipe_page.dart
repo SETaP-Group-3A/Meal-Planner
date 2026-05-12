@@ -60,6 +60,7 @@ class _RecipePageState extends State<RecipePage> {
                   widget.recipe.id,
                 );
                 if (mounted) {
+                  setState(() {});
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Saved to ${category.name}')),
                   );

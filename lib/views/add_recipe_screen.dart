@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/recipe.dart';
 import '../mock_data.dart';
 import '../services/database_service.dart';
+import '../category_service.dart';
 
 /// form screen for adding a custom recipe
 class AddRecipeScreen extends StatefulWidget {
@@ -111,6 +112,9 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
     );
 
     await DatabaseService.instance.createRecipe(recipe, categoryId: widget.categoryId);
+    if (widget.categoryId != null) {
+      await CategoryService.instance.addRecipeToCategory(widget.categoryId!, recipe.id);
+    }
     if (mounted) Navigator.pop(context, true);
   }
 
