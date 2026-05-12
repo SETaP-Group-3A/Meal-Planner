@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'models/recipe.dart';
 import 'views/app_styles.dart';
 import 'services/database_service.dart';
+import 'category_service.dart';
 import 'mock_data.dart';
 
 class RecipePage extends StatefulWidget {
@@ -16,9 +17,9 @@ class RecipePage extends StatefulWidget {
 class _RecipePageState extends State<RecipePage> {
   bool _showAdvanced = false;
   bool _isFavourite = false;
-  final _folderController = TextEditingController(text: 'Favourites');
   static const int _defaultServings = 2;
   int _currentServings = 2;
+
   /// indexes of ingredients the user has tapped to exclude
   final Set<int> _excludedIngredients = {};
 
@@ -32,36 +33,45 @@ class _RecipePageState extends State<RecipePage> {
 
   @override
   void dispose() {
-    _folderController.dispose();
     super.dispose();
   }
 
-  /// shows a dialog to save this recipe into a folder
+  /// fetches existing folders then shows them as a tappable list
   Future<void> _showSaveToFolderDialog() async {
-    _folderController.text = 'Favourites';
+    final folders = await DatabaseService.instance.getAllFolderNames();
+    if (!mounted) return;
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('Save to Folder'),
-        content: TextField(
-          controller: _folderController,
-          decoration: const InputDecoration(labelText: 'Folder Name'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: folders.length,
+            itemBuilder: (_, i) => ListTile(
+              leading: const Icon(Icons.folder_outlined),
+              title: Text(folders[i]),
+              onTap: () async {
+                final name = folders[i];
+                Navigator.pop(ctx);
+                await DatabaseService.instance.addRecipeToFolder(
+                  widget.recipe.id,
+                  name,
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Saved to $name')));
+                }
+              },
+            ),
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final folderName = _folderController.text.trim();
-              if (folderName.isNotEmpty) {
-                await DatabaseService.instance
-                    .addRecipeToFolder(widget.recipe.id, folderName);
-              }
-              if (mounted) Navigator.pop(context);
-            },
-            child: const Text('Save'),
           ),
         ],
       ),
@@ -181,10 +191,7 @@ class _RecipePageState extends State<RecipePage> {
         const Divider(height: 32),
         Text('Calories', style: AppStyles.subtitleText),
         const SizedBox(height: 4),
-        Text(
-          '$_scaledCalories kcal',
-          style: AppStyles.normalText,
-        ),
+        Text('$_scaledCalories kcal', style: AppStyles.normalText),
         const SizedBox(height: 12),
         Text('Macros', style: AppStyles.subtitleText),
         const SizedBox(height: 4),
@@ -226,9 +233,13 @@ class _RecipePageState extends State<RecipePage> {
               _isFavourite ? Icons.favorite : Icons.favorite_border,
               color: _isFavourite ? Colors.red : null,
             ),
-            tooltip: _isFavourite ? 'Remove from favourites' : 'Add to favourites',
+            tooltip: _isFavourite
+                ? 'Remove from favourites'
+                : 'Add to favourites',
             onPressed: () async {
-              final next = await DatabaseService.instance.toggleFavourite(widget.recipe.id);
+              final next = await DatabaseService.instance.toggleFavourite(
+                widget.recipe.id,
+              );
               if (mounted) setState(() => _isFavourite = next);
             },
           ),
