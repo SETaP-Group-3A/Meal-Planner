@@ -123,7 +123,7 @@ class WeeklyGoals extends ChangeNotifier {
           [accountId, latestWeekId],
         );
 
-        var weekType = GoalType.money;
+        var weekType = currentGoalType;
         if (typeRow.isNotEmpty) {
           final typeStr = typeRow.first['goal_type']?.toString() ?? 'money';
           weekType = GoalTypes.fromDbString(typeStr);
