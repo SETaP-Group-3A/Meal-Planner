@@ -123,7 +123,7 @@ class WeeklyGoals extends ChangeNotifier {
           [accountId, latestWeekId],
         );
 
-        var weekType = GoalType.money;
+        var weekType = currentGoalType;
         if (typeRow.isNotEmpty) {
           final typeStr = typeRow.first['goal_type']?.toString() ?? 'money';
           weekType = GoalTypes.fromDbString(typeStr);
@@ -204,7 +204,7 @@ class WeeklyGoals extends ChangeNotifier {
   }
 
   List<Goal> getGoalsForCurrentWeek() {
-    return getGoalsForWeek(goals.keys.isNotEmpty ? goals.keys.last : 0);
+    return getGoalsForWeek(currentWeek);
   }
 
   List<Goal> getGoalsForWeek(int weekID) {
@@ -232,15 +232,19 @@ class WeeklyGoals extends ChangeNotifier {
         whereArgs: [accountEmail],
         limit: 1,
       );
+
       accountId = users.isNotEmpty ? users.first['id'] as String? : null;
+      if (accountId == null) {
+        return false; // avoid querying all goals when the email doesn't match any account
+      }
 
       // Join goal with week_goal so we can associate goals with weeks/accounts
       final rows = await db.rawQuery('''
         SELECT g.goal_id, g.goal_type, g.day_id, g.goal_value, wg.week_goal_id, wg.start_date
         FROM goal g
         LEFT JOIN week_goal wg ON wg.goal_id = g.goal_id
-        ${accountId != null ? 'WHERE wg.account_id = ?' : ''}
-      ''', accountId != null ? [accountId] : null);
+        ${'WHERE wg.account_id = ?'}
+      ''', [accountId]);
 
       if (rows.isEmpty) return false;
 
@@ -391,6 +395,9 @@ class WeeklyGoals extends ChangeNotifier {
   }) async {
     final dbSvc = DatabaseService.instance;
     final db = await dbSvc.database;
+
+    goals.clear();
+    weekStartDates.clear();
 
     String? accountId;
     if (accountEmail != null) {

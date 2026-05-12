@@ -9,7 +9,9 @@ class CategoryService {
 
   CategoryService._internal();
 
-  final List<Category> _categories = [
+  List<Category> _categories = _createDefaultCategories();
+
+  static List<Category> _createDefaultCategories() => [
     Category(
       id: 'c-snacks',
       name: 'Snacks',
@@ -26,6 +28,10 @@ class CategoryService {
     ),
     Category(id: 'c-favourites', name: 'Favourites', targetRoute: '/category', recipeIds: [], imageUrl: 'https://www.freepik.com/free-photos-vectors/stars-png'),
   ];
+
+  void resetForTesting() {
+    _categories = _createDefaultCategories();
+  }
 
 
   List<Category> get categories => List.unmodifiable(_categories);
@@ -94,16 +100,16 @@ class CategoryService {
 
 
   Future<Category?> getById(String id) async {
+    for (final c in _categories) {
+      if (c.id == id) return c;
+    }
+
     try {
       final cats = await DatabaseService.instance.getAllCategories();
       final found = cats.where((c) => c.id == id);
       if (found.isNotEmpty) return found.first;
     } catch (_) {
       // DB failed, continue to in-memory
-    }
-
-    for (final c in _categories) {
-      if (c.id == id) return c;
     }
     return null;
   }
@@ -133,6 +139,11 @@ class CategoryService {
 
 
   Future<void> addRecipeToCategory(String categoryId, String recipeId) async {
+    if (recipeId.trim().isEmpty) return;
+
+    final knownRecipe = await DatabaseService.instance.getRecipeById(recipeId);
+    if (knownRecipe == null) return;
+
     final c = await getById(categoryId);
     if (c == null) return;
     if (!c.recipeIds.contains(recipeId)) {
