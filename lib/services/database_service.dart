@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
@@ -26,19 +27,24 @@ class DatabaseService {
   }
  
   Future<Database> _initDB(String filePath) async {
-    if (Platform.isWindows || Platform.isLinux) {
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
- 
-    final dbPath = (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
-        ? join(Directory.current.path, filePath)
-        : join(await getDatabasesPath(), filePath);
- 
+
+    final String dbPath;
+    if (kIsWeb) {
+      dbPath = filePath;
+    } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      dbPath = join(Directory.current.path, filePath);
+    } else {
+      dbPath = join(await getDatabasesPath(), filePath);
+    }
+
     // Delete existing DB on start
     //if (await databaseExists(dbPath)) await deleteDatabase(dbPath);
- 
-    return await openDatabase(dbPath, version: 3, onCreate: _createDB, onUpgrade: _upgradeDB);
+
+    return await openDatabase(dbPath, version: 4, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
  
   static Future<void> initForTesting() async {
@@ -129,6 +135,15 @@ class DatabaseService {
       'recipe_favourites': '''
         CREATE TABLE recipe_favourites (
           recipeId TEXT PRIMARY KEY
+        )
+      ''',
+
+      'recipe_folders': '''
+        CREATE TABLE recipe_folders (
+          recipeId TEXT NOT NULL,
+          folderName TEXT NOT NULL,
+          PRIMARY KEY (recipeId, folderName),
+          FOREIGN KEY (recipeId) REFERENCES recipes (id) ON DELETE CASCADE
         )
       ''',
 
@@ -237,7 +252,15 @@ class DatabaseService {
           FOREIGN KEY (account_id) REFERENCES users (id) ON DELETE CASCADE
         )
       ''');
-
+    }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS recipe_folders (
+          recipeId TEXT NOT NULL,
+          folderName TEXT NOT NULL,
+          PRIMARY KEY (recipeId, folderName)
+        )
+      ''');
     }
   }
 
@@ -371,8 +394,15 @@ class DatabaseService {
       'name': recipe.name,
       'categoryId': categoryId,
     });
- 
-    // Insert recipe ingredients
+
+    if (categoryId != null) {
+      await db.insert(
+        'category_recipes',
+        {'categoryId': categoryId, 'recipeId': recipe.id},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+
     for (var ingredientName in recipe.requiredIngredients) {
       await db.insert('recipe_ingredients', {
         'recipeId': recipe.id,
@@ -466,6 +496,62 @@ class DatabaseService {
       await db.insert('recipe_favourites', {'recipeId': recipeId});
     }
     return !fav;
+  }
+
+//------------------------------------------------------------------------------------------------------------------
+//Recipe Folders
+
+  /// add a recipe to a folder (ignores duplicates)
+  Future<void> addRecipeToFolder(String recipeId, String folderName) async {
+    final db = await instance.database;
+    await db.insert(
+      'recipe_folders',
+      {'recipeId': recipeId, 'folderName': folderName},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  /// remove a recipe from a folder
+  Future<void> removeRecipeFromFolder(String recipeId, String folderName) async {
+    final db = await instance.database;
+    await db.delete('recipe_folders',
+        where: 'recipeId = ? AND folderName = ?', whereArgs: [recipeId, folderName]);
+  }
+
+  /// get all recipes in a given folder
+  Future<List<Recipe>> getRecipesByFolder(String folderName) async {
+    final db = await instance.database;
+    final rows = await db.rawQuery('''
+      SELECT r.id, r.name FROM recipes r
+      JOIN recipe_folders rf ON rf.recipeId = r.id
+      WHERE rf.folderName = ?
+    ''', [folderName]);
+
+    List<Recipe> recipes = [];
+    for (var row in rows) {
+      final ingredients = await _getIngredientsForRecipe(row['id'] as String);
+      recipes.add(Recipe(
+        id: row['id'] as String,
+        name: row['name'] as String,
+        requiredIngredients: ingredients,
+        prepTimeMinutes: 0,
+        allergens: [],
+        calories: 0,
+        macros: Macros(proteinG: 0, carbsG: 0, fatG: 0),
+        nutrients: {},
+        folderName: folderName,
+      ));
+    }
+    return recipes;
+  }
+
+  /// returns all folder names — Favourites is always first even if empty
+  Future<List<String>> getAllFolderNames() async {
+    final db = await instance.database;
+    final rows = await db.rawQuery('SELECT DISTINCT folderName FROM recipe_folders');
+    final names = rows.map((r) => r['folderName'] as String).toList();
+    if (!names.contains('Favourites')) names.insert(0, 'Favourites');
+    return names;
   }
 
 //------------------------------------------------------------------------------------------------------------------

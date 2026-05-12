@@ -152,9 +152,9 @@ List<MapEntry<Store, double>> getNearestStores(double userLat, double userLon) {
   return ranked;
 }
 
-/// convenience wrapper using a hardcoded mock location (fratton park)
+/// convenience wrapper using a hardcoded mock location (future tech centre)
 List<MapEntry<Store, double>> getNearestStoresToMockUser() {
-  const mockLat = 50.7964; // fratton park for example
-  const mockLon = -1.0639;
+  const mockLat = 50.798683; // future tech centre
+  const mockLon = -1.099322;
   return getNearestStores(mockLat, mockLon);
 }

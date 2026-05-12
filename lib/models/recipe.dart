@@ -23,6 +23,8 @@ class Recipe {
   final int calories;
   final Macros macros;
   final Map<String, double> nutrients;
+  /// which folder this recipe belongs to, null if none
+  final String? folderName;
 
   Recipe({
     required this.id,
@@ -33,6 +35,7 @@ class Recipe {
     required this.calories,
     required this.macros,
     required this.nutrients,
+    this.folderName,
   });
 
   @override
