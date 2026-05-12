@@ -124,6 +124,14 @@ class _DayGoalWidgetState extends State<DayGoalWidget> {
   }
 
   @override
+  void didUpdateWidget(covariant DayGoalWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.goal.id != widget.goal.id || oldWidget.goal.value != widget.goal.value) {
+      _controller.text = GoalTypes.displayGoal(widget.goal.id, widget.goal.value.toString());
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
