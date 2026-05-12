@@ -396,6 +396,9 @@ class WeeklyGoals extends ChangeNotifier {
     final dbSvc = DatabaseService.instance;
     final db = await dbSvc.database;
 
+    goals.clear();
+    weekStartDates.clear();
+
     String? accountId;
     if (accountEmail != null) {
       accountId = await dbSvc.resolveAccountIdFromEmail(accountEmail);
