@@ -47,14 +47,14 @@ void main() {
     (WidgetTester tester) async {
       await tester.pumpWidget(_buildApp());
 
-      // 2 → 1
+      // 2 -> 1
       await tester.tap(find.byIcon(Icons.remove));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('Servings: 1'), findsOneWidget);
 
-      // should stay at 1 (button is disabled)
-      await tester.tap(find.byIcon(Icons.remove));
-      await tester.pump();
+      // button is now disabled and should not decrement further
+      await tester.tap(find.byIcon(Icons.remove), warnIfMissed: false);
+      await tester.pumpAndSettle();
       expect(find.text('Servings: 1'), findsOneWidget);
     },
   );
