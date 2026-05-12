@@ -204,7 +204,7 @@ class WeeklyGoals extends ChangeNotifier {
   }
 
   List<Goal> getGoalsForCurrentWeek() {
-    return getGoalsForWeek(goals.keys.isNotEmpty ? goals.keys.last : 0);
+    return getGoalsForWeek(currentWeek);
   }
 
   List<Goal> getGoalsForWeek(int weekID) {
