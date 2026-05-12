@@ -41,6 +41,30 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     });
   }
 
+  Future<void> _showDeleteDialog(Category category) async {
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Folder'),
+        content: Text('Delete "${category.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await CategoryService.instance.removeCategory(category.id);
+              _filterCategories();
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// shows a dialog to create a new category
   Future<void> _showCreateCategoryDialog() async {
     _newCategoryController.clear();
@@ -111,6 +135,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 childAspectRatio: 1,
                 children: _filteredCategories.map((c) {
                   return GestureDetector(
+                    onLongPress: () => _showDeleteDialog(c),
                     onTap: () {
                       final route = c.targetRoute;
                       if (route != null &&
