@@ -36,9 +36,9 @@ class _RecipePageState extends State<RecipePage> {
     super.dispose();
   }
 
-  /// fetches existing folders then shows them as a tappable list
+  /// fetches existing categories then shows them as a tappable list
   Future<void> _showSaveToFolderDialog() async {
-    final folders = await DatabaseService.instance.getAllFolderNames();
+    final categories = await CategoryService.instance.getAllCategories();
     if (!mounted) return;
     await showDialog(
       context: context,
@@ -48,21 +48,21 @@ class _RecipePageState extends State<RecipePage> {
           width: double.maxFinite,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: folders.length,
+            itemCount: categories.length,
             itemBuilder: (_, i) => ListTile(
               leading: const Icon(Icons.folder_outlined),
-              title: Text(folders[i]),
+              title: Text(categories[i].name),
               onTap: () async {
-                final name = folders[i];
+                final category = categories[i];
                 Navigator.pop(ctx);
-                await DatabaseService.instance.addRecipeToFolder(
+                await CategoryService.instance.addRecipeToCategory(
+                  category.id,
                   widget.recipe.id,
-                  name,
                 );
                 if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Saved to $name')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Saved to ${category.name}')),
+                  );
                 }
               },
             ),

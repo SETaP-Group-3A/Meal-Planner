@@ -14,13 +14,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _newCategoryController = TextEditingController();
   List<Category> _filteredCategories = [];
+  List<Category> _allCategories = [];
 
   @override
   void initState() {
     super.initState();
-    final src = widget.categories ?? CategoryService.instance.categories;
-    _filteredCategories = src.where((c) => c.id.startsWith('c-')).toList();
     _searchController.addListener(_filterCategories);
+    _loadCategories();
   }
 
   @override
@@ -30,15 +30,25 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     super.dispose();
   }
 
-  void _filterCategories() {
+  List<Category> _applySearch(List<Category> src) {
     final query = _searchController.text.toLowerCase();
+    return src
+        .where((c) => c.id.startsWith('c-') && c.name.toLowerCase().contains(query))
+        .toList();
+  }
+
+  /// queries the database and refreshes the grid
+  Future<void> _loadCategories() async {
+    final src = widget.categories ?? await CategoryService.instance.getAllCategories();
+    if (!mounted) return;
     setState(() {
-      final src = widget.categories ?? CategoryService.instance.categories;
-      _filteredCategories = src.where((category) {
-        if (!category.id.startsWith('c-')) return false;
-        return category.name.toLowerCase().contains(query);
-      }).toList();
+      _allCategories = src;
+      _filteredCategories = _applySearch(src);
     });
+  }
+
+  void _filterCategories() {
+    setState(() => _filteredCategories = _applySearch(_allCategories));
   }
 
   Future<void> _showDeleteDialog(Category category) async {
@@ -56,7 +66,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             onPressed: () async {
               Navigator.pop(ctx);
               await CategoryService.instance.removeCategory(category.id);
-              _filterCategories();
+              _loadCategories();
             },
             child: const Text('Delete'),
           ),
@@ -90,7 +100,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   name: name,
                   targetRoute: '/category',
                 );
-                _filterCategories();
+                _loadCategories();
               }
               Navigator.pop(ctx);
             },

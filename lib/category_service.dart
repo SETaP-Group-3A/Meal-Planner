@@ -33,7 +33,11 @@ class CategoryService {
 
   Future<List<Category>> getAllCategories() async {
     try {
-      return (await DatabaseService.instance.getAllCategories()).cast<Category>();
+      final dbCats = await DatabaseService.instance.getAllCategories();
+      // defaults first, then any custom categories saved to the database
+      final defaultIds = _categories.map((c) => c.id).toSet();
+      final extras = dbCats.where((c) => !defaultIds.contains(c.id)).toList();
+      return [..._categories, ...extras];
     } catch (_) {
       return List.unmodifiable(_categories);
     }
