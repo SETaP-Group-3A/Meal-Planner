@@ -7,6 +7,7 @@ import '../mock_data.dart';
 import '../shopping_list.dart';
 import '../recipe_page.dart';
 import '../services/database_service.dart';
+import 'add_recipe_screen.dart';
 
 class CategoryContentScreen extends StatefulWidget {
   final String? categoryId;
@@ -292,6 +293,19 @@ class _CategoryContentScreenState extends State<CategoryContentScreen> {
             onPressed: _showAddItemDialog,
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Create new recipe',
+        onPressed: () async {
+          await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AddRecipeScreen(categoryId: category?.id),
+            ),
+          );
+          await _refresh();
+        },
+        child: const Icon(Icons.edit_note),
       ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),

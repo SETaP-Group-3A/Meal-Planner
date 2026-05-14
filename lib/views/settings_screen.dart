@@ -211,6 +211,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     labelText: 'Username',
                     border: OutlineInputBorder(),
                   ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Username is required' : null,
                 ),
 
                 const SizedBox(height: 12),
@@ -221,6 +223,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     labelText: 'Email',
                     border: OutlineInputBorder(),
                   ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Email is required' : null,
                 ),
 
                 const SizedBox(height: 12),

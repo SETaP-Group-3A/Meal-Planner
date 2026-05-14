@@ -65,6 +65,11 @@ class WeeklyGoals extends ChangeNotifier {
   // When a WeeklyGoals instance is created, start loading values from the DB
   WeeklyGoals({String? accountEmail, required GoalType type}) {
     currentGoalType = type;
+    // For anonymous users, initialise a single empty week so the UI can display/edit
+    if (accountEmail == null) {
+      goals[0] = List.generate(7, (i) => Goal(id: currentGoalType, day: i, value: 0.0));
+      weekStartDates[0] = DateTime.now();
+    }
     try {
       loadFromDatabase(accountEmail: accountEmail, expectedType: type).then((_) {
         // After loading, ensure weeks are up-to-date for this account.
@@ -123,7 +128,7 @@ class WeeklyGoals extends ChangeNotifier {
           [accountId, latestWeekId],
         );
 
-        var weekType = GoalType.money;
+        var weekType = currentGoalType;
         if (typeRow.isNotEmpty) {
           final typeStr = typeRow.first['goal_type']?.toString() ?? 'money';
           weekType = GoalTypes.fromDbString(typeStr);
@@ -204,7 +209,7 @@ class WeeklyGoals extends ChangeNotifier {
   }
 
   List<Goal> getGoalsForCurrentWeek() {
-    return getGoalsForWeek(goals.keys.isNotEmpty ? goals.keys.last : 0);
+    return getGoalsForWeek(currentWeek);
   }
 
   List<Goal> getGoalsForWeek(int weekID) {
@@ -220,27 +225,23 @@ class WeeklyGoals extends ChangeNotifier {
       if (expectedType != currentGoalType) {
         await updateGoalType(newType: expectedType, accountEmail: accountEmail);
       }
-      // if caller supplied an email, resolve it to the internal account id
-      String? accountId;
+      // ensure previous loads don't remain
+      goals.clear();
+      weekStartDates.clear();
 
+      // if caller supplied an email, resolve it to the internal account id
       if (accountEmail == null) return false;
 
-      final users = await db.query(
-        'users',
-        columns: ['id'],
-        where: 'email = ?',
-        whereArgs: [accountEmail],
-        limit: 1,
-      );
-      accountId = users.isNotEmpty ? users.first['id'] as String? : null;
+      final accountId = await DatabaseService.instance.resolveAccountIdFromEmail(accountEmail);
+      if (accountId == null) return false;
 
       // Join goal with week_goal so we can associate goals with weeks/accounts
       final rows = await db.rawQuery('''
         SELECT g.goal_id, g.goal_type, g.day_id, g.goal_value, wg.week_goal_id, wg.start_date
         FROM goal g
         LEFT JOIN week_goal wg ON wg.goal_id = g.goal_id
-        ${accountId != null ? 'WHERE wg.account_id = ?' : ''}
-      ''', accountId != null ? [accountId] : null);
+        WHERE wg.account_id = ?
+      ''', [accountId]);
 
       if (rows.isEmpty) return false;
 
@@ -338,14 +339,7 @@ class WeeklyGoals extends ChangeNotifier {
 
       String? accountId;
       if (accountEmail != null) {
-        final users = await db.query(
-          'users',
-          columns: ['id'],
-          where: 'email = ?',
-          whereArgs: [accountEmail],
-          limit: 1,
-        );
-        accountId = users.isNotEmpty ? users.first['id'] as String? : null;
+        accountId = await dbSvc.resolveAccountIdFromEmail(accountEmail);
       }
 
       if (accountId == null) {
@@ -363,6 +357,16 @@ class WeeklyGoals extends ChangeNotifier {
 
       if (existingGoalId != null) {
         await dbSvc.updateGoal(existingGoalId, day, value);
+      } else {
+        // create a new goal row and mapping for this account/week/day
+        final goalTypeStr = id?.toString() ?? currentGoalType.toString();
+        final createdGoalId = await dbSvc.createGoal(goalTypeStr, accountId, day, value);
+        await db.insert('week_goal', {
+          'week_goal_id': weekId,
+          'account_id': accountId,
+          'goal_id': createdGoalId,
+          'start_date': weekStartDates[weekId]?.toIso8601String() ?? DateTime.now().toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     } catch (e) {
       // preserve in-memory change even if DB fails; surface error in debug
@@ -391,6 +395,9 @@ class WeeklyGoals extends ChangeNotifier {
   }) async {
     final dbSvc = DatabaseService.instance;
     final db = await dbSvc.database;
+
+    goals.clear();
+    weekStartDates.clear();
 
     String? accountId;
     if (accountEmail != null) {

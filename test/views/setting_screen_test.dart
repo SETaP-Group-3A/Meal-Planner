@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meal_planner/models/weekly_goals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meal_planner/views/settings_screen.dart';
 
@@ -71,7 +72,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Save'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.text('Username is required'), findsOneWidget);
       expect(find.text('Email is required'), findsOneWidget);
@@ -83,10 +84,12 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).at(0), 'TestUser');
+
       await tester.enterText(
         find.byType(TextFormField).at(1),
         'test@email.com',
       );
+
       await tester.enterText(find.byType(TextFormField).at(2), 'SO17 1BJ');
 
       await tester.tap(find.text('Save'));
@@ -108,6 +111,20 @@ void main() {
       );
 
       expect(addressField.enabled, false);
+    });
+
+    testWidgets('User can change goal type', (WidgetTester tester) async {
+      await tester.pumpWidget(createWidgetUnderTest(AccountSettingsScreen()));
+
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(DropdownButton<GoalType>));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Eat Healthier').last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Eat Healthier'), findsWidgets);
     });
   });
 
